@@ -52,20 +52,28 @@ internal static class TestData
         string name = "Ethernet",
         bool isConnected = true,
         string? ipv4Address = "192.168.1.50",
-        Ipv4AddressCollection? ipv4Addresses = null) =>
+        Ipv4AddressCollection? ipv4Addresses = null,
+        string description = "Contoso Gigabit Adapter",
+        string macAddress = "00-1A-2B-3C-4D-5E",
+        long? linkSpeedBitsPerSecond = 1_000_000_000,
+        NetworkConfigurationMode mode = NetworkConfigurationMode.Dhcp,
+        string? subnetMask = "255.255.255.0",
+        string? gateway = "192.168.1.1",
+        string? primaryDns = "192.168.1.1",
+        string? secondaryDns = null) =>
         new(
             new NetworkAdapterId(id),
             name,
-            "Contoso Gigabit Adapter",
-            "00-1A-2B-3C-4D-5E",
+            description,
+            macAddress,
             isConnected,
-            1_000_000_000,
-            NetworkConfigurationMode.Dhcp,
+            linkSpeedBitsPerSecond,
+            mode,
             ipv4Address,
-            "255.255.255.0",
-            "192.168.1.1",
-            "192.168.1.1",
-            null,
+            subnetMask,
+            gateway,
+            primaryDns,
+            secondaryDns,
             ipv4Addresses ?? DefaultIpv4Addresses(ipv4Address));
 
     private static Ipv4AddressCollection DefaultIpv4Addresses(string? ipv4Address) =>

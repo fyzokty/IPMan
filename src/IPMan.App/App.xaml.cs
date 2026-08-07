@@ -55,6 +55,7 @@ public partial class App : System.Windows.Application
 
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IDelayProvider, SystemDelayProvider>();
+        services.AddSingleton<IElevationStateProvider, WindowsElevationStateProvider>();
 
         services.AddSingleton<IAdapterProbe, SystemNetworkInterfaceProbe>();
         services.AddSingleton<INetworkAdapterReader, NetworkAdapterReader>();
@@ -63,6 +64,8 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IAdapterRefreshCoordinator, AdapterRefreshCoordinator>();
 
         services.AddSingleton<IUiDispatcher>(new WpfUiDispatcher(uiDispatcher));
+        services.AddSingleton<IClipboardService, WpfClipboardService>();
+        services.AddSingleton<IApplicationVersionProvider, AssemblyApplicationVersionProvider>();
 
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<MainWindow>();

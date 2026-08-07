@@ -58,50 +58,63 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="DiagnosticViewHeader" xml:space="preserve">
-    <value>Salt okunur adaptör tanılama görünümü</value>
+
+  <data name="ApplicationTagline" xml:space="preserve">
+    <value>Ağ bağdaştırıcısı yapılandırması</value>
   </data>
-  <data name="ColumnName" xml:space="preserve">
-    <value>Ad</value>
+
+  <data name="CurrentConfigurationHeader" xml:space="preserve">
+    <value>Mevcut yapılandırma</value>
   </data>
-  <data name="ColumnDescription" xml:space="preserve">
-    <value>Açıklama</value>
+  <data name="DraftConfigurationHeader" xml:space="preserve">
+    <value>Yapılandırma taslağı</value>
   </data>
-  <data name="ColumnConnectionState" xml:space="preserve">
+  <data name="DraftConfigurationHint" xml:space="preserve">
+    <value>Bu alanlar yalnızca taslaktır. Bu sürümde Windows yapılandırması değiştirilmez.</value>
+  </data>
+
+  <data name="FieldConnectionState" xml:space="preserve">
     <value>Durum</value>
   </data>
-  <data name="ColumnMode" xml:space="preserve">
-    <value>Yapılandırma</value>
+  <data name="FieldAdapterName" xml:space="preserve">
+    <value>Bağdaştırıcı adı</value>
   </data>
-  <data name="ColumnIpv4Address" xml:space="preserve">
-    <value>IPv4 adresi</value>
+  <data name="FieldDescription" xml:space="preserve">
+    <value>Açıklama</value>
   </data>
-  <data name="ColumnSubnetMask" xml:space="preserve">
-    <value>Alt ağ maskesi</value>
-  </data>
-  <data name="ColumnGateway" xml:space="preserve">
-    <value>Ağ geçidi</value>
-  </data>
-  <data name="ColumnPrimaryDns" xml:space="preserve">
-    <value>Birincil DNS</value>
-  </data>
-  <data name="ColumnSecondaryDns" xml:space="preserve">
-    <value>İkincil DNS</value>
-  </data>
-  <data name="ColumnAdditionalIpv4Addresses" xml:space="preserve">
-    <value>Ek IPv4 adresleri</value>
-  </data>
-  <data name="ColumnMacAddress" xml:space="preserve">
+  <data name="FieldMacAddress" xml:space="preserve">
     <value>MAC adresi</value>
   </data>
-  <data name="ColumnLinkSpeed" xml:space="preserve">
+  <data name="FieldIpv4Address" xml:space="preserve">
+    <value>IPv4 adresi</value>
+  </data>
+  <data name="FieldSubnetMask" xml:space="preserve">
+    <value>Alt ağ maskesi</value>
+  </data>
+  <data name="FieldGateway" xml:space="preserve">
+    <value>Varsayılan ağ geçidi</value>
+  </data>
+  <data name="FieldPrimaryDns" xml:space="preserve">
+    <value>Birincil DNS</value>
+  </data>
+  <data name="FieldSecondaryDns" xml:space="preserve">
+    <value>İkincil DNS</value>
+  </data>
+  <data name="FieldConfigurationMode" xml:space="preserve">
+    <value>Yapılandırma modu</value>
+  </data>
+  <data name="FieldLinkSpeed" xml:space="preserve">
     <value>Bağlantı hızı</value>
   </data>
+  <data name="FieldAdditionalIpv4Addresses" xml:space="preserve">
+    <value>Ek IPv4 adresleri</value>
+  </data>
+
   <data name="ConnectionStateConnected" xml:space="preserve">
     <value>Bağlı</value>
   </data>
   <data name="ConnectionStateDisconnected" xml:space="preserve">
-    <value>Bağlı değil</value>
+    <value>Bağlı Değil</value>
   </data>
   <data name="ModeDhcp" xml:space="preserve">
     <value>Otomatik (DHCP)</value>
@@ -113,18 +126,70 @@
     <value>Bilinmiyor</value>
   </data>
   <data name="ValueUnavailable" xml:space="preserve">
-    <value>Yok</value>
+    <value>—</value>
+  </data>
+
+  <data name="LinkSpeedGigabitsPerSecond" xml:space="preserve">
+    <value>{0} Gbps</value>
   </data>
   <data name="LinkSpeedMegabitsPerSecond" xml:space="preserve">
-    <value>{0} Mbit/sn</value>
+    <value>{0} Mbps</value>
   </data>
-  <data name="StatusNotStarted" xml:space="preserve">
-    <value>Adaptör taraması henüz başlatılmadı.</value>
+  <data name="LinkSpeedKilobitsPerSecond" xml:space="preserve">
+    <value>{0} Kbps</value>
   </data>
-  <data name="StatusRefreshed" xml:space="preserve">
-    <value>{0} adaptör bulundu. Tetikleyici: {1}</value>
+
+  <data name="CommandGetCurrentValues" xml:space="preserve">
+    <value>Mevcut Değeri Getir</value>
   </data>
-  <data name="StatusRefreshFailed" xml:space="preserve">
-    <value>Adaptör bilgileri okunamadı. Tetikleyici: {0}</value>
+  <data name="CommandCopy" xml:space="preserve">
+    <value>Kopyala</value>
+  </data>
+  <data name="CommandCopyFieldTooltip" xml:space="preserve">
+    <value>{0} alanını panoya kopyala</value>
+  </data>
+
+  <data name="StateLoading" xml:space="preserve">
+    <value>Yükleniyor...</value>
+  </data>
+  <data name="StateReady" xml:space="preserve">
+    <value>Hazır</value>
+  </data>
+  <data name="StateError" xml:space="preserve">
+    <value>Hata</value>
+  </data>
+  <data name="LoadingAdapters" xml:space="preserve">
+    <value>Ağ bağdaştırıcıları okunuyor...</value>
+  </data>
+  <data name="EmptyStateTitle" xml:space="preserve">
+    <value>Yönetilebilir ağ bağdaştırıcısı bulunamadı</value>
+  </data>
+  <data name="EmptyStateDescription" xml:space="preserve">
+    <value>Windows şu anda görüntülenebilecek bir bağdaştırıcı bildirmiyor. Bir bağdaştırıcı takıldığında liste kendiliğinden güncellenir.</value>
+  </data>
+  <data name="RefreshFailedTitle" xml:space="preserve">
+    <value>Bağdaştırıcı bilgileri yenilenemedi. Görüntülenen değerler son başarılı okumaya aittir.</value>
+  </data>
+
+  <data name="StatusAdministratorYes" xml:space="preserve">
+    <value>Yönetici: Evet</value>
+  </data>
+  <data name="StatusAdministratorNo" xml:space="preserve">
+    <value>Yönetici: Hayır</value>
+  </data>
+  <data name="StatusSelectedAdapter" xml:space="preserve">
+    <value>Seçili: {0} — {1}</value>
+  </data>
+  <data name="StatusNoSelectedAdapter" xml:space="preserve">
+    <value>Seçili bağdaştırıcı yok</value>
+  </data>
+  <data name="StatusLastRefresh" xml:space="preserve">
+    <value>Son yenileme: {0}</value>
+  </data>
+  <data name="StatusLastRefreshNever" xml:space="preserve">
+    <value>Son yenileme: —</value>
+  </data>
+  <data name="StatusVersion" xml:space="preserve">
+    <value>Sürüm {0}</value>
   </data>
 </root>

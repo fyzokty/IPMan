@@ -2,61 +2,401 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:res="clr-namespace:IPMan.App.Resources"
+        xmlns:vm="clr-namespace:IPMan.App.ViewModels"
         Title="{Binding ApplicationName}"
         Width="1100"
         Height="700"
         MinWidth="900"
         MinHeight="600"
+        Background="{StaticResource WindowBackgroundBrush}"
         WindowStartupLocation="CenterScreen">
-    <Grid Margin="12">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Margin="0,0,0,8"
-                   FontWeight="SemiBold"
-                   Text="{Binding DiagnosticViewHeader}" />
+    <Window.Resources>
+        <!-- Tab header: name plus a shape-based connection marker, never colour alone. -->
+        <DataTemplate x:Key="AdapterTabHeaderTemplate" DataType="{x:Type vm:AdapterViewModel}">
+            <StackPanel Orientation="Horizontal"
+                        AutomationProperties.Name="{Binding AccessibleDescription}"
+                        ToolTip="{Binding AccessibleDescription}">
+                <TextBlock Text="{Binding ConnectionMarker}"
+                           Margin="0,0,6,0"
+                           VerticalAlignment="Center">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{StaticResource DisconnectedBrush}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsConnected}" Value="True">
+                                    <Setter Property="Foreground" Value="{StaticResource ConnectedBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+                <TextBlock Text="{Binding DisplayName}"
+                           MaxWidth="220"
+                           TextTrimming="CharacterEllipsis"
+                           VerticalAlignment="Center" />
+            </StackPanel>
+        </DataTemplate>
 
-        <DataGrid Grid.Row="1"
-                  AutoGenerateColumns="False"
-                  CanUserAddRows="False"
-                  CanUserDeleteRows="False"
-                  IsReadOnly="True"
-                  ItemsSource="{Binding Adapters}"
-                  SelectionMode="Single">
-            <DataGrid.Columns>
-                <DataGridTextColumn Binding="{Binding Name}"
-                                    Header="{x:Static res:Strings.ColumnName}" />
-                <DataGridTextColumn Binding="{Binding Description}"
-                                    Header="{x:Static res:Strings.ColumnDescription}" />
-                <DataGridTextColumn Binding="{Binding ConnectionState}"
-                                    Header="{x:Static res:Strings.ColumnConnectionState}" />
-                <DataGridTextColumn Binding="{Binding Mode}"
-                                    Header="{x:Static res:Strings.ColumnMode}" />
-                <DataGridTextColumn Binding="{Binding Ipv4Address}"
-                                    Header="{x:Static res:Strings.ColumnIpv4Address}" />
-                <DataGridTextColumn Binding="{Binding SubnetMask}"
-                                    Header="{x:Static res:Strings.ColumnSubnetMask}" />
-                <DataGridTextColumn Binding="{Binding Gateway}"
-                                    Header="{x:Static res:Strings.ColumnGateway}" />
-                <DataGridTextColumn Binding="{Binding PrimaryDns}"
-                                    Header="{x:Static res:Strings.ColumnPrimaryDns}" />
-                <DataGridTextColumn Binding="{Binding SecondaryDns}"
-                                    Header="{x:Static res:Strings.ColumnSecondaryDns}" />
-                <DataGridTextColumn Binding="{Binding AdditionalIpv4Addresses}"
-                                    Header="{x:Static res:Strings.ColumnAdditionalIpv4Addresses}" />
-                <DataGridTextColumn Binding="{Binding MacAddress}"
-                                    Header="{x:Static res:Strings.ColumnMacAddress}" />
-                <DataGridTextColumn Binding="{Binding LinkSpeed}"
-                                    Header="{x:Static res:Strings.ColumnLinkSpeed}" />
-            </DataGrid.Columns>
-        </DataGrid>
+        <!-- Tab content: current configuration on the left, editable draft on the right. -->
+        <DataTemplate x:Key="AdapterTabContentTemplate" DataType="{x:Type vm:AdapterViewModel}">
+            <ScrollViewer VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled"
+                          Padding="0,12,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" MinWidth="330" />
+                        <ColumnDefinition Width="16" />
+                        <ColumnDefinition Width="*" MinWidth="330" />
+                    </Grid.ColumnDefinitions>
 
-        <TextBlock Grid.Row="2"
-                   Margin="0,8,0,0"
-                   Text="{Binding StatusText}" />
-    </Grid>
+                    <!-- Current configuration (read-only) -->
+                    <Border Grid.Column="0" Style="{StaticResource CardStyle}" VerticalAlignment="Top">
+                        <StackPanel DataContext="{Binding Details}">
+                            <TextBlock Style="{StaticResource SectionHeaderStyle}"
+                                       Text="{x:Static res:Strings.CurrentConfigurationHeader}" />
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="130" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldConnectionState}" />
+                                <TextBlock Grid.Row="0" Grid.Column="1"
+                                           Style="{StaticResource FieldValueStyle}"
+                                           Text="{Binding ConnectionState}" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldAdapterName}" />
+                                <TextBlock Grid.Row="1" Grid.Column="1"
+                                           Style="{StaticResource FieldValueStyle}"
+                                           Text="{Binding Name}" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldDescription}" />
+                                <TextBlock Grid.Row="2" Grid.Column="1"
+                                           Style="{StaticResource FieldValueStyle}"
+                                           Text="{Binding Description}" />
+
+                                <TextBlock Grid.Row="3" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldMacAddress}" />
+                                <TextBlock Grid.Row="3" Grid.Column="1"
+                                           Style="{StaticResource FieldValueStyle}"
+                                           Text="{Binding MacAddress}" />
+
+                                <TextBlock Grid.Row="4" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldConfigurationMode}" />
+                                <TextBlock Grid.Row="4" Grid.Column="1"
+                                           Style="{StaticResource FieldValueStyle}"
+                                           Text="{Binding ConfigurationMode}" />
+
+                                <TextBlock Grid.Row="5" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldIpv4Address}" />
+                                <TextBlock Grid.Row="5" Grid.Column="1"
+                                           Style="{StaticResource FieldValueStyle}"
+                                           Text="{Binding Ipv4Address}" />
+
+                                <TextBlock Grid.Row="6" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldSubnetMask}" />
+                                <TextBlock Grid.Row="6" Grid.Column="1"
+                                           Style="{StaticResource FieldValueStyle}"
+                                           Text="{Binding SubnetMask}" />
+
+                                <TextBlock Grid.Row="7" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldGateway}" />
+                                <TextBlock Grid.Row="7" Grid.Column="1"
+                                           Style="{StaticResource FieldValueStyle}"
+                                           Text="{Binding Gateway}" />
+
+                                <TextBlock Grid.Row="8" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldPrimaryDns}" />
+                                <TextBlock Grid.Row="8" Grid.Column="1"
+                                           Style="{StaticResource FieldValueStyle}"
+                                           Text="{Binding PrimaryDns}" />
+
+                                <TextBlock Grid.Row="9" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldSecondaryDns}" />
+                                <TextBlock Grid.Row="9" Grid.Column="1"
+                                           Style="{StaticResource FieldValueStyle}"
+                                           Text="{Binding SecondaryDns}" />
+
+                                <TextBlock Grid.Row="10" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldLinkSpeed}" />
+                                <TextBlock Grid.Row="10" Grid.Column="1"
+                                           Style="{StaticResource FieldValueStyle}"
+                                           Text="{Binding LinkSpeed}" />
+
+                                <TextBlock Grid.Row="11" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldAdditionalIpv4Addresses}"
+                                           Visibility="{Binding HasAdditionalIpv4Addresses,
+                                                                Converter={StaticResource BooleanToVisibility}}" />
+                                <ItemsControl Grid.Row="11" Grid.Column="1"
+                                              Margin="0,0,0,6"
+                                              ItemsSource="{Binding AdditionalIpv4AddressList}"
+                                              Visibility="{Binding HasAdditionalIpv4Addresses,
+                                                                   Converter={StaticResource BooleanToVisibility}}">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <TextBlock Style="{StaticResource FieldValueStyle}" Text="{Binding}" />
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Configuration draft (edit only; nothing is written to Windows) -->
+                    <Border Grid.Column="2" Style="{StaticResource CardStyle}" VerticalAlignment="Top">
+                        <StackPanel DataContext="{Binding Draft}">
+                            <TextBlock Style="{StaticResource SectionHeaderStyle}"
+                                       Text="{x:Static res:Strings.DraftConfigurationHeader}" />
+
+                            <TextBlock Margin="0,0,0,14"
+                                       Foreground="{StaticResource SecondaryTextBrush}"
+                                       Text="{x:Static res:Strings.DraftConfigurationHint}"
+                                       TextWrapping="Wrap" />
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" MinWidth="130" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                    <RowDefinition Height="Auto" />
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Grid.Row="0" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldIpv4Address}" />
+                                <TextBox x:Name="Ipv4AddressBox"
+                                         Grid.Row="0" Grid.Column="1"
+                                         Style="{StaticResource DraftTextBoxStyle}"
+                                         AutomationProperties.Name="{x:Static res:Strings.FieldIpv4Address}"
+                                         Text="{Binding Ipv4Address, UpdateSourceTrigger=PropertyChanged}" />
+                                <Button Grid.Row="0" Grid.Column="2"
+                                        Style="{StaticResource CopyButtonStyle}"
+                                        Command="{Binding CopyFieldCommand}"
+                                        CommandParameter="{x:Static vm:DraftField.Ipv4Address}"
+                                        Content="{x:Static res:Strings.CommandCopy}"
+                                        AutomationProperties.Name="{x:Static res:Strings.FieldIpv4Address}" />
+
+                                <TextBlock Grid.Row="1" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldSubnetMask}" />
+                                <TextBox Grid.Row="1" Grid.Column="1"
+                                         Style="{StaticResource DraftTextBoxStyle}"
+                                         AutomationProperties.Name="{x:Static res:Strings.FieldSubnetMask}"
+                                         Text="{Binding SubnetMask, UpdateSourceTrigger=PropertyChanged}" />
+                                <Button Grid.Row="1" Grid.Column="2"
+                                        Style="{StaticResource CopyButtonStyle}"
+                                        Command="{Binding CopyFieldCommand}"
+                                        CommandParameter="{x:Static vm:DraftField.SubnetMask}"
+                                        Content="{x:Static res:Strings.CommandCopy}"
+                                        AutomationProperties.Name="{x:Static res:Strings.FieldSubnetMask}" />
+
+                                <TextBlock Grid.Row="2" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldGateway}" />
+                                <TextBox Grid.Row="2" Grid.Column="1"
+                                         Style="{StaticResource DraftTextBoxStyle}"
+                                         AutomationProperties.Name="{x:Static res:Strings.FieldGateway}"
+                                         Text="{Binding Gateway, UpdateSourceTrigger=PropertyChanged}" />
+                                <Button Grid.Row="2" Grid.Column="2"
+                                        Style="{StaticResource CopyButtonStyle}"
+                                        Command="{Binding CopyFieldCommand}"
+                                        CommandParameter="{x:Static vm:DraftField.Gateway}"
+                                        Content="{x:Static res:Strings.CommandCopy}"
+                                        AutomationProperties.Name="{x:Static res:Strings.FieldGateway}" />
+
+                                <TextBlock Grid.Row="3" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldPrimaryDns}" />
+                                <TextBox Grid.Row="3" Grid.Column="1"
+                                         Style="{StaticResource DraftTextBoxStyle}"
+                                         AutomationProperties.Name="{x:Static res:Strings.FieldPrimaryDns}"
+                                         Text="{Binding PrimaryDns, UpdateSourceTrigger=PropertyChanged}" />
+                                <Button Grid.Row="3" Grid.Column="2"
+                                        Style="{StaticResource CopyButtonStyle}"
+                                        Command="{Binding CopyFieldCommand}"
+                                        CommandParameter="{x:Static vm:DraftField.PrimaryDns}"
+                                        Content="{x:Static res:Strings.CommandCopy}"
+                                        AutomationProperties.Name="{x:Static res:Strings.FieldPrimaryDns}" />
+
+                                <TextBlock Grid.Row="4" Grid.Column="0"
+                                           Style="{StaticResource FieldLabelStyle}"
+                                           Text="{x:Static res:Strings.FieldSecondaryDns}" />
+                                <TextBox Grid.Row="4" Grid.Column="1"
+                                         Style="{StaticResource DraftTextBoxStyle}"
+                                         AutomationProperties.Name="{x:Static res:Strings.FieldSecondaryDns}"
+                                         Text="{Binding SecondaryDns, UpdateSourceTrigger=PropertyChanged}" />
+                                <Button Grid.Row="4" Grid.Column="2"
+                                        Style="{StaticResource CopyButtonStyle}"
+                                        Command="{Binding CopyFieldCommand}"
+                                        CommandParameter="{x:Static vm:DraftField.SecondaryDns}"
+                                        Content="{x:Static res:Strings.CommandCopy}"
+                                        AutomationProperties.Name="{x:Static res:Strings.FieldSecondaryDns}" />
+                            </Grid>
+
+                            <Button Margin="0,6,0,0"
+                                    Padding="14,6"
+                                    HorizontalAlignment="Left"
+                                    Command="{Binding GetCurrentValuesCommand}"
+                                    Content="{x:Static res:Strings.CommandGetCurrentValues}" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </ScrollViewer>
+        </DataTemplate>
+    </Window.Resources>
+
+    <DockPanel LastChildFill="True">
+
+        <!-- Header -->
+        <Border DockPanel.Dock="Top"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="0,0,0,1"
+                Padding="20,12">
+            <StackPanel>
+                <TextBlock FontSize="20"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource PrimaryTextBrush}"
+                           Text="{Binding ApplicationName}" />
+                <TextBlock Foreground="{StaticResource SecondaryTextBrush}"
+                           Text="{Binding ApplicationTagline}" />
+            </StackPanel>
+        </Border>
+
+        <!-- Status bar -->
+        <Border DockPanel.Dock="Bottom"
+                Background="{StaticResource SurfaceBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
+                BorderThickness="0,1,0,0"
+                Padding="20,6">
+            <Grid DataContext="{Binding StatusBar}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0"
+                           Style="{StaticResource StatusBarTextStyle}"
+                           Text="{Binding ApplicationState}" />
+                <TextBlock Grid.Column="1"
+                           Style="{StaticResource StatusBarTextStyle}"
+                           Text="{Binding SelectedAdapterState}" />
+                <TextBlock Grid.Column="2"
+                           Style="{StaticResource StatusBarTextStyle}"
+                           Text="{Binding LastRefresh}" />
+                <TextBlock Grid.Column="3"
+                           Style="{StaticResource StatusBarTextStyle}"
+                           Text="{Binding AdministratorState}" />
+                <TextBlock Grid.Column="4"
+                           Margin="0"
+                           Style="{StaticResource StatusBarTextStyle}"
+                           Text="{Binding Version}" />
+            </Grid>
+        </Border>
+
+        <!-- Main content -->
+        <Grid Margin="20,12,20,12">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Inline refresh failure: never modal, never clears the last valid state. -->
+            <Border Grid.Row="0"
+                    Margin="0,0,0,12"
+                    Padding="12,8"
+                    Background="{StaticResource WarningBackgroundBrush}"
+                    BorderBrush="{StaticResource WarningBorderBrush}"
+                    BorderThickness="1"
+                    CornerRadius="4"
+                    Visibility="{Binding HasRefreshError, Converter={StaticResource BooleanToVisibility}}">
+                <TextBlock Foreground="{StaticResource PrimaryTextBrush}"
+                           Text="{Binding RefreshErrorText}"
+                           TextWrapping="Wrap" />
+            </Border>
+
+            <TabControl Grid.Row="1"
+                        Background="Transparent"
+                        BorderThickness="0"
+                        ItemsSource="{Binding Adapters}"
+                        SelectedItem="{Binding SelectedAdapter}"
+                        ItemTemplate="{StaticResource AdapterTabHeaderTemplate}"
+                        ContentTemplate="{StaticResource AdapterTabContentTemplate}"
+                        Visibility="{Binding IsContentVisible, Converter={StaticResource BooleanToVisibility}}" />
+
+            <!-- Loading -->
+            <StackPanel Grid.Row="1"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibility}}">
+                <ProgressBar Width="220"
+                             Height="4"
+                             IsIndeterminate="True" />
+                <TextBlock Margin="0,12,0,0"
+                           HorizontalAlignment="Center"
+                           Foreground="{StaticResource SecondaryTextBrush}"
+                           Text="{x:Static res:Strings.LoadingAdapters}" />
+            </StackPanel>
+
+            <!-- Empty -->
+            <StackPanel Grid.Row="1"
+                        MaxWidth="460"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Visibility="{Binding IsEmptyStateVisible, Converter={StaticResource BooleanToVisibility}}">
+                <TextBlock HorizontalAlignment="Center"
+                           FontSize="15"
+                           FontWeight="SemiBold"
+                           Foreground="{StaticResource PrimaryTextBrush}"
+                           Text="{x:Static res:Strings.EmptyStateTitle}"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap" />
+                <TextBlock Margin="0,8,0,0"
+                           Foreground="{StaticResource SecondaryTextBrush}"
+                           Text="{x:Static res:Strings.EmptyStateDescription}"
+                           TextAlignment="Center"
+                           TextWrapping="Wrap" />
+            </StackPanel>
+        </Grid>
+    </DockPanel>
 </Window>

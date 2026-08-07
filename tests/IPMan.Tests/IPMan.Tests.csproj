@@ -4,6 +4,8 @@
     <RootNamespace>IPMan.Tests</RootNamespace>
     <AssemblyName>IPMan.Tests</AssemblyName>
     <IsPackable>false</IsPackable>
+    <!-- Required to reference the WPF application project for ViewModel tests. -->
+    <UseWPF>true</UseWPF>
     <!--
       Behaviour-focused test names (Method_WhenCondition_ExpectedResult) are
       required by docs/07_Development/Sprint_04/04_TEST_REQUIREMENTS.md, so the
@@ -13,6 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\IPMan.App\IPMan.App.csproj" />
     <ProjectReference Include="..\..\src\IPMan.Application\IPMan.Application.csproj" />
     <ProjectReference Include="..\..\src\IPMan.Domain\IPMan.Domain.csproj" />
     <ProjectReference Include="..\..\src\IPMan.Infrastructure\IPMan.Infrastructure.csproj" />

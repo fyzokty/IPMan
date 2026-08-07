@@ -13,31 +13,37 @@ public static class Strings
     private static readonly ResourceManager Manager =
         new("IPMan.App.Resources.Strings", typeof(Strings).Assembly);
 
-    public static string DiagnosticViewHeader => Get(nameof(DiagnosticViewHeader));
+    public static string ApplicationTagline => Get(nameof(ApplicationTagline));
 
-    public static string ColumnName => Get(nameof(ColumnName));
+    public static string CurrentConfigurationHeader => Get(nameof(CurrentConfigurationHeader));
 
-    public static string ColumnDescription => Get(nameof(ColumnDescription));
+    public static string DraftConfigurationHeader => Get(nameof(DraftConfigurationHeader));
 
-    public static string ColumnConnectionState => Get(nameof(ColumnConnectionState));
+    public static string DraftConfigurationHint => Get(nameof(DraftConfigurationHint));
 
-    public static string ColumnMode => Get(nameof(ColumnMode));
+    public static string FieldConnectionState => Get(nameof(FieldConnectionState));
 
-    public static string ColumnIpv4Address => Get(nameof(ColumnIpv4Address));
+    public static string FieldAdapterName => Get(nameof(FieldAdapterName));
 
-    public static string ColumnSubnetMask => Get(nameof(ColumnSubnetMask));
+    public static string FieldDescription => Get(nameof(FieldDescription));
 
-    public static string ColumnGateway => Get(nameof(ColumnGateway));
+    public static string FieldMacAddress => Get(nameof(FieldMacAddress));
 
-    public static string ColumnPrimaryDns => Get(nameof(ColumnPrimaryDns));
+    public static string FieldIpv4Address => Get(nameof(FieldIpv4Address));
 
-    public static string ColumnSecondaryDns => Get(nameof(ColumnSecondaryDns));
+    public static string FieldSubnetMask => Get(nameof(FieldSubnetMask));
 
-    public static string ColumnAdditionalIpv4Addresses => Get(nameof(ColumnAdditionalIpv4Addresses));
+    public static string FieldGateway => Get(nameof(FieldGateway));
 
-    public static string ColumnMacAddress => Get(nameof(ColumnMacAddress));
+    public static string FieldPrimaryDns => Get(nameof(FieldPrimaryDns));
 
-    public static string ColumnLinkSpeed => Get(nameof(ColumnLinkSpeed));
+    public static string FieldSecondaryDns => Get(nameof(FieldSecondaryDns));
+
+    public static string FieldConfigurationMode => Get(nameof(FieldConfigurationMode));
+
+    public static string FieldLinkSpeed => Get(nameof(FieldLinkSpeed));
+
+    public static string FieldAdditionalIpv4Addresses => Get(nameof(FieldAdditionalIpv4Addresses));
 
     public static string ConnectionStateConnected => Get(nameof(ConnectionStateConnected));
 
@@ -51,20 +57,59 @@ public static class Strings
 
     public static string ValueUnavailable => Get(nameof(ValueUnavailable));
 
-    public static string StatusNotStarted => Get(nameof(StatusNotStarted));
+    public static string CommandGetCurrentValues => Get(nameof(CommandGetCurrentValues));
 
-    public static string FormatLinkSpeedMegabitsPerSecond(long megabitsPerSecond) =>
-        Format(Get("LinkSpeedMegabitsPerSecond"), megabitsPerSecond);
+    public static string CommandCopy => Get(nameof(CommandCopy));
 
-    public static string FormatStatusRefreshed(int adapterCount, string reason) =>
-        Format(Get("StatusRefreshed"), adapterCount, reason);
+    public static string StateLoading => Get(nameof(StateLoading));
 
-    public static string FormatStatusRefreshFailed(string reason) =>
-        Format(Get("StatusRefreshFailed"), reason);
+    public static string StateReady => Get(nameof(StateReady));
+
+    public static string StateError => Get(nameof(StateError));
+
+    public static string LoadingAdapters => Get(nameof(LoadingAdapters));
+
+    public static string EmptyStateTitle => Get(nameof(EmptyStateTitle));
+
+    public static string EmptyStateDescription => Get(nameof(EmptyStateDescription));
+
+    public static string RefreshFailedTitle => Get(nameof(RefreshFailedTitle));
+
+    public static string StatusAdministratorYes => Get(nameof(StatusAdministratorYes));
+
+    public static string StatusAdministratorNo => Get(nameof(StatusAdministratorNo));
+
+    public static string StatusNoSelectedAdapter => Get(nameof(StatusNoSelectedAdapter));
+
+    public static string StatusLastRefreshNever => Get(nameof(StatusLastRefreshNever));
+
+    public static string FormatLinkSpeedGigabits(string value, IFormatProvider formatProvider) =>
+        Format(Get("LinkSpeedGigabitsPerSecond"), formatProvider, value);
+
+    public static string FormatLinkSpeedMegabits(string value, IFormatProvider formatProvider) =>
+        Format(Get("LinkSpeedMegabitsPerSecond"), formatProvider, value);
+
+    public static string FormatLinkSpeedKilobits(string value, IFormatProvider formatProvider) =>
+        Format(Get("LinkSpeedKilobitsPerSecond"), formatProvider, value);
+
+    public static string FormatCopyFieldTooltip(string fieldLabel) =>
+        Format(Get("CommandCopyFieldTooltip"), CultureInfo.CurrentCulture, fieldLabel);
+
+    public static string FormatSelectedAdapter(string adapterName, string connectionState) =>
+        Format(Get("StatusSelectedAdapter"), CultureInfo.CurrentCulture, adapterName, connectionState);
+
+    public static string FormatLastRefresh(string time) =>
+        Format(Get("StatusLastRefresh"), CultureInfo.CurrentCulture, time);
+
+    public static string FormatVersion(string version) =>
+        Format(Get("StatusVersion"), CultureInfo.CurrentCulture, version);
 
     private static string Get(string name) =>
         Manager.GetString(name, CultureInfo.CurrentUICulture) ?? name;
 
-    private static string Format(string format, params object?[] arguments) =>
-        string.Format(CultureInfo.CurrentCulture, format, arguments);
+    private static string Format(
+        string format,
+        IFormatProvider formatProvider,
+        params object?[] arguments) =>
+        string.Format(formatProvider, format, arguments);
 }
