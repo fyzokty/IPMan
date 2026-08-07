@@ -59,6 +59,11 @@ public partial class App : System.Windows.Application
 
         services.AddSingleton<IAdapterProbe, SystemNetworkInterfaceProbe>();
         services.AddSingleton<INetworkAdapterReader, NetworkAdapterReader>();
+        services.AddSingleton(new Ipv4ConflictProbeOptions());
+        services.AddSingleton<IIpv4ConflictProbe, PingIpv4ConflictProbe>();
+        services.AddSingleton<IStaticIpv4ConfigurationValidator, StaticIpv4ConfigurationValidator>();
+        services.AddSingleton<IStaticIpv4ConfigurationComparer, StaticIpv4ConfigurationComparer>();
+        services.AddSingleton<INetworkConfigurationPreflightService, NetworkConfigurationPreflightService>();
         services.AddSingleton<INetworkChangeMonitor, NetworkChangeMonitor>();
         services.AddSingleton(new AdapterRefreshCoordinatorOptions());
         services.AddSingleton<IAdapterRefreshCoordinator, AdapterRefreshCoordinator>();

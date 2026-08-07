@@ -127,7 +127,7 @@ public sealed class NetworkAdapterReaderTests
     }
 
     [Fact]
-    public async Task GetAdaptersAsync_WhenWindowsReadFails_PropagatesFailure()
+    public async Task GetAdaptersAsync_WhenWindowsReadFails_PropagatesExpectedOperationalFailure()
     {
         NetworkAdapterReader reader = CreateReader(
             new FakeAdapterProbe().FailWith(new NetworkInformationException()));

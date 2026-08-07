@@ -1,9 +1,8 @@
 namespace IPMan.Domain.Networking;
 
 /// <summary>
-/// A normalized user-requested static IPv4 configuration.
-/// Validation/normalization is performed before this model reaches the
-/// infrastructure mutation layer.
+/// A user-requested static IPv4 configuration. Text may still require
+/// validation and normalization; validated consumers receive a canonical copy.
 /// </summary>
 public sealed record StaticIpv4Configuration(
     string Ipv4Address,
