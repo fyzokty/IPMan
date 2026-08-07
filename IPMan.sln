@@ -1,0 +1,50 @@
+﻿Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.8.12023.21 stable
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IPMan.Domain", "src\IPMan.Domain\IPMan.Domain.csproj", "{EBABF07A-503B-45F5-BF55-263117545890}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IPMan.Application", "src\IPMan.Application\IPMan.Application.csproj", "{FFB0E4A0-61D4-456D-9617-81933E8704CB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IPMan.Infrastructure", "src\IPMan.Infrastructure\IPMan.Infrastructure.csproj", "{0557D05F-7C14-4A30-ACCF-06152BF4416E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IPMan.App", "src\IPMan.App\IPMan.App.csproj", "{063BBE0D-4BE6-4412-ACFC-1FB875BCA802}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{BC9EE888-5C5D-401A-90C3-59E005D99C21}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IPMan.Tests", "tests\IPMan.Tests\IPMan.Tests.csproj", "{63B71155-3184-40F5-A273-0CA4CD09D4C5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{EBABF07A-503B-45F5-BF55-263117545890}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EBABF07A-503B-45F5-BF55-263117545890}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EBABF07A-503B-45F5-BF55-263117545890}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EBABF07A-503B-45F5-BF55-263117545890}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FFB0E4A0-61D4-456D-9617-81933E8704CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFB0E4A0-61D4-456D-9617-81933E8704CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFB0E4A0-61D4-456D-9617-81933E8704CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFB0E4A0-61D4-456D-9617-81933E8704CB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0557D05F-7C14-4A30-ACCF-06152BF4416E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0557D05F-7C14-4A30-ACCF-06152BF4416E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0557D05F-7C14-4A30-ACCF-06152BF4416E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0557D05F-7C14-4A30-ACCF-06152BF4416E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{063BBE0D-4BE6-4412-ACFC-1FB875BCA802}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{063BBE0D-4BE6-4412-ACFC-1FB875BCA802}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{063BBE0D-4BE6-4412-ACFC-1FB875BCA802}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{063BBE0D-4BE6-4412-ACFC-1FB875BCA802}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63B71155-3184-40F5-A273-0CA4CD09D4C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63B71155-3184-40F5-A273-0CA4CD09D4C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63B71155-3184-40F5-A273-0CA4CD09D4C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63B71155-3184-40F5-A273-0CA4CD09D4C5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{63B71155-3184-40F5-A273-0CA4CD09D4C5} = {BC9EE888-5C5D-401A-90C3-59E005D99C21}
+	EndGlobalSection
+EndGlobal

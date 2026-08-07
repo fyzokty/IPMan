@@ -1,0 +1,62 @@
+<Window x:Class="IPMan.App.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:res="clr-namespace:IPMan.App.Resources"
+        Title="{Binding ApplicationName}"
+        Width="1100"
+        Height="700"
+        MinWidth="900"
+        MinHeight="600"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="12">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Margin="0,0,0,8"
+                   FontWeight="SemiBold"
+                   Text="{Binding DiagnosticViewHeader}" />
+
+        <DataGrid Grid.Row="1"
+                  AutoGenerateColumns="False"
+                  CanUserAddRows="False"
+                  CanUserDeleteRows="False"
+                  IsReadOnly="True"
+                  ItemsSource="{Binding Adapters}"
+                  SelectionMode="Single">
+            <DataGrid.Columns>
+                <DataGridTextColumn Binding="{Binding Name}"
+                                    Header="{x:Static res:Strings.ColumnName}" />
+                <DataGridTextColumn Binding="{Binding Description}"
+                                    Header="{x:Static res:Strings.ColumnDescription}" />
+                <DataGridTextColumn Binding="{Binding ConnectionState}"
+                                    Header="{x:Static res:Strings.ColumnConnectionState}" />
+                <DataGridTextColumn Binding="{Binding Mode}"
+                                    Header="{x:Static res:Strings.ColumnMode}" />
+                <DataGridTextColumn Binding="{Binding Ipv4Address}"
+                                    Header="{x:Static res:Strings.ColumnIpv4Address}" />
+                <DataGridTextColumn Binding="{Binding SubnetMask}"
+                                    Header="{x:Static res:Strings.ColumnSubnetMask}" />
+                <DataGridTextColumn Binding="{Binding Gateway}"
+                                    Header="{x:Static res:Strings.ColumnGateway}" />
+                <DataGridTextColumn Binding="{Binding PrimaryDns}"
+                                    Header="{x:Static res:Strings.ColumnPrimaryDns}" />
+                <DataGridTextColumn Binding="{Binding SecondaryDns}"
+                                    Header="{x:Static res:Strings.ColumnSecondaryDns}" />
+                <DataGridTextColumn Binding="{Binding AdditionalIpv4Addresses}"
+                                    Header="{x:Static res:Strings.ColumnAdditionalIpv4Addresses}" />
+                <DataGridTextColumn Binding="{Binding MacAddress}"
+                                    Header="{x:Static res:Strings.ColumnMacAddress}" />
+                <DataGridTextColumn Binding="{Binding LinkSpeed}"
+                                    Header="{x:Static res:Strings.ColumnLinkSpeed}" />
+            </DataGrid.Columns>
+        </DataGrid>
+
+        <TextBlock Grid.Row="2"
+                   Margin="0,8,0,0"
+                   Text="{Binding StatusText}" />
+    </Grid>
+</Window>
