@@ -252,11 +252,30 @@ No new package was introduced for production code.
 
 ## Diff for architect review
 
-`git diff --stat` could not be produced: `C:\Development\IPMan` is not a git
-working tree (`git rev-parse` reports "not a repository"), so there is no baseline
-to diff against. The "Files changed" section above lists every added and modified
-file instead. A `git init` plus baseline commit can be made on request, after
-which real diffs will be available for the next review round.
+The repository was not under version control while Sprint 04 was implemented, so
+no incremental diff of the sprint exists. It has since been initialized and the
+reviewed state captured as a baseline commit:
+
+- branch: `main`
+- commit: `4162b8e` — *Baseline: Sprint 04 adapter discovery (post-review)*
+- contents: 142 files, 8067 insertions (61 files / 3723 lines under `src` and
+  `tests`; the remainder is the approved documentation set)
+- working tree clean; `bin/`, `obj/` and `.vs/` are excluded by the existing
+  `.gitignore`
+
+Review the code with:
+
+```bash
+git show --stat HEAD
+```
+
+```bash
+git show HEAD -- src tests
+```
+
+From the next review round onward, `git diff --stat` against this baseline gives
+a precise change set. The "Files changed" section above remains the authoritative
+list of what Sprint 04 added and modified relative to the pre-sprint state.
 
 ## Do not continue
 
