@@ -1,19 +1,11 @@
-# IPMan Sprint 05 — Production Main Window UI Foundation
+# IPMan Sprint 07 — Static IPv4 Mutation + Rollback Capture
 
-This is an implementation-guidance package for Claude Code.
+This package contains architecture and implementation guidance for Codex.
 
-It contains no production C# or XAML code.
+It contains no production C# or XAML implementation.
 
-Sprint 05 replaces the temporary diagnostic presentation with the first
-production-quality main-window shell while remaining strictly read-only with
-respect to Windows network configuration.
+Sprint 07 is the first sprint allowed to mutate Windows network configuration,
+but only through a non-UI application service and only after all safety gates
+pass.
 
-Copy:
-
-`docs/07_Development/Sprint_05/`
-
-into the existing repository, then instruct Claude Code to execute
-`00_CLAUDE_TASK.md`.
-
-Do not begin network mutation, profiles, settings persistence or system tray
-implementation in this sprint.
+The production `Uygula` button remains inactive/not wired until a later sprint.

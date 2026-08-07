@@ -17,6 +17,8 @@ public sealed class NetworkAdapterMapperTests
 
     private static readonly string[] SingleDnsServer = { "1.1.1.1" };
 
+    private static readonly string[] SingleMappedGateway = { "192.168.9.254" };
+
     private static readonly byte[] SamplePhysicalAddress = { 0x0A, 0x1B, 0x2C, 0x3D, 0x4E, 0x5F };
 
     [Fact]
@@ -232,6 +234,19 @@ public sealed class NetworkAdapterMapperTests
             TestData.Adapter(gatewayAddresses: Ipv6ThenIpv4Gateways));
 
         Assert.Equal("192.168.9.254", snapshot.Gateway);
+        Assert.Equal(SingleMappedGateway, snapshot.Ipv4Gateways);
+    }
+
+    [Fact]
+    public void Map_WhenMultipleIpv4GatewaysExist_PreservesAllInWindowsOrder()
+    {
+        string[] gateways = { "192.168.1.1", "10.0.0.1" };
+
+        NetworkAdapterSnapshot snapshot = NetworkAdapterMapper.Map(
+            TestData.Adapter(gatewayAddresses: gateways));
+
+        Assert.Equal(gateways, snapshot.Ipv4Gateways);
+        Assert.Equal("192.168.1.1", snapshot.Gateway);
     }
 
     [Fact]
@@ -242,6 +257,7 @@ public sealed class NetworkAdapterMapperTests
 
         Assert.Equal("1.1.1.1", snapshot.PrimaryDns);
         Assert.Equal("9.9.9.9", snapshot.SecondaryDns);
+        Assert.Equal(ThreeDnsServers, snapshot.Ipv4DnsServers);
     }
 
     [Fact]
@@ -252,6 +268,7 @@ public sealed class NetworkAdapterMapperTests
 
         Assert.Equal("1.1.1.1", snapshot.PrimaryDns);
         Assert.Null(snapshot.SecondaryDns);
+        Assert.Equal(SingleDnsServer, snapshot.Ipv4DnsServers);
     }
 
     [Fact]
@@ -262,6 +279,7 @@ public sealed class NetworkAdapterMapperTests
 
         Assert.Null(snapshot.PrimaryDns);
         Assert.Null(snapshot.SecondaryDns);
+        Assert.Empty(snapshot.Ipv4DnsServers);
     }
 
     [Fact]
@@ -272,6 +290,7 @@ public sealed class NetworkAdapterMapperTests
 
         Assert.Equal("1.1.1.1", snapshot.PrimaryDns);
         Assert.Null(snapshot.SecondaryDns);
+        Assert.Equal(SingleDnsServer, snapshot.Ipv4DnsServers);
     }
 
     [Fact]

@@ -6,10 +6,6 @@ public interface INetworkAdapterConfigurator
 {
     Task<NetworkApplyResult> ApplyStaticAsync(
         NetworkAdapterId adapterId,
-        StaticIpv4Configuration configuration,
-        CancellationToken cancellationToken);
-
-    Task<NetworkApplyResult> EnableDhcpAsync(
-        NetworkAdapterId adapterId,
+        StaticIpv4MutationPlan mutationPlan,
         CancellationToken cancellationToken);
 }

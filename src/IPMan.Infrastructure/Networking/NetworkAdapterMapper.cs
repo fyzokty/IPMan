@@ -29,6 +29,8 @@ public static class NetworkAdapterMapper
         ArgumentNullException.ThrowIfNull(adapter);
 
         AdapterUnicastAddressReadModel? primaryIpv4 = SelectPrimaryIpv4(adapter.UnicastAddresses);
+        Ipv4AddressValueCollection gateways = MapAllIpv4Gateways(adapter.GatewayAddresses);
+        Ipv4AddressValueCollection dnsServers = MapAllIpv4DnsServers(adapter.DnsAddresses);
 
         return new NetworkAdapterSnapshot(
             new NetworkAdapterId(adapter.Id),
@@ -40,10 +42,12 @@ public static class NetworkAdapterMapper
             MapConfigurationMode(adapter.IsDhcpEnabled),
             primaryIpv4?.Address,
             MapSubnetMask(primaryIpv4?.Ipv4Mask),
-            SelectGateway(adapter.GatewayAddresses),
-            SelectDns(adapter.DnsAddresses, 0),
-            SelectDns(adapter.DnsAddresses, 1),
-            MapAllIpv4Addresses(adapter.UnicastAddresses));
+            gateways.Count > 0 ? gateways[0] : null,
+            dnsServers.Count > 0 ? dnsServers[0] : null,
+            dnsServers.Count > 1 ? dnsServers[1] : null,
+            MapAllIpv4Addresses(adapter.UnicastAddresses),
+            gateways,
+            dnsServers);
     }
 
     /// <summary>
@@ -61,6 +65,30 @@ public static class NetworkAdapterMapper
             .Select(address => new Ipv4AddressAssignment(
                 address.Address,
                 MapSubnetMask(address.Ipv4Mask))));
+    }
+
+    /// <summary>Preserves every usable IPv4 default gateway in reported order.</summary>
+    public static Ipv4AddressValueCollection MapAllIpv4Gateways(
+        IReadOnlyList<string> gatewayAddresses)
+    {
+        ArgumentNullException.ThrowIfNull(gatewayAddresses);
+
+        return new Ipv4AddressValueCollection(gatewayAddresses
+            .Select(candidate => TryParseIpv4(candidate, out IPAddress? parsed) ? parsed : null)
+            .Where(parsed => parsed is not null && !parsed.Equals(IPAddress.Any))
+            .Select(parsed => parsed!.ToString()));
+    }
+
+    /// <summary>Preserves every IPv4 DNS server in reported order.</summary>
+    public static Ipv4AddressValueCollection MapAllIpv4DnsServers(
+        IReadOnlyList<string> dnsAddresses)
+    {
+        ArgumentNullException.ThrowIfNull(dnsAddresses);
+
+        return new Ipv4AddressValueCollection(dnsAddresses
+            .Select(candidate => TryParseIpv4(candidate, out IPAddress? parsed) ? parsed : null)
+            .Where(parsed => parsed is not null)
+            .Select(parsed => parsed!.ToString()));
     }
 
     /// <summary>
@@ -114,33 +142,6 @@ public static class NetworkAdapterMapper
 
         // Windows reports 0.0.0.0 when no meaningful IPv4 mask exists.
         return string.Equals(mask, UnspecifiedIpv4, StringComparison.Ordinal) ? null : mask;
-    }
-
-    private static string? SelectGateway(IReadOnlyList<string> gatewayAddresses)
-    {
-        ArgumentNullException.ThrowIfNull(gatewayAddresses);
-
-        foreach (string candidate in gatewayAddresses)
-        {
-            if (TryParseIpv4(candidate, out IPAddress? parsed) &&
-                !parsed.Equals(IPAddress.Any))
-            {
-                return parsed.ToString();
-            }
-        }
-
-        return null;
-    }
-
-    private static string? SelectDns(IReadOnlyList<string> dnsAddresses, int index)
-    {
-        ArgumentNullException.ThrowIfNull(dnsAddresses);
-
-        List<string> ipv4Servers = dnsAddresses
-            .Where(candidate => TryParseIpv4(candidate, out _))
-            .ToList();
-
-        return index < ipv4Servers.Count ? ipv4Servers[index] : null;
     }
 
     private static bool IsRoutableIpv4(AdapterUnicastAddressReadModel address)

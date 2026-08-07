@@ -60,7 +60,9 @@ internal static class TestData
         string? subnetMask = "255.255.255.0",
         string? gateway = "192.168.1.1",
         string? primaryDns = "192.168.1.1",
-        string? secondaryDns = null) =>
+        string? secondaryDns = null,
+        Ipv4AddressValueCollection? ipv4Gateways = null,
+        Ipv4AddressValueCollection? ipv4DnsServers = null) =>
         new(
             new NetworkAdapterId(id),
             name,
@@ -74,10 +76,15 @@ internal static class TestData
             gateway,
             primaryDns,
             secondaryDns,
-            ipv4Addresses ?? DefaultIpv4Addresses(ipv4Address));
+            ipv4Addresses ?? DefaultIpv4Addresses(ipv4Address),
+            ipv4Gateways ?? Values(gateway),
+            ipv4DnsServers ?? Values(primaryDns, secondaryDns));
 
     private static Ipv4AddressCollection DefaultIpv4Addresses(string? ipv4Address) =>
         ipv4Address is null
             ? Ipv4AddressCollection.Empty
             : new Ipv4AddressCollection(new[] { new Ipv4AddressAssignment(ipv4Address, "255.255.255.0") });
+
+    private static Ipv4AddressValueCollection Values(params string?[] values) =>
+        new(values.Where(value => value is not null).Select(value => value!));
 }

@@ -1,3 +1,4 @@
+using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using IPMan.App.Presentation;
@@ -64,6 +65,19 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IStaticIpv4ConfigurationValidator, StaticIpv4ConfigurationValidator>();
         services.AddSingleton<IStaticIpv4ConfigurationComparer, StaticIpv4ConfigurationComparer>();
         services.AddSingleton<INetworkConfigurationPreflightService, NetworkConfigurationPreflightService>();
+        services.AddSingleton(new RollbackSnapshotRepositoryOptions
+        {
+            BackupDirectory = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "IPMan",
+                "Backup")
+        });
+        services.AddSingleton<IRollbackSnapshotRepository, JsonRollbackSnapshotRepository>();
+        services.AddSingleton<INetworkAdapterRecoveryReader, WmiNetworkAdapterRecoveryReader>();
+        services.AddSingleton<INetworkMutationCoordinator, NetworkMutationCoordinator>();
+        services.AddSingleton<INetworkAdapterConfigurator, WmiNetworkAdapterConfigurator>();
+        services.AddSingleton(new StaticIpv4ApplyOptions());
+        services.AddSingleton<IStaticIpv4ApplyService, StaticIpv4ApplyService>();
         services.AddSingleton<INetworkChangeMonitor, NetworkChangeMonitor>();
         services.AddSingleton(new AdapterRefreshCoordinatorOptions());
         services.AddSingleton<IAdapterRefreshCoordinator, AdapterRefreshCoordinator>();
