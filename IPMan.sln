@@ -14,6 +14,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{BC9EE888
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IPMan.Tests", "tests\IPMan.Tests\IPMan.Tests.csproj", "{63B71155-3184-40F5-A273-0CA4CD09D4C5}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IPMan.IntegrationTests", "tests\IPMan.IntegrationTests\IPMan.IntegrationTests.csproj", "{F0AB8C34-57A5-4B7E-A61D-CC94E785C8B1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,11 +42,16 @@ Global
 		{63B71155-3184-40F5-A273-0CA4CD09D4C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63B71155-3184-40F5-A273-0CA4CD09D4C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63B71155-3184-40F5-A273-0CA4CD09D4C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F0AB8C34-57A5-4B7E-A61D-CC94E785C8B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0AB8C34-57A5-4B7E-A61D-CC94E785C8B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0AB8C34-57A5-4B7E-A61D-CC94E785C8B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0AB8C34-57A5-4B7E-A61D-CC94E785C8B1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{63B71155-3184-40F5-A273-0CA4CD09D4C5} = {BC9EE888-5C5D-401A-90C3-59E005D99C21}
+		{F0AB8C34-57A5-4B7E-A61D-CC94E785C8B1} = {BC9EE888-5C5D-401A-90C3-59E005D99C21}
 	EndGlobalSection
 EndGlobal

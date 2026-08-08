@@ -1,11 +1,19 @@
-# IPMan Sprint 07 — Static IPv4 Mutation + Rollback Capture
+# IPMan Sprint 08 — Isolated Windows Mutation Validation
 
-This package contains architecture and implementation guidance for Codex.
+This package contains Codex implementation and validation guidance.
 
-It contains no production C# or XAML implementation.
+Sprint 08 is an integration-safety sprint.
 
-Sprint 07 is the first sprint allowed to mutate Windows network configuration,
-but only through a non-UI application service and only after all safety gates
-pass.
+It does not wire the production Apply button.
 
-The production `Uygula` button remains inactive/not wired until a later sprint.
+Primary goals:
+
+- create a deliberately opt-in destructive Windows integration harness,
+- validate Sprint 07 WMI behavior on a disposable VM or isolated adapter,
+- capture before/after evidence,
+- verify rollback snapshot fidelity,
+- prove IPv6 settings are not unintentionally damaged,
+- inspect DNS mode / DNS-over-HTTPS related state before and after mutation,
+- define the release gate before production UI mutation is enabled.
+
+No normal `dotnet test` execution may mutate a real network adapter.

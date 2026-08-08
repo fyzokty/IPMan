@@ -1,15 +1,16 @@
-# Sprint 07 Guidance Changelog
+# Sprint 08 Guidance Changelog
 
-## 1.0.0 - 2026-08-07
+## 1.0.0 - 2026-08-08
 
-Added detailed Codex implementation guidance for:
-- full IPv4 gateway/DNS state preservation,
-- safety blocks for unmodelled topology,
-- rollback capture and atomic persistence,
-- WMI static IPv4 mutation,
-- partial failure reporting,
-- bounded post-mutation verification,
-- mutation serialization,
-- non-destructive automated test requirements.
+Added detailed Codex guidance for:
 
-No production C# or XAML implementation is included.
+- opt-in destructive Windows integration harness,
+- exact adapter identity safety,
+- isolated static mutation scenarios,
+- IPv6 non-interference evidence,
+- DNS source / richer DNS / DoH observation,
+- rollback fidelity verification,
+- machine-readable test evidence,
+- explicit production Apply release gate.
+
+No production Apply UI wiring is included.

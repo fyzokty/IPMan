@@ -106,7 +106,12 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
                 new Dictionary<string, object?>
                 {
                     ["DefaultIPGateway"] = new[] { gatewayValue },
-                    ["GatewayCostMetric"] = new ushort[] { 1 }
+                    ["GatewayCostMetric"] = new[]
+                    {
+                        plan.GatewayMode == GatewayMutationMode.Set
+                            ? plan.GatewayMetric!.Value
+                            : (ushort)1
+                    }
                 });
         }
 
@@ -120,19 +125,28 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
                 gateway.TechnicalMessage);
         }
 
-        string[] dnsServers = new[] { configuration.PrimaryDns, configuration.SecondaryDns }
-            .Where(value => value is not null)
-            .Select(value => value!)
-            .ToArray();
+        StepExecution dns;
 
-        // Microsoft documents omission of all input parameters as the way to
-        // return from static DNS servers to DHCP/automatic source semantics.
-        StepExecution dns = Invoke(
-            session,
-            SetDnsMethod,
-            dnsServers.Length == 0
-                ? null
-                : new Dictionary<string, object?> { ["DNSServerSearchOrder"] = dnsServers });
+        if (plan.DnsMode == DnsMutationMode.LeaveUnchanged)
+        {
+            dns = new StepExecution(NetworkMutationStepResult.NotRequired());
+        }
+        else
+        {
+            string[] dnsServers = new[] { configuration.PrimaryDns, configuration.SecondaryDns }
+                .Where(value => value is not null)
+                .Select(value => value!)
+                .ToArray();
+
+            // Microsoft documents omission of all input parameters as the way
+            // to return from static DNS to automatic source semantics.
+            dns = Invoke(
+                session,
+                SetDnsMethod,
+                plan.DnsMode == DnsMutationMode.ClearToAutomatic
+                    ? null
+                    : new Dictionary<string, object?> { ["DNSServerSearchOrder"] = dnsServers });
+        }
 
         return new NetworkApplyResult(
             ipv4.Result,
@@ -221,9 +235,26 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
 
         bool hasGateway = plan.Configuration.Gateway is not null;
 
-        if ((plan.GatewayMode == GatewayMutationMode.Set) != hasGateway)
+        bool gatewayPlanIsValid = plan.GatewayMode switch
+        {
+            GatewayMutationMode.Set => hasGateway &&
+                plan.GatewayMetric is >= 1 and <= 9999,
+            GatewayMutationMode.Clear or GatewayMutationMode.LeaveAbsent =>
+                !hasGateway && plan.GatewayMetric is null,
+            _ => false
+        };
+
+        if (!gatewayPlanIsValid)
         {
             throw new ArgumentException("Gateway mutation mode does not match the configuration.", nameof(plan));
+        }
+
+        bool hasDns = plan.Configuration.PrimaryDns is not null;
+
+        if ((plan.DnsMode == DnsMutationMode.Set && !hasDns) ||
+            (plan.DnsMode == DnsMutationMode.ClearToAutomatic && hasDns))
+        {
+            throw new ArgumentException("DNS mutation mode does not match the configuration.", nameof(plan));
         }
     }
 

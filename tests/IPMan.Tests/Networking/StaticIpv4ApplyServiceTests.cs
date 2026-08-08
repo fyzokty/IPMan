@@ -22,6 +22,10 @@ public sealed class StaticIpv4ApplyServiceTests
 
     private static readonly string[] DriftDns = { "9.9.9.9" };
 
+    private static readonly string[] MatchingManualDns = { "1.1.1.1", "8.8.8.8" };
+
+    private static readonly string[] SingleManualDns = { "1.1.1.1" };
+
     [Theory]
     [InlineData(NetworkConfigurationPreflightStatus.ValidationFailed, StaticIpv4ApplyStatus.ValidationFailed)]
     [InlineData(NetworkConfigurationPreflightStatus.AdapterUnavailable, StaticIpv4ApplyStatus.AdapterUnavailable)]
@@ -43,13 +47,77 @@ public sealed class StaticIpv4ApplyServiceTests
     [Fact]
     public async Task ApplyAsync_WhenNoChange_DoesNotCaptureRollbackOrMutate()
     {
-        using ApplyContext context = CreateContext(preflightStatus: NetworkConfigurationPreflightStatus.NoChange);
+        NetworkAdapterSnapshot current = Verified();
+        using ApplyContext context = CreateContext(
+            current,
+            preflightStatus: NetworkConfigurationPreflightStatus.NoChange,
+            recoveryResult: NetworkAdapterRecoveryReadResult.Success(Recovery(current)));
 
         StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.NoChange, result.Status);
         Assert.Empty(context.Rollback.SavedSnapshots);
         Assert.Equal(0, context.Configurator.ApplyCount);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenEffectiveDnsMatchesButSourceDoesNot_StillMutatesDnsSource()
+    {
+        StaticIpv4Configuration desired = new(
+            "192.168.1.60",
+            "255.255.255.0",
+            "192.168.1.1",
+            "1.1.1.1",
+            null);
+        NetworkAdapterSnapshot current = TestData.Snapshot(
+            id: AdapterId.Value,
+            mode: NetworkConfigurationMode.Static,
+            ipv4Address: desired.Ipv4Address,
+            subnetMask: desired.SubnetMask,
+            gateway: desired.Gateway,
+            primaryDns: desired.PrimaryDns,
+            ipv4DnsServers: new Ipv4AddressValueCollection(SingleManualDns));
+        using ApplyContext context = CreateContext(
+            current,
+            desired,
+            preflightStatus: NetworkConfigurationPreflightStatus.NoChange,
+            recoveryResult: NetworkAdapterRecoveryReadResult.Success(
+                Recovery(current, DnsConfigurationMode.Automatic)),
+            verificationSnapshots: new[] { current });
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(
+            Request(desired),
+            CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
+        Assert.Equal(DnsMutationMode.Set, Assert.Single(context.Configurator.Plans).DnsMode);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenEffectiveValuesMatchButModeIsDhcp_StillMutatesToStatic()
+    {
+        StaticIpv4Configuration desired = Desired();
+        NetworkAdapterSnapshot current = TestData.Snapshot(
+            id: AdapterId.Value,
+            mode: NetworkConfigurationMode.Dhcp,
+            ipv4Address: desired.Ipv4Address,
+            subnetMask: desired.SubnetMask,
+            gateway: desired.Gateway,
+            primaryDns: null,
+            secondaryDns: null,
+            ipv4DnsServers: Ipv4AddressValueCollection.Empty);
+        using ApplyContext context = CreateContext(
+            current,
+            desired,
+            preflightStatus: NetworkConfigurationPreflightStatus.NoChange,
+            recoveryResult: NetworkAdapterRecoveryReadResult.Success(Recovery(current)));
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(
+            Request(desired),
+            CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
+        Assert.Equal(NetworkConfigurationMode.Dhcp, Assert.Single(context.Configurator.Plans).PreviousMode);
     }
 
     [Fact]
@@ -334,7 +402,139 @@ public sealed class StaticIpv4ApplyServiceTests
             CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
-        Assert.Equal(GatewayMutationMode.Clear, Assert.Single(context.Configurator.Plans).GatewayMode);
+        StaticIpv4MutationPlan plan = Assert.Single(context.Configurator.Plans);
+        Assert.Equal(GatewayMutationMode.Clear, plan.GatewayMode);
+        Assert.Null(plan.GatewayMetric);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenOnlyStaticIpv4Changes_PreservesExistingGatewayMetric()
+    {
+        NetworkAdapterSnapshot current = TestData.Snapshot(
+            id: AdapterId.Value,
+            mode: NetworkConfigurationMode.Static,
+            ipv4Address: "192.168.1.50",
+            subnetMask: "255.255.255.0",
+            gateway: "192.168.1.1");
+        using ApplyContext context = CreateContext(
+            current,
+            recoveryResult: NetworkAdapterRecoveryReadResult.Success(
+                Recovery(current, gatewayMetric: 25)));
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(
+            Request(),
+            CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
+        Assert.Equal((ushort)25, Assert.Single(context.Configurator.Plans).GatewayMetric);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenOnlyDnsChanges_PreservesExistingGatewayMetric()
+    {
+        StaticIpv4Configuration desired = new(
+            "192.168.1.60",
+            "255.255.255.0",
+            "192.168.1.1",
+            "1.1.1.1",
+            null);
+        NetworkAdapterSnapshot current = TestData.Snapshot(
+            id: AdapterId.Value,
+            mode: NetworkConfigurationMode.Static,
+            ipv4Address: desired.Ipv4Address,
+            subnetMask: desired.SubnetMask,
+            gateway: desired.Gateway,
+            ipv4DnsServers: Ipv4AddressValueCollection.Empty);
+        using ApplyContext context = CreateContext(
+            current,
+            desired,
+            recoveryResult: NetworkAdapterRecoveryReadResult.Success(
+                Recovery(current, gatewayMetric: 25)));
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(
+            Request(desired),
+            CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
+        StaticIpv4MutationPlan plan = Assert.Single(context.Configurator.Plans);
+        Assert.Equal((ushort)25, plan.GatewayMetric);
+        Assert.Equal(DnsMutationMode.Set, plan.DnsMode);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenGatewayChanges_UsesApprovedDefaultMetric()
+    {
+        StaticIpv4Configuration desired = Desired(gateway: "192.168.1.254");
+        NetworkAdapterSnapshot current = TestData.Snapshot(
+            id: AdapterId.Value,
+            mode: NetworkConfigurationMode.Static,
+            ipv4Address: "192.168.1.50",
+            subnetMask: "255.255.255.0",
+            gateway: "192.168.1.1");
+        NetworkAdapterSnapshot verified = Verified(
+            gateway: desired.Gateway,
+            gateways: new Ipv4AddressValueCollection(new[] { desired.Gateway! }));
+        using ApplyContext context = CreateContext(
+            current,
+            desired,
+            recoveryResult: NetworkAdapterRecoveryReadResult.Success(Recovery(current)),
+            verificationSnapshots: new[] { verified });
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(
+            Request(desired),
+            CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
+        Assert.Equal((ushort)1, Assert.Single(context.Configurator.Plans).GatewayMetric);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenUnchangedGatewayMetricIsUnavailable_FailsClosed()
+    {
+        NetworkAdapterSnapshot current = TestData.Snapshot(
+            id: AdapterId.Value,
+            mode: NetworkConfigurationMode.Static,
+            ipv4Address: "192.168.1.50",
+            subnetMask: "255.255.255.0",
+            gateway: "192.168.1.1");
+        NetworkAdapterRecoverySnapshot recovery = new(
+            current,
+            DnsConfigurationMode.Automatic,
+            Array.Empty<string>(),
+            new[] { new Ipv4GatewayRecoveryState("192.168.1.1", null) });
+        using ApplyContext context = CreateContext(
+            current,
+            recoveryResult: NetworkAdapterRecoveryReadResult.Success(recovery));
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(
+            Request(),
+            CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.RecoveryStateUnavailable, result.Status);
+        Assert.Empty(context.Configurator.Plans);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenPostMutationGatewayMetricDoesNotMatchPlan_FailsVerification()
+    {
+        NetworkAdapterSnapshot current = TestData.Snapshot(
+            id: AdapterId.Value,
+            mode: NetworkConfigurationMode.Static,
+            ipv4Address: "192.168.1.50",
+            subnetMask: "255.255.255.0",
+            gateway: "192.168.1.1");
+        using ApplyContext context = CreateContext(
+            current,
+            recoveryResult: NetworkAdapterRecoveryReadResult.Success(
+                Recovery(current, gatewayMetric: 25)),
+            verificationAttempts: 1,
+            verificationGatewayMetric: 1);
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(
+            Request(),
+            CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.VerificationFailed, result.Status);
     }
 
     [Fact]
@@ -356,7 +556,80 @@ public sealed class StaticIpv4ApplyServiceTests
             CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
-        Assert.Equal(GatewayMutationMode.LeaveAbsent, Assert.Single(context.Configurator.Plans).GatewayMode);
+        StaticIpv4MutationPlan plan = Assert.Single(context.Configurator.Plans);
+        Assert.Equal(GatewayMutationMode.LeaveAbsent, plan.GatewayMode);
+        Assert.Null(plan.GatewayMetric);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenAutomaticDnsAlreadyMatches_LeavesDnsUnchanged()
+    {
+        using ApplyContext context = CreateContext();
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
+        Assert.Equal(DnsMutationMode.LeaveUnchanged, Assert.Single(context.Configurator.Plans).DnsMode);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenManualDnsAlreadyMatches_LeavesDnsUnchanged()
+    {
+        StaticIpv4Configuration desired = new(
+            "192.168.1.60",
+            "255.255.255.0",
+            "192.168.1.1",
+            "1.1.1.1",
+            "8.8.8.8");
+        NetworkAdapterSnapshot current = Current(
+            dnsServers: new Ipv4AddressValueCollection(MatchingManualDns));
+        using ApplyContext context = CreateContext(
+            current,
+            desired,
+            recoveryResult: NetworkAdapterRecoveryReadResult.Success(
+                Recovery(current, DnsConfigurationMode.Manual)));
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(
+            Request(desired),
+            CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
+        Assert.Equal(DnsMutationMode.LeaveUnchanged, Assert.Single(context.Configurator.Plans).DnsMode);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenReturningDnsToAutomatic_UsesClearPlan()
+    {
+        NetworkAdapterSnapshot current = Current(
+            dnsServers: new Ipv4AddressValueCollection(SingleManualDns));
+        using ApplyContext context = CreateContext(
+            current,
+            recoveryResult: NetworkAdapterRecoveryReadResult.Success(
+                Recovery(current, DnsConfigurationMode.Manual)));
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
+        Assert.Equal(DnsMutationMode.ClearToAutomatic, Assert.Single(context.Configurator.Plans).DnsMode);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenSettingManualDns_UsesSetPlan()
+    {
+        StaticIpv4Configuration desired = new(
+            "192.168.1.60",
+            "255.255.255.0",
+            "192.168.1.1",
+            "1.1.1.1",
+            null);
+        using ApplyContext context = CreateContext(desired: desired);
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(
+            Request(desired),
+            CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
+        Assert.Equal(DnsMutationMode.Set, Assert.Single(context.Configurator.Plans).DnsMode);
     }
 
     [Fact]
@@ -477,7 +750,8 @@ public sealed class StaticIpv4ApplyServiceTests
     public async Task ApplyAsync_WhenTwoServiceInstancesShareCoordinator_SerializesAllMutation()
     {
         using ApplyContext context = CreateContext(
-            verificationSnapshots: new[] { Verified(), Verified() });
+            verificationSnapshots: new[] { Verified(), Verified() },
+            serializedApplyCount: 2);
         StaticIpv4ApplyService secondService = new(
             context.Preflight,
             context.Rollback,
@@ -531,7 +805,9 @@ public sealed class StaticIpv4ApplyServiceTests
         NetworkConfigurationPreflightStatus preflightStatus = NetworkConfigurationPreflightStatus.Ready,
         NetworkAdapterRecoveryReadResult? recoveryResult = null,
         IReadOnlyList<NetworkAdapterSnapshot>? verificationSnapshots = null,
-        int verificationAttempts = 4)
+        int verificationAttempts = 4,
+        int serializedApplyCount = 1,
+        ushort? verificationGatewayMetric = null)
     {
         desired ??= Desired();
         current ??= Current();
@@ -541,8 +817,37 @@ public sealed class StaticIpv4ApplyServiceTests
         FakeNetworkAdapterConfigurator configurator = new();
         FakeNetworkAdapterReader reader = new();
         FakeNetworkAdapterRecoveryReader recoveryReader = new();
-        recoveryReader.Enqueue(recoveryResult ?? NetworkAdapterRecoveryReadResult.Success(Recovery(current)));
+        NetworkAdapterRecoveryReadResult initialRecovery = recoveryResult ??
+            NetworkAdapterRecoveryReadResult.Success(Recovery(current));
         IReadOnlyList<NetworkAdapterSnapshot> snapshots = verificationSnapshots ?? new[] { Verified() };
+
+        if (serializedApplyCount == 1)
+        {
+            recoveryReader.Enqueue(initialRecovery);
+
+            foreach (NetworkAdapterSnapshot snapshot in snapshots)
+            {
+                recoveryReader.Enqueue(RecoveryAfterMutation(
+                    snapshot,
+                    desired,
+                    initialRecovery,
+                    verificationGatewayMetric));
+            }
+        }
+        else
+        {
+            Assert.Equal(serializedApplyCount, snapshots.Count);
+
+            foreach (NetworkAdapterSnapshot snapshot in snapshots)
+            {
+                recoveryReader.Enqueue(initialRecovery);
+                recoveryReader.Enqueue(RecoveryAfterMutation(
+                    snapshot,
+                    desired,
+                    initialRecovery,
+                    verificationGatewayMetric));
+            }
+        }
 
         foreach (NetworkAdapterSnapshot snapshot in snapshots)
         {
@@ -644,6 +949,34 @@ public sealed class StaticIpv4ApplyServiceTests
             snapshot.Ipv4Gateways
                 .Select(gateway => new Ipv4GatewayRecoveryState(gateway, gatewayMetric))
                 .ToArray());
+
+    private static NetworkAdapterRecoverySnapshot RecoveryAfterMutation(
+        NetworkAdapterSnapshot snapshot,
+        StaticIpv4Configuration desired,
+        NetworkAdapterRecoveryReadResult initialRecovery,
+        ushort? verificationGatewayMetric)
+    {
+        string[] configuredDns = new[] { desired.PrimaryDns, desired.SecondaryDns }
+            .Where(value => value is not null)
+            .Select(value => value!)
+            .ToArray();
+
+        ushort? expectedGatewayMetric = desired.Gateway is null
+            ? null
+            : initialRecovery.Snapshot?.Ipv4Gateways.SingleOrDefault(gateway =>
+                string.Equals(gateway.Address, desired.Gateway, StringComparison.Ordinal))?.Metric ?? (ushort)1;
+        ushort? observedGatewayMetric = verificationGatewayMetric ?? expectedGatewayMetric;
+
+        return new NetworkAdapterRecoverySnapshot(
+            snapshot,
+            configuredDns.Length == 0
+                ? DnsConfigurationMode.Automatic
+                : DnsConfigurationMode.Manual,
+            configuredDns,
+            snapshot.Ipv4Gateways
+                .Select(gateway => new Ipv4GatewayRecoveryState(gateway, observedGatewayMetric))
+                .ToArray());
+    }
 
     private sealed record ApplyContext(
         StaticIpv4ApplyService Service,

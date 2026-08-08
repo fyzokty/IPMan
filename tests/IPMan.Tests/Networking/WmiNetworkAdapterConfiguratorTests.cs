@@ -41,6 +41,7 @@ public sealed class WmiNetworkAdapterConfiguratorTests
             {
                 Assert.Equal("SetGateways", call.Method);
                 Assert.Equal(ExpectedGateway, call.Parameters!["DefaultIPGateway"]);
+                Assert.Equal(new ushort[] { 1 }, call.Parameters["GatewayCostMetric"]);
             },
             call =>
             {
@@ -166,7 +167,10 @@ public sealed class WmiNetworkAdapterConfiguratorTests
     public async Task ApplyStaticAsync_WhenDnsIsEmpty_OmitsAllDnsInputParameters()
     {
         FakeWmiSession session = new(0, 0, 0);
-        StaticIpv4MutationPlan plan = Plan(primaryDns: null, secondaryDns: null);
+        StaticIpv4MutationPlan plan = Plan(
+            primaryDns: null,
+            secondaryDns: null,
+            dnsMode: DnsMutationMode.ClearToAutomatic);
 
         NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
             AdapterId,
@@ -178,12 +182,29 @@ public sealed class WmiNetworkAdapterConfiguratorTests
     }
 
     [Fact]
+    public async Task ApplyStaticAsync_WhenDnsAlreadyMatches_SkipsUnnecessaryDnsCall()
+    {
+        FakeWmiSession session = new(0, 0);
+        StaticIpv4MutationPlan plan = Plan(dnsMode: DnsMutationMode.LeaveUnchanged);
+
+        NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
+            AdapterId,
+            plan,
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(NetworkMutationStepStatus.NotRequired, result.DnsStep.Status);
+        Assert.DoesNotContain(session.Calls, call => call.Method == "SetDNSServerSearchOrder");
+    }
+
+    [Fact]
     public async Task ApplyStaticAsync_WhenGatewayWasAlreadyAbsent_SkipsUnnecessaryGatewayCall()
     {
         FakeWmiSession session = new(0, 0);
         StaticIpv4MutationPlan plan = Plan(
             gateway: null,
-            gatewayMode: GatewayMutationMode.LeaveAbsent);
+            gatewayMode: GatewayMutationMode.LeaveAbsent,
+            gatewayMetric: null);
 
         NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
             AdapterId,
@@ -196,12 +217,43 @@ public sealed class WmiNetworkAdapterConfiguratorTests
     }
 
     [Fact]
+    public async Task ApplyStaticAsync_WhenExistingGatewayMetricIsPreserved_UsesPlannedMetric()
+    {
+        FakeWmiSession session = new(0, 0, 0);
+        StaticIpv4MutationPlan plan = Plan(gatewayMetric: 25);
+
+        NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
+            AdapterId,
+            plan,
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(new ushort[] { 25 }, session.Calls[1].Parameters!["GatewayCostMetric"]);
+    }
+
+    [Fact]
+    public async Task ApplyStaticAsync_WhenSetGatewayMetricIsMissing_FailsBeforeResolvingAdapter()
+    {
+        FakeWmiFactory factory = new(new WmiAdapterResolution(WmiAdapterResolutionStatus.Unavailable));
+        StaticIpv4MutationPlan plan = Plan(gatewayMetric: null);
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            new WmiNetworkAdapterConfigurator(factory).ApplyStaticAsync(
+                AdapterId,
+                plan,
+                CancellationToken.None));
+
+        Assert.Equal(0, factory.ResolveCount);
+    }
+
+    [Fact]
     public async Task ApplyStaticAsync_WhenGatewayMustBeCleared_UsesDocumentedHostAddressSentinel()
     {
         FakeWmiSession session = new(0, 0, 0);
         StaticIpv4MutationPlan plan = Plan(
             gateway: null,
-            gatewayMode: GatewayMutationMode.Clear);
+            gatewayMode: GatewayMutationMode.Clear,
+            gatewayMetric: null);
 
         NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
             AdapterId,
@@ -294,6 +346,8 @@ public sealed class WmiNetworkAdapterConfiguratorTests
         string? primaryDns = "1.1.1.1",
         string? secondaryDns = "8.8.8.8",
         GatewayMutationMode gatewayMode = GatewayMutationMode.Set,
+        ushort? gatewayMetric = 1,
+        DnsMutationMode dnsMode = DnsMutationMode.Set,
         NetworkConfigurationMode previousMode = NetworkConfigurationMode.Dhcp) =>
         new(
             new StaticIpv4Configuration(
@@ -303,6 +357,8 @@ public sealed class WmiNetworkAdapterConfiguratorTests
                 primaryDns,
                 secondaryDns),
             gatewayMode,
+            gatewayMetric,
+            dnsMode,
             previousMode);
 
     private sealed class FakeWmiFactory : IWmiNetworkAdapterSessionFactory

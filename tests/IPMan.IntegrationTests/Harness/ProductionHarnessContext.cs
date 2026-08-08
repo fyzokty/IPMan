@@ -1,0 +1,28 @@
+using IPMan.Application.Networking;
+
+namespace IPMan.IntegrationTests.Harness;
+
+public sealed class ProductionHarnessContext : IDisposable
+{
+    private readonly NetworkMutationCoordinator _coordinator;
+
+    internal ProductionHarnessContext(
+        INetworkAdapterReader adapterReader,
+        INetworkAdapterRecoveryReader recoveryReader,
+        IStaticIpv4ApplyService applyService,
+        NetworkMutationCoordinator coordinator)
+    {
+        AdapterReader = adapterReader;
+        RecoveryReader = recoveryReader;
+        ApplyService = applyService;
+        _coordinator = coordinator;
+    }
+
+    public INetworkAdapterReader AdapterReader { get; }
+
+    public INetworkAdapterRecoveryReader RecoveryReader { get; }
+
+    public IStaticIpv4ApplyService ApplyService { get; }
+
+    public void Dispose() => _coordinator.Dispose();
+}

@@ -149,14 +149,17 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
                 safetyBlock);
         }
 
-        NetworkConfigurationComparisonResult refreshedComparison = _comparer.Compare(current, desired);
+        NetworkConfigurationComparisonResult refreshedComparison = CompareWithDnsSemantics(
+            current,
+            recovery,
+            desired);
 
-        if (refreshedComparison.IsEquivalent && FullStateMatches(current, desired))
+        if (refreshedComparison.IsEquivalent && FullStateMatches(current, recovery, desired))
         {
             return new StaticIpv4ApplyResult(StaticIpv4ApplyStatus.NoChange, preflight);
         }
 
-        if (!recovery.IsRestoreCapable)
+        if (!recovery.IsRestoreCapable || !CanPlanGatewayMutation(recovery, desired))
         {
             return new StaticIpv4ApplyResult(StaticIpv4ApplyStatus.RecoveryStateUnavailable, preflight);
         }
@@ -199,11 +202,9 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
 
         StaticIpv4MutationPlan plan = new(
             desired,
-            desired.Gateway is null
-                ? current.Ipv4Gateways.Count == 0
-                    ? GatewayMutationMode.LeaveAbsent
-                    : GatewayMutationMode.Clear
-                : GatewayMutationMode.Set,
+            GetGatewayMutationMode(current, desired),
+            GetGatewayMetric(recovery, desired),
+            GetDnsMutationMode(recovery, desired),
             current.Mode);
 
         // From this point onward cancellation cannot mean rollback. Complete the
@@ -231,7 +232,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
 
         return await VerifyAsync(
                 request.AdapterId,
-                desired,
+                plan,
                 preflight,
                 rollback,
                 mutation)
@@ -244,8 +245,10 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
         preflight.Status switch
         {
             NetworkConfigurationPreflightStatus.Ready => null,
-            NetworkConfigurationPreflightStatus.NoChange =>
-                new StaticIpv4ApplyResult(StaticIpv4ApplyStatus.NoChange, preflight),
+            // The lightweight reader cannot distinguish automatic DNS from a
+            // manual list whose effective servers happen to be identical.
+            // Continue to the exact recovery read before declaring no change.
+            NetworkConfigurationPreflightStatus.NoChange => null,
             NetworkConfigurationPreflightStatus.ValidationFailed =>
                 new StaticIpv4ApplyResult(StaticIpv4ApplyStatus.ValidationFailed, preflight),
             NetworkConfigurationPreflightStatus.AdapterUnavailable =>
@@ -307,11 +310,12 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
 
     private async Task<StaticIpv4ApplyResult> VerifyAsync(
         NetworkAdapterId adapterId,
-        StaticIpv4Configuration desired,
+        StaticIpv4MutationPlan plan,
         NetworkConfigurationPreflightResult preflight,
         RollbackSnapshotReference rollback,
         NetworkApplyResult mutation)
     {
+        StaticIpv4Configuration desired = plan.Configuration;
         NetworkAdapterSnapshot? lastSnapshot = null;
         NetworkConfigurationComparisonResult? lastComparison = null;
 
@@ -340,9 +344,28 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
             }
 
             lastSnapshot = actual;
-            lastComparison = _comparer.Compare(actual, desired);
+            NetworkAdapterRecoveryReadResult recoveryRead = await _recoveryReader
+                .ReadAsync(adapterId, CancellationToken.None)
+                .ConfigureAwait(false);
 
-            if (lastComparison.IsEquivalent && FullStateMatches(actual, desired))
+            if (recoveryRead.Status != NetworkAdapterRecoveryReadStatus.Success ||
+                recoveryRead.Snapshot is null ||
+                recoveryRead.Snapshot.Adapter.Id != adapterId)
+            {
+                return new StaticIpv4ApplyResult(
+                    StaticIpv4ApplyStatus.VerificationFailed,
+                    preflight,
+                    Rollback: rollback,
+                    Mutation: mutation,
+                    ActualSnapshot: actual);
+            }
+
+            NetworkAdapterRecoverySnapshot recovery = recoveryRead.Snapshot;
+            lastComparison = CompareWithDnsSemantics(actual, recovery, desired);
+
+            if (lastComparison.IsEquivalent &&
+                FullStateMatches(actual, recovery, desired) &&
+                GatewayMetricMatches(recovery, plan))
             {
                 return new StaticIpv4ApplyResult(
                     StaticIpv4ApplyStatus.VerifiedSuccess,
@@ -389,20 +412,127 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
         }
     }
 
+    private NetworkConfigurationComparisonResult CompareWithDnsSemantics(
+        NetworkAdapterSnapshot actual,
+        NetworkAdapterRecoverySnapshot recovery,
+        StaticIpv4Configuration desired)
+    {
+        NetworkConfigurationDifference differences = _comparer.Compare(actual, desired).Differences;
+
+        if (DnsStateMatches(recovery, desired))
+        {
+            differences &= ~(NetworkConfigurationDifference.PrimaryDns |
+                NetworkConfigurationDifference.SecondaryDns);
+        }
+
+        return new NetworkConfigurationComparisonResult(differences);
+    }
+
     private static bool FullStateMatches(
         NetworkAdapterSnapshot actual,
+        NetworkAdapterRecoverySnapshot recovery,
         StaticIpv4Configuration desired)
     {
         string[] desiredGateways = desired.Gateway is null ? Array.Empty<string>() : new[] { desired.Gateway };
-        string[] desiredDns = new[] { desired.PrimaryDns, desired.SecondaryDns }
+
+        return actual.Mode == NetworkConfigurationMode.Static &&
+            actual.Ipv4Addresses.Count == 1 &&
+            actual.Ipv4Gateways.SequenceEqual(desiredGateways, StringComparer.Ordinal) &&
+            DnsStateMatches(recovery, desired);
+    }
+
+    private static DnsMutationMode GetDnsMutationMode(
+        NetworkAdapterRecoverySnapshot current,
+        StaticIpv4Configuration desired)
+    {
+        string[] desiredDns = DesiredDns(desired);
+
+        if (desiredDns.Length == 0)
+        {
+            return current.DnsMode == DnsConfigurationMode.Automatic
+                ? DnsMutationMode.LeaveUnchanged
+                : DnsMutationMode.ClearToAutomatic;
+        }
+
+        return current.DnsMode == DnsConfigurationMode.Manual &&
+            current.ConfiguredIpv4DnsServers.SequenceEqual(desiredDns, StringComparer.Ordinal)
+                ? DnsMutationMode.LeaveUnchanged
+                : DnsMutationMode.Set;
+    }
+
+    private static GatewayMutationMode GetGatewayMutationMode(
+        NetworkAdapterSnapshot current,
+        StaticIpv4Configuration desired) =>
+        desired.Gateway is null
+            ? current.Ipv4Gateways.Count == 0
+                ? GatewayMutationMode.LeaveAbsent
+                : GatewayMutationMode.Clear
+            : GatewayMutationMode.Set;
+
+    private static bool CanPlanGatewayMutation(
+        NetworkAdapterRecoverySnapshot current,
+        StaticIpv4Configuration desired) =>
+        !GatewayAddressIsUnchanged(current, desired) ||
+        current.Ipv4Gateways[0].Metric.HasValue;
+
+    private static ushort? GetGatewayMetric(
+        NetworkAdapterRecoverySnapshot current,
+        StaticIpv4Configuration desired)
+    {
+        if (desired.Gateway is null)
+        {
+            return null;
+        }
+
+        return GatewayAddressIsUnchanged(current, desired)
+            ? current.Ipv4Gateways[0].Metric
+            : (ushort)1;
+    }
+
+    private static bool GatewayAddressIsUnchanged(
+        NetworkAdapterRecoverySnapshot current,
+        StaticIpv4Configuration desired) =>
+        desired.Gateway is not null &&
+        current.Ipv4Gateways.Length == 1 &&
+        string.Equals(
+            current.Ipv4Gateways[0].Address,
+            desired.Gateway,
+            StringComparison.Ordinal);
+
+    private static bool GatewayMetricMatches(
+        NetworkAdapterRecoverySnapshot actual,
+        StaticIpv4MutationPlan plan)
+    {
+        if (plan.Configuration.Gateway is null)
+        {
+            return actual.Ipv4Gateways.Length == 0;
+        }
+
+        return actual.Ipv4Gateways.Length == 1 &&
+            string.Equals(
+                actual.Ipv4Gateways[0].Address,
+                plan.Configuration.Gateway,
+                StringComparison.Ordinal) &&
+            actual.Ipv4Gateways[0].Metric == plan.GatewayMetric;
+    }
+
+    private static bool DnsStateMatches(
+        NetworkAdapterRecoverySnapshot actual,
+        StaticIpv4Configuration desired)
+    {
+        string[] desiredDns = DesiredDns(desired);
+
+        return desiredDns.Length == 0
+            ? actual.DnsMode == DnsConfigurationMode.Automatic
+            : actual.DnsMode == DnsConfigurationMode.Manual &&
+                actual.ConfiguredIpv4DnsServers.SequenceEqual(desiredDns, StringComparer.Ordinal);
+    }
+
+    private static string[] DesiredDns(StaticIpv4Configuration desired) =>
+        new[] { desired.PrimaryDns, desired.SecondaryDns }
             .Where(value => value is not null)
             .Select(value => value!)
             .ToArray();
-
-        return actual.Ipv4Addresses.Count == 1 &&
-            actual.Ipv4Gateways.SequenceEqual(desiredGateways, StringComparer.Ordinal) &&
-            actual.Ipv4DnsServers.SequenceEqual(desiredDns, StringComparer.Ordinal);
-    }
 
     private sealed record PostMutationRead(
         NetworkAdapterSnapshot? Snapshot = null,
