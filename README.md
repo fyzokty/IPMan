@@ -19,6 +19,12 @@ Primary goals:
 No normal `dotnet test` execution may mutate a real network adapter.
 
 Current gate: `HARNESS_READY_REAL_RUN_PENDING`. The first isolated real attempt
-was `NOT EXECUTED` before rollback capture or mutation because recovery
-capability could not be proven. Sprint 08 now includes an explicitly opted-in,
-exact-GUID, read-only diagnostic path; production Apply remains closed.
+was `NOT EXECUTED` before rollback capture or mutation. The exact-GUID read-only
+diagnostic then reported WMI recovery success, automatic DNS with native result
+`0`, and a restore-capable snapshot, while the managed adapter read returned
+`NotFound`. The VM proved that `NetworkInterface.Id` and
+`Get-NetAdapter InterfaceGuid` reported the same uppercase GUID. The blocker was
+application identity semantics: equivalent uppercase/lowercase GUID text
+produced unequal `NetworkAdapterId` values. Parseable GUID identities are now
+canonicalized at that Domain boundary. The destructive scenario has not been
+rerun and production Apply remains closed.

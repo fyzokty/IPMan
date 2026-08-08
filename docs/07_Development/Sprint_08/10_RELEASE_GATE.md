@@ -16,6 +16,21 @@ That attempt was `NOT EXECUTED` before rollback capture and mutation. Typed,
 read-only recovery diagnostics must identify the blocker and receive architect
 review before another destructive attempt is authorized.
 
+The subsequent read-only diagnostic reported:
+
+- `ManagedAdapterRead: NotFound`;
+- WMI recovery `Success` with matching identity;
+- `DnsMode: Automatic`, `DnsProbeStatus: Automatic`, `DnsNativeResult: 0`;
+- `RestoreCapability: Capable`.
+
+On the same VM, `NetworkInterface.Id` and `Get-NetAdapter InterfaceGuid` returned
+the same uppercase GUID. The managed-reader blocker was traced to textual GUID
+case/format equality in `NetworkAdapterId`, not to Windows identity, WMI recovery
+or DNS recovery. GUID-shaped application identities are now canonicalized at the
+Domain value-object boundary. No destructive scenario has been rerun after this
+fix, so the gate remains `HARNESS_READY_REAL_RUN_PENDING`, not
+`INTEGRATION_VALIDATED`.
+
 The architect will only open the production Apply gate after reviewing real
 isolated-run evidence.
 

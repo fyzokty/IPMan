@@ -10,7 +10,9 @@ public readonly record struct NetworkAdapterId
     public NetworkAdapterId(string value)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(value);
-        Value = value;
+        Value = Guid.TryParse(value, out Guid parsed)
+            ? parsed.ToString("B").ToUpperInvariant()
+            : value;
     }
 
     public string Value { get; }

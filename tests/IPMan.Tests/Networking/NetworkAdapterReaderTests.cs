@@ -100,6 +100,26 @@ public sealed class NetworkAdapterReaderTests
     }
 
     [Fact]
+    public async Task GetAdapterAsync_WhenWindowsGuidTextDiffers_FindsExactEquivalentIdentity()
+    {
+        const string targetWindowsId = "{827A2938-BB14-4D18-B67F-94E9C4F818BA}";
+        NetworkAdapterReader reader = CreateReader(new FakeAdapterProbe().WithAdapters(
+            TestData.Adapter(
+                id: "{927A2938-BB14-4D18-B67F-94E9C4F818BA}",
+                name: "Ethernet"),
+            TestData.Adapter(
+                id: targetWindowsId,
+                name: "Ethernet")));
+
+        NetworkAdapterSnapshot? adapter = await reader.GetAdapterAsync(
+            new NetworkAdapterId("827a2938-bb14-4d18-b67f-94e9c4f818ba"),
+            CancellationToken.None);
+
+        Assert.NotNull(adapter);
+        Assert.Equal(targetWindowsId, adapter.Id.Value);
+    }
+
+    [Fact]
     public async Task GetAdapterAsync_WhenAdapterIsUnknown_ReturnsNull()
     {
         NetworkAdapterReader reader = CreateReader(new FakeAdapterProbe().WithAdapters(
