@@ -4,6 +4,7 @@ using IPMan.Domain.Networking;
 using IPMan.IntegrationTests.Evidence;
 using IPMan.IntegrationTests.Harness;
 using IPMan.IntegrationTests.Observation;
+using IPMan.Infrastructure.Networking;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -38,24 +39,34 @@ public sealed class DestructiveStaticMutationTests
             "WARNING: this mutation can disconnect the machine; use local/VM console and never the remote-management path.");
 
         using ProductionHarnessContext production = ProductionHarnessFactory.Create();
-        NetworkAdapterSnapshot? managedBefore = await production.AdapterReader
-            .GetAdapterAsync(settings.AdapterId, CancellationToken.None);
-        NetworkAdapterRecoveryReadResult recoveryRead = await production.RecoveryReader
-            .ReadAsync(settings.AdapterId, CancellationToken.None);
+        ManagedAdapterDiagnosticRead managedBefore = await RecoveryDiagnosticCapture
+            .ReadManagedAdapterAsync(
+                production.AdapterReader,
+                settings.AdapterId,
+                CancellationToken.None);
+        NetworkAdapterRecoveryDiagnosticReadResult recoveryDiagnostic =
+            await production.RecoveryReader.ReadDiagnosticAsync(
+                settings.AdapterId,
+                CancellationToken.None);
+        NetworkAdapterRecoveryReadResult recoveryRead = recoveryDiagnostic.RecoveryRead;
+        RecoveryDiagnosticReport diagnosticReport = RecoveryDiagnosticReport.Create(
+            settings.AdapterId,
+            managedBefore,
+            recoveryDiagnostic);
 
-        if (managedBefore?.Id != settings.AdapterId ||
-            recoveryRead.Status != NetworkAdapterRecoveryReadStatus.Success ||
-            recoveryRead.Snapshot is null ||
-            recoveryRead.Snapshot.Adapter.Id != settings.AdapterId ||
-            !recoveryRead.Snapshot.IsRestoreCapable)
+        if (!diagnosticReport.CanProceed)
         {
             Assert.Fail(
-                "NOT EXECUTED — exact adapter recovery state was unavailable or not restore-capable.");
+                "NOT EXECUTED — exact adapter recovery state was unavailable or not restore-capable." +
+                Environment.NewLine +
+                string.Join(Environment.NewLine, diagnosticReport.FormatSanitizedLines()));
         }
+
+        NetworkAdapterRecoverySnapshot recoverySnapshot = recoveryRead.Snapshot!;
 
         ScenarioPreconditionResult preconditions = ScenarioPreconditionValidator.Validate(
             settings.Scenario,
-            recoveryRead.Snapshot,
+            recoverySnapshot,
             settings.DesiredConfiguration);
 
         if (!preconditions.IsAllowed)
@@ -83,7 +94,7 @@ public sealed class DestructiveStaticMutationTests
             settings.AdapterId,
             settings.DesiredConfiguration,
             beforeObservation,
-            recoveryRead.Snapshot);
+            recoverySnapshot);
         await evidenceWriter.WriteBeforeAsync(beforeEvidence, CancellationToken.None);
         _output.WriteLine($"Evidence directory: {evidenceWriter.DirectoryPath}");
 
@@ -107,7 +118,7 @@ public sealed class DestructiveStaticMutationTests
             afterRecovery = await production.RecoveryReader
                 .ReadAsync(settings.AdapterId, CancellationToken.None);
             rollbackMatches = await RollbackSnapshotVerifier
-                .MatchesAsync(applyResult.Rollback, recoveryRead.Snapshot, CancellationToken.None);
+                .MatchesAsync(applyResult.Rollback, recoverySnapshot, CancellationToken.None);
             ObservationComparisonResult nonInterference = ObservationComparer.CompareNonInterference(
                 beforeObservation,
                 afterObservation,
@@ -115,7 +126,7 @@ public sealed class DestructiveStaticMutationTests
             differences = ScenarioOutcomeVerifier.Verify(
                 settings,
                 applyResult,
-                recoveryRead.Snapshot,
+                recoverySnapshot,
                 afterRecovery,
                 preconditions.RequestedDimensions,
                 nonInterference,

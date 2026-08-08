@@ -9,4 +9,5 @@ internal interface IDnsRecoveryStateProbe
 
 internal sealed record DnsRecoveryState(
     DnsConfigurationMode Mode,
-    string[] ConfiguredServers);
+    string[] ConfiguredServers,
+    DnsRecoveryProbeDiagnostic Diagnostic);

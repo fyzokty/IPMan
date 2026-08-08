@@ -31,7 +31,18 @@ public sealed class WmiNetworkAdapterRecoveryReader : INetworkAdapterRecoveryRea
         _dnsStateProbe = dnsStateProbe;
     }
 
-    public Task<NetworkAdapterRecoveryReadResult> ReadAsync(
+    public async Task<NetworkAdapterRecoveryReadResult> ReadAsync(
+        NetworkAdapterId adapterId,
+        CancellationToken cancellationToken)
+    {
+        NetworkAdapterRecoveryDiagnosticReadResult diagnostic = await ReadDiagnosticAsync(
+                adapterId,
+                cancellationToken)
+            .ConfigureAwait(false);
+        return diagnostic.RecoveryRead;
+    }
+
+    public Task<NetworkAdapterRecoveryDiagnosticReadResult> ReadDiagnosticAsync(
         NetworkAdapterId adapterId,
         CancellationToken cancellationToken)
     {
@@ -39,7 +50,7 @@ public sealed class WmiNetworkAdapterRecoveryReader : INetworkAdapterRecoveryRea
         return Task.Run(() => ReadCore(adapterId), CancellationToken.None);
     }
 
-    private NetworkAdapterRecoveryReadResult ReadCore(NetworkAdapterId adapterId)
+    private NetworkAdapterRecoveryDiagnosticReadResult ReadCore(NetworkAdapterId adapterId)
     {
         WmiAdapterResolution resolution;
 
@@ -49,12 +60,12 @@ public sealed class WmiNetworkAdapterRecoveryReader : INetworkAdapterRecoveryRea
         }
         catch (ManagementException)
         {
-            return new(NetworkAdapterRecoveryReadStatus.ReadFailed);
+            return DiagnosticFailure(NetworkAdapterRecoveryReadStatus.ReadFailed);
         }
 
         if (resolution.Status != WmiAdapterResolutionStatus.Found || resolution.Session is null)
         {
-            return new(
+            return DiagnosticFailure(
                 resolution.Status == WmiAdapterResolutionStatus.Ambiguous
                     ? NetworkAdapterRecoveryReadStatus.AdapterMappingAmbiguous
                     : NetworkAdapterRecoveryReadStatus.AdapterUnavailable);
@@ -96,18 +107,24 @@ public sealed class WmiNetworkAdapterRecoveryReader : INetworkAdapterRecoveryRea
                 dnsServers);
 
             DnsRecoveryState dns = _dnsStateProbe.ReadIpv4State(adapterId.Value);
-            return NetworkAdapterRecoveryReadResult.Success(
-                new NetworkAdapterRecoverySnapshot(
-                    adapter,
-                    dns.Mode,
-                    dns.ConfiguredServers,
-                    gateways));
+            return new NetworkAdapterRecoveryDiagnosticReadResult(
+                NetworkAdapterRecoveryReadResult.Success(
+                    new NetworkAdapterRecoverySnapshot(
+                        adapter,
+                        dns.Mode,
+                        dns.ConfiguredServers,
+                        gateways)),
+                dns.Diagnostic);
         }
         catch (ManagementException)
         {
-            return new(NetworkAdapterRecoveryReadStatus.ReadFailed);
+            return DiagnosticFailure(NetworkAdapterRecoveryReadStatus.ReadFailed);
         }
     }
+
+    private static NetworkAdapterRecoveryDiagnosticReadResult DiagnosticFailure(
+        NetworkAdapterRecoveryReadStatus status) =>
+        new(new NetworkAdapterRecoveryReadResult(status), DnsProbe: null);
 
     private static Ipv4AddressCollection ReadIpv4Addresses(
         IReadOnlyList<string> addresses,

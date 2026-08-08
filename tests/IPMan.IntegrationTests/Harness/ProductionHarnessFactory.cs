@@ -32,7 +32,7 @@ public static class ProductionHarnessFactory
                     "IPMan",
                     "Backup")
             });
-        INetworkAdapterRecoveryReader recoveryReader = new WmiNetworkAdapterRecoveryReader();
+        WmiNetworkAdapterRecoveryReader recoveryReader = new();
         INetworkAdapterConfigurator configurator = new WmiNetworkAdapterConfigurator();
         NetworkMutationCoordinator coordinator = new();
         IDelayProvider delay = new SystemDelayProvider();

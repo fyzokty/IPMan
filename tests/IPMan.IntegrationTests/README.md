@@ -44,3 +44,27 @@ summary contains only stable failure metadata rather than raw exception text.
 The harness does not restore the adapter automatically. After a scenario,
 restore the known-good state manually or revert the VM checkpoint before
 running another scenario.
+
+## Read-only recovery diagnostic
+
+The diagnostic path reads only one explicitly supplied adapter GUID. It does
+not construct or call the mutation service and does not require any destructive
+acknowledgement. It is skipped by default.
+
+```text
+IPMAN_RECOVERY_DIAGNOSTIC=1
+IPMAN_TEST_ADAPTER_ID={EXACT-INTERFACE-GUID}
+```
+
+Run only the diagnostic category:
+
+```powershell
+dotnet test tests/IPMan.IntegrationTests/IPMan.IntegrationTests.csproj `
+  --filter "Category=ReadOnlyRecoveryDiagnostic" `
+  --logger "console;verbosity=detailed"
+```
+
+Output is sanitized to stable statuses, numeric native return codes, counts and
+booleans. It does not print adapter IP/DNS values, display metadata, raw native
+pointers or exception messages. A diagnostic run is not integration validation
+and does not authorize a destructive rerun.

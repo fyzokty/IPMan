@@ -1,4 +1,5 @@
 using IPMan.Application.Networking;
+using IPMan.Infrastructure.Networking;
 
 namespace IPMan.IntegrationTests.Harness;
 
@@ -8,7 +9,7 @@ public sealed class ProductionHarnessContext : IDisposable
 
     internal ProductionHarnessContext(
         INetworkAdapterReader adapterReader,
-        INetworkAdapterRecoveryReader recoveryReader,
+        WmiNetworkAdapterRecoveryReader recoveryReader,
         IStaticIpv4ApplyService applyService,
         NetworkMutationCoordinator coordinator)
     {
@@ -20,7 +21,7 @@ public sealed class ProductionHarnessContext : IDisposable
 
     public INetworkAdapterReader AdapterReader { get; }
 
-    public INetworkAdapterRecoveryReader RecoveryReader { get; }
+    public WmiNetworkAdapterRecoveryReader RecoveryReader { get; }
 
     public IStaticIpv4ApplyService ApplyService { get; }
 

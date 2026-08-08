@@ -8,6 +8,14 @@ status: Approved
 
 Sprint 08 implementation alone does NOT authorize wiring `Uygula`.
 
+Current status after the first isolated VM attempt remains:
+
+`HARNESS_READY_REAL_RUN_PENDING`
+
+That attempt was `NOT EXECUTED` before rollback capture and mutation. Typed,
+read-only recovery diagnostics must identify the blocker and receive architect
+review before another destructive attempt is authorized.
+
 The architect will only open the production Apply gate after reviewing real
 isolated-run evidence.
 

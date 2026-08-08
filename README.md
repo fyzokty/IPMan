@@ -17,3 +17,8 @@ Primary goals:
 - define the release gate before production UI mutation is enabled.
 
 No normal `dotnet test` execution may mutate a real network adapter.
+
+Current gate: `HARNESS_READY_REAL_RUN_PENDING`. The first isolated real attempt
+was `NOT EXECUTED` before rollback capture or mutation because recovery
+capability could not be proven. Sprint 08 now includes an explicitly opted-in,
+exact-GUID, read-only diagnostic path; production Apply remains closed.

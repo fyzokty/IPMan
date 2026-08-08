@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
 using IPMan.Domain.Networking;
 
 namespace IPMan.Infrastructure.Networking;
@@ -11,50 +10,49 @@ namespace IPMan.Infrastructure.Networking;
 /// </summary>
 internal sealed class WindowsDnsRecoveryStateProbe : IDnsRecoveryStateProbe
 {
-    private const uint NoError = 0;
-    private const uint SettingsVersion1 = 1;
     private const ulong NameServerFlag = 0x0002;
     private const ulong ProfileNameServerFlag = 0x0200;
     private static readonly char[] ServerSeparators = { ',', ' ', ';' };
+    private readonly IDnsInterfaceSettingsReader _settingsReader;
+
+    public WindowsDnsRecoveryStateProbe()
+        : this(new WindowsDnsInterfaceSettingsReader())
+    {
+    }
+
+    internal WindowsDnsRecoveryStateProbe(IDnsInterfaceSettingsReader settingsReader)
+    {
+        ArgumentNullException.ThrowIfNull(settingsReader);
+        _settingsReader = settingsReader;
+    }
 
     public DnsRecoveryState ReadIpv4State(string adapterId)
     {
         if (!Guid.TryParse(adapterId, out Guid interfaceId))
         {
-            return Unknown();
+            return Unknown(DnsRecoveryProbeStatus.InvalidAdapterGuid);
         }
-
-        DnsInterfaceSettings settings = new() { Version = SettingsVersion1 };
-        bool mustFree = false;
 
         try
         {
-            uint result = GetInterfaceDnsSettings(interfaceId, ref settings);
+            DnsInterfaceSettingsReadResult settings = _settingsReader.Read(interfaceId);
 
-            if (result != NoError)
+            if (settings.NativeResult != 0)
             {
-                return Unknown();
+                return Unknown(
+                    DnsRecoveryProbeStatus.NativeCallFailed,
+                    settings.NativeResult);
             }
 
-            mustFree = true;
-            return MapSettings(
-                settings.Flags,
-                Marshal.PtrToStringUni(settings.NameServer));
+            return MapSettings(settings.Flags, settings.NameServers);
         }
         catch (DllNotFoundException)
         {
-            return Unknown();
+            return Unknown(DnsRecoveryProbeStatus.NativeLibraryUnavailable);
         }
         catch (EntryPointNotFoundException)
         {
-            return Unknown();
-        }
-        finally
-        {
-            if (mustFree)
-            {
-                FreeInterfaceDnsSettings(ref settings);
-            }
+            return Unknown(DnsRecoveryProbeStatus.NativeEntryPointUnavailable);
         }
     }
 
@@ -67,20 +65,39 @@ internal sealed class WindowsDnsRecoveryStateProbe : IDnsRecoveryStateProbe
         {
             // Profile/policy DNS is a distinct source that the Sprint 07 WMI
             // mutator cannot faithfully restore through SetDNSServerSearchOrder.
-            return Unknown();
+            return Unknown(
+                DnsRecoveryProbeStatus.ProfileOrPolicyDnsDetected,
+                adapterManualServerFlag: hasAdapterServers,
+                profileServerFlag: true);
         }
 
         if (!hasAdapterServers)
         {
             return new DnsRecoveryState(
                 DnsConfigurationMode.Automatic,
-                Array.Empty<string>());
+                Array.Empty<string>(),
+                new DnsRecoveryProbeDiagnostic(
+                    DnsRecoveryProbeStatus.Automatic,
+                    NativeResult: 0,
+                    AdapterManualServerFlag: false,
+                    ProfileServerFlag: false,
+                    UsableIpv4ServerCount: 0));
         }
 
         string[] configuredServers = ParseIpv4Servers(nameServers);
         return configuredServers.Length > 0
-            ? new DnsRecoveryState(DnsConfigurationMode.Manual, configuredServers)
-            : Unknown();
+            ? new DnsRecoveryState(
+                DnsConfigurationMode.Manual,
+                configuredServers,
+                new DnsRecoveryProbeDiagnostic(
+                    DnsRecoveryProbeStatus.Manual,
+                    NativeResult: 0,
+                    AdapterManualServerFlag: true,
+                    ProfileServerFlag: false,
+                    configuredServers.Length))
+            : Unknown(
+                DnsRecoveryProbeStatus.ManualAdapterFlagWithoutUsableIpv4Servers,
+                adapterManualServerFlag: true);
     }
 
     private static string[] ParseIpv4Servers(string? value)
@@ -101,29 +118,18 @@ internal sealed class WindowsDnsRecoveryStateProbe : IDnsRecoveryStateProbe
             .ToArray();
     }
 
-    private static DnsRecoveryState Unknown() =>
-        new(DnsConfigurationMode.Unknown, Array.Empty<string>());
-
-    [DllImport("iphlpapi.dll", ExactSpelling = true)]
-    private static extern uint GetInterfaceDnsSettings(
-        Guid interfaceId,
-        ref DnsInterfaceSettings settings);
-
-    [DllImport("iphlpapi.dll", ExactSpelling = true)]
-    private static extern void FreeInterfaceDnsSettings(ref DnsInterfaceSettings settings);
-
-    [StructLayout(LayoutKind.Sequential)]
-    private struct DnsInterfaceSettings
-    {
-        public uint Version;
-        public ulong Flags;
-        public IntPtr Domain;
-        public IntPtr NameServer;
-        public IntPtr SearchList;
-        public uint RegistrationEnabled;
-        public uint RegisterAdapterName;
-        public uint EnableLlmnr;
-        public uint QueryAdapterName;
-        public IntPtr ProfileNameServer;
-    }
+    private static DnsRecoveryState Unknown(
+        DnsRecoveryProbeStatus status,
+        uint? nativeResult = null,
+        bool adapterManualServerFlag = false,
+        bool profileServerFlag = false) =>
+        new(
+            DnsConfigurationMode.Unknown,
+            Array.Empty<string>(),
+            new DnsRecoveryProbeDiagnostic(
+                status,
+                nativeResult,
+                adapterManualServerFlag,
+                profileServerFlag,
+                UsableIpv4ServerCount: 0));
 }

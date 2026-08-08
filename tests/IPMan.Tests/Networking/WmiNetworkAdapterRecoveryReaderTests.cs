@@ -26,16 +26,97 @@ public sealed class WmiNetworkAdapterRecoveryReaderTests
     private static readonly string[] RawDns = { "1.1.1.1", "2001:4860:4860::8888", "8.8.8.8" };
 
     [Theory]
-    [InlineData(0, null, DnsConfigurationMode.Automatic)]
-    [InlineData(0x0002, "1.1.1.1, 8.8.8.8", DnsConfigurationMode.Manual)]
-    [InlineData(0x0002, null, DnsConfigurationMode.Unknown)]
-    [InlineData(0x0200, "9.9.9.9", DnsConfigurationMode.Unknown)]
+    [InlineData(0, null, DnsConfigurationMode.Automatic, DnsRecoveryProbeStatus.Automatic, 0)]
+    [InlineData(0x0002, "1.1.1.1, 8.8.8.8", DnsConfigurationMode.Manual, DnsRecoveryProbeStatus.Manual, 2)]
+    [InlineData(0x0002, null, DnsConfigurationMode.Unknown, DnsRecoveryProbeStatus.ManualAdapterFlagWithoutUsableIpv4Servers, 0)]
+    [InlineData(0x0200, "9.9.9.9", DnsConfigurationMode.Unknown, DnsRecoveryProbeStatus.ProfileOrPolicyDnsDetected, 0)]
     internal void DnsSettings_MapOnlyRestoreCapableSourceSemantics(
         ulong flags,
         string? nameServers,
-        DnsConfigurationMode expected)
+        DnsConfigurationMode expectedMode,
+        DnsRecoveryProbeStatus expectedStatus,
+        int expectedServerCount)
     {
-        Assert.Equal(expected, WindowsDnsRecoveryStateProbe.MapSettings(flags, nameServers).Mode);
+        DnsRecoveryState result = WindowsDnsRecoveryStateProbe.MapSettings(flags, nameServers);
+
+        Assert.Equal(expectedMode, result.Mode);
+        Assert.Equal(expectedStatus, result.Diagnostic.Status);
+        Assert.Equal(expectedServerCount, result.Diagnostic.UsableIpv4ServerCount);
+    }
+
+    [Fact]
+    public void DnsProbe_WhenAdapterIdIsNotGuid_ReturnsTypedUnknownWithoutNativeRead()
+    {
+        FakeDnsSettingsReader reader = new(_ => throw new InvalidOperationException("must not run"));
+        WindowsDnsRecoveryStateProbe probe = new(reader);
+
+        DnsRecoveryState result = probe.ReadIpv4State("not-a-guid");
+
+        Assert.Equal(DnsConfigurationMode.Unknown, result.Mode);
+        Assert.Equal(DnsRecoveryProbeStatus.InvalidAdapterGuid, result.Diagnostic.Status);
+        Assert.Equal(0, reader.ReadCount);
+    }
+
+    [Fact]
+    public void DnsProbe_WhenNativeLibraryIsUnavailable_ReturnsTypedUnknown()
+    {
+        WindowsDnsRecoveryStateProbe probe = new(
+            new FakeDnsSettingsReader(_ => throw new DllNotFoundException("sensitive")));
+
+        DnsRecoveryState result = probe.ReadIpv4State(AdapterId.Value);
+
+        Assert.Equal(DnsConfigurationMode.Unknown, result.Mode);
+        Assert.Equal(DnsRecoveryProbeStatus.NativeLibraryUnavailable, result.Diagnostic.Status);
+        Assert.Null(result.Diagnostic.NativeResult);
+    }
+
+    [Fact]
+    public void DnsProbe_WhenNativeEntryPointIsUnavailable_ReturnsTypedUnknown()
+    {
+        WindowsDnsRecoveryStateProbe probe = new(
+            new FakeDnsSettingsReader(_ => throw new EntryPointNotFoundException("sensitive")));
+
+        DnsRecoveryState result = probe.ReadIpv4State(AdapterId.Value);
+
+        Assert.Equal(DnsConfigurationMode.Unknown, result.Mode);
+        Assert.Equal(DnsRecoveryProbeStatus.NativeEntryPointUnavailable, result.Diagnostic.Status);
+    }
+
+    [Fact]
+    public void DnsProbe_WhenNativeCallReturnsNonZero_RetainsNumericCodeAndUnknownMode()
+    {
+        WindowsDnsRecoveryStateProbe probe = new(
+            new FakeDnsSettingsReader(_ => new DnsInterfaceSettingsReadResult(87, 0, null)));
+
+        DnsRecoveryState result = probe.ReadIpv4State(AdapterId.Value);
+
+        Assert.Equal(DnsConfigurationMode.Unknown, result.Mode);
+        Assert.Equal(DnsRecoveryProbeStatus.NativeCallFailed, result.Diagnostic.Status);
+        Assert.Equal((uint)87, result.Diagnostic.NativeResult);
+    }
+
+    [Fact]
+    public void DnsNativeReader_WhenNativeCallSucceeds_FreesReturnedSettings()
+    {
+        FakeDnsNativeApi native = new(0);
+        WindowsDnsInterfaceSettingsReader reader = new(native);
+
+        DnsInterfaceSettingsReadResult result = reader.Read(Guid.Parse(AdapterId.Value));
+
+        Assert.Equal((uint)0, result.NativeResult);
+        Assert.Equal(1, native.FreeCount);
+    }
+
+    [Fact]
+    public void DnsNativeReader_WhenNativeCallFails_DoesNotFreeUnreturnedSettings()
+    {
+        FakeDnsNativeApi native = new(87);
+        WindowsDnsInterfaceSettingsReader reader = new(native);
+
+        DnsInterfaceSettingsReadResult result = reader.Read(Guid.Parse(AdapterId.Value));
+
+        Assert.Equal((uint)87, result.NativeResult);
+        Assert.Equal(0, native.FreeCount);
     }
 
     [Fact]
@@ -47,9 +128,10 @@ public sealed class WmiNetworkAdapterRecoveryReaderTests
             new FakeWmiFactory(new WmiAdapterResolution(WmiAdapterResolutionStatus.Found, session)),
             dns);
 
-        NetworkAdapterRecoveryReadResult result = await reader.ReadAsync(
+        NetworkAdapterRecoveryDiagnosticReadResult diagnostic = await reader.ReadDiagnosticAsync(
             AdapterId,
             CancellationToken.None);
+        NetworkAdapterRecoveryReadResult result = diagnostic.RecoveryRead;
 
         Assert.Equal(NetworkAdapterRecoveryReadStatus.Success, result.Status);
         NetworkAdapterRecoverySnapshot snapshot = Assert.IsType<NetworkAdapterRecoverySnapshot>(result.Snapshot);
@@ -65,6 +147,7 @@ public sealed class WmiNetworkAdapterRecoveryReaderTests
         Assert.Equal((ushort)35, gateway.Metric);
         Assert.Equal(ExpectedIpv4Dns, snapshot.Adapter.Ipv4DnsServers);
         Assert.Equal(AdapterId.Value, dns.LastAdapterId);
+        Assert.Equal(DnsRecoveryProbeStatus.Manual, diagnostic.DnsProbe!.Status);
     }
 
     [Fact]
@@ -178,7 +261,54 @@ public sealed class WmiNetworkAdapterRecoveryReaderTests
                 _mode,
                 _mode == DnsConfigurationMode.Manual
                     ? ExpectedIpv4Dns
-                    : Array.Empty<string>());
+                    : Array.Empty<string>(),
+                new DnsRecoveryProbeDiagnostic(
+                    _mode switch
+                    {
+                        DnsConfigurationMode.Automatic => DnsRecoveryProbeStatus.Automatic,
+                        DnsConfigurationMode.Manual => DnsRecoveryProbeStatus.Manual,
+                        _ => DnsRecoveryProbeStatus.NativeCallFailed
+                    },
+                    NativeResult: _mode == DnsConfigurationMode.Unknown ? 87u : 0u,
+                    AdapterManualServerFlag: _mode == DnsConfigurationMode.Manual,
+                    ProfileServerFlag: false,
+                    UsableIpv4ServerCount: _mode == DnsConfigurationMode.Manual
+                        ? ExpectedIpv4Dns.Length
+                        : 0));
         }
+    }
+
+    private sealed class FakeDnsSettingsReader : IDnsInterfaceSettingsReader
+    {
+        private readonly Func<Guid, DnsInterfaceSettingsReadResult> _handler;
+
+        public FakeDnsSettingsReader(Func<Guid, DnsInterfaceSettingsReadResult> handler) =>
+            _handler = handler;
+
+        public int ReadCount { get; private set; }
+
+        public DnsInterfaceSettingsReadResult Read(Guid interfaceId)
+        {
+            ReadCount++;
+            return _handler(interfaceId);
+        }
+    }
+
+    private sealed class FakeDnsNativeApi : IDnsInterfaceSettingsNativeApi
+    {
+        private readonly uint _result;
+
+        public FakeDnsNativeApi(uint result) => _result = result;
+
+        public int FreeCount { get; private set; }
+
+        public uint Get(Guid interfaceId, ref DnsInterfaceSettingsV1 settings)
+        {
+            Assert.Equal(Guid.Parse(AdapterId.Value), interfaceId);
+            settings.Flags = 0;
+            return _result;
+        }
+
+        public void Free(ref DnsInterfaceSettingsV1 settings) => FreeCount++;
     }
 }
