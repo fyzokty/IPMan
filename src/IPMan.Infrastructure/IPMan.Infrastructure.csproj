@@ -18,5 +18,7 @@
   <ItemGroup>
     <!-- Network change monitor lifecycle is tested through an internal seam. -->
     <InternalsVisibleTo Include="IPMan.Tests" />
+    <!-- Read-only production diagnostics exercise internal Windows provider seams. -->
+    <InternalsVisibleTo Include="IPMan.IntegrationTests" />
   </ItemGroup>
 </Project>

@@ -1,3 +1,4 @@
+using System.Globalization;
 using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
 using IPMan.Infrastructure.Networking;
@@ -48,6 +49,27 @@ public sealed class ReadOnlyRecoveryDiagnosticTests
         {
             _output.WriteLine(line);
         }
+
+        InterfaceIdentityResolution identity = new SystemWindowsInterfaceIdentityResolver()
+            .Resolve(adapterId);
+        Assert.True(
+            identity.IsSuccess,
+            $"PersistentStore diagnostic identity resolution failed: {identity.Status} " +
+            $"({identity.TechnicalCode?.ToString(CultureInfo.InvariantCulture) ?? "none"}).");
+
+        WindowsPersistentRouteReadResult persistentRoutes =
+            new SystemWindowsPersistentRouteProvider().Enumerate(identity.Identity!);
+        _output.WriteLine(
+            $"persistentPolicyStoreExactIpv4DefaultRouteReadSuccess={persistentRoutes.IsSuccess}");
+        _output.WriteLine(
+            $"persistentPolicyStoreExactIpv4DefaultRouteCount={persistentRoutes.Routes.Count}");
+        _output.WriteLine(
+            "persistentPolicyStoreTechnicalCode=" +
+            (persistentRoutes.TechnicalCode?.ToString(CultureInfo.InvariantCulture) ?? "none"));
+
+        Assert.True(
+            persistentRoutes.IsSuccess,
+            "Production PersistentStore provider-context diagnostic read failed.");
 
         Assert.DoesNotContain(lines, line =>
             line.Contains(adapterId.Value, StringComparison.OrdinalIgnoreCase));

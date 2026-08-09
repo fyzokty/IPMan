@@ -3,6 +3,7 @@ using System.Management;
 using System.Runtime.InteropServices;
 using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
+using EnumerationOptions = System.Management.EnumerationOptions;
 
 namespace IPMan.Infrastructure.Networking;
 
@@ -111,6 +112,24 @@ internal interface IWindowsPersistentRouteProvider
     WindowsPersistentRouteReadResult Enumerate(WindowsInterfaceIdentity identity);
 
     WindowsPersistentRouteOperationResult Delete(WindowsPersistentRoute route);
+}
+
+internal interface IWindowsPersistentRouteManagementAdapter
+{
+    WindowsPersistentRouteReadResult Enumerate(
+        string query,
+        EnumerationOptions options);
+
+    WindowsPersistentRouteOperationResult Delete(
+        WindowsPersistentRoute route,
+        DeleteOptions options);
+}
+
+internal interface IWindowsPersistentRouteContextFactory
+{
+    EnumerationOptions CreateEnumerationOptions();
+
+    DeleteOptions CreateDeleteOptions();
 }
 
 internal interface IWindowsActiveRouteStore
@@ -352,7 +371,28 @@ internal sealed class SystemWindowsPersistentRouteStore : IWindowsPersistentRout
 internal sealed class SystemWindowsPersistentRouteProvider : IWindowsPersistentRouteProvider
 {
     internal const uint ErrorInvalidData = 13;
-    private const string NamespacePath = @"root\StandardCimv2";
+    internal const string PolicyStoreContextKey = "PolicyStore";
+    internal const string PersistentStoreContextValue = "PersistentStore";
+
+    private readonly IWindowsPersistentRouteManagementAdapter _managementAdapter;
+    private readonly IWindowsPersistentRouteContextFactory _contextFactory;
+
+    public SystemWindowsPersistentRouteProvider()
+        : this(
+            new SystemWindowsPersistentRouteManagementAdapter(),
+            new SystemWindowsPersistentRouteContextFactory())
+    {
+    }
+
+    internal SystemWindowsPersistentRouteProvider(
+        IWindowsPersistentRouteManagementAdapter managementAdapter,
+        IWindowsPersistentRouteContextFactory contextFactory)
+    {
+        ArgumentNullException.ThrowIfNull(managementAdapter);
+        ArgumentNullException.ThrowIfNull(contextFactory);
+        _managementAdapter = managementAdapter;
+        _contextFactory = contextFactory;
+    }
 
     internal static string BuildExactPersistentDefaultRouteQuery(uint interfaceIndex) =>
         "SELECT * FROM MSFT_NetRoute WHERE " +
@@ -361,58 +401,30 @@ internal sealed class SystemWindowsPersistentRouteProvider : IWindowsPersistentR
 
     public WindowsPersistentRouteReadResult Enumerate(WindowsInterfaceIdentity identity)
     {
-        try
-        {
-            using ManagementObjectSearcher searcher = new(
-                NamespacePath,
-                BuildExactPersistentDefaultRouteQuery(identity.InterfaceIndex));
-            using ManagementObjectCollection results = searcher.Get();
-            List<WindowsPersistentRoute> routes = new();
+        EnumerationOptions options = _contextFactory.CreateEnumerationOptions();
 
-            foreach (ManagementObject route in results)
-            {
-                using (route)
-                {
-                    string? objectPath = route.Path?.Path;
-                    WindowsPersistentRouteReadResult parsed = ParseReturnedRoute(
-                        objectPath,
-                        route["InterfaceIndex"],
-                        route["AddressFamily"],
-                        route["DestinationPrefix"],
-                        route["Store"]);
-
-                    if (!parsed.IsSuccess)
-                    {
-                        return parsed;
-                    }
-
-                    routes.Add(parsed.Routes[0]);
-                }
-            }
-
-            return new WindowsPersistentRouteReadResult(routes);
-        }
-        catch (ManagementException exception)
-        {
-            return ReadFailure(exception);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return WindowsPersistentRouteReadResult.Failure(accessDenied: true);
-        }
-        catch (FormatException)
-        {
-            return WindowsPersistentRouteReadResult.Failure(technicalCode: ErrorInvalidData);
-        }
-        catch (InvalidCastException)
-        {
-            return WindowsPersistentRouteReadResult.Failure(technicalCode: ErrorInvalidData);
-        }
-        catch (OverflowException)
-        {
-            return WindowsPersistentRouteReadResult.Failure(technicalCode: ErrorInvalidData);
-        }
+        return HasPersistentStoreContext(options.Context)
+            ? _managementAdapter.Enumerate(
+                BuildExactPersistentDefaultRouteQuery(identity.InterfaceIndex),
+                options)
+            : WindowsPersistentRouteReadResult.Failure(technicalCode: ErrorInvalidData);
     }
+
+    public WindowsPersistentRouteOperationResult Delete(WindowsPersistentRoute route)
+    {
+        DeleteOptions options = _contextFactory.CreateDeleteOptions();
+
+        return HasPersistentStoreContext(options.Context)
+            ? _managementAdapter.Delete(route, options)
+            : WindowsPersistentRouteOperationResult.Failure(technicalCode: ErrorInvalidData);
+    }
+
+    internal static bool HasPersistentStoreContext(ManagementNamedValueCollection? context) =>
+        context is not null &&
+        string.Equals(
+            context[PolicyStoreContextKey] as string,
+            PersistentStoreContextValue,
+            StringComparison.Ordinal);
 
     internal static WindowsPersistentRouteReadResult ParseReturnedRoute(
         string? objectPath,
@@ -456,13 +468,100 @@ internal sealed class SystemWindowsPersistentRouteProvider : IWindowsPersistentR
             return WindowsPersistentRouteReadResult.Failure(technicalCode: ErrorInvalidData);
         }
     }
+}
 
-    public WindowsPersistentRouteOperationResult Delete(WindowsPersistentRoute route)
+internal sealed class SystemWindowsPersistentRouteContextFactory :
+    IWindowsPersistentRouteContextFactory
+{
+    public EnumerationOptions CreateEnumerationOptions() =>
+        new() { Context = CreatePersistentStoreContext() };
+
+    public DeleteOptions CreateDeleteOptions() =>
+        new() { Context = CreatePersistentStoreContext() };
+
+    private static ManagementNamedValueCollection CreatePersistentStoreContext()
+    {
+        ManagementNamedValueCollection context = new();
+        context.Add(
+            SystemWindowsPersistentRouteProvider.PolicyStoreContextKey,
+            SystemWindowsPersistentRouteProvider.PersistentStoreContextValue);
+        return context;
+    }
+}
+
+internal sealed class SystemWindowsPersistentRouteManagementAdapter :
+    IWindowsPersistentRouteManagementAdapter
+{
+    private const uint ErrorInvalidData = SystemWindowsPersistentRouteProvider.ErrorInvalidData;
+    private const string NamespacePath = @"root\StandardCimv2";
+
+    public WindowsPersistentRouteReadResult Enumerate(
+        string query,
+        EnumerationOptions options)
+    {
+        try
+        {
+            using ManagementObjectSearcher searcher = new(
+                NamespacePath,
+                query,
+                options);
+            using ManagementObjectCollection results = searcher.Get();
+            List<WindowsPersistentRoute> routes = new();
+
+            foreach (ManagementObject route in results)
+            {
+                using (route)
+                {
+                    string? objectPath = route.Path?.Path;
+                    WindowsPersistentRouteReadResult parsed =
+                        SystemWindowsPersistentRouteProvider.ParseReturnedRoute(
+                            objectPath,
+                            route["InterfaceIndex"],
+                            route["AddressFamily"],
+                            route["DestinationPrefix"],
+                            route["Store"]);
+
+                    if (!parsed.IsSuccess)
+                    {
+                        return parsed;
+                    }
+
+                    routes.Add(parsed.Routes[0]);
+                }
+            }
+
+            return new WindowsPersistentRouteReadResult(routes);
+        }
+        catch (ManagementException exception)
+        {
+            return ReadFailure(exception);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return WindowsPersistentRouteReadResult.Failure(accessDenied: true);
+        }
+        catch (FormatException)
+        {
+            return WindowsPersistentRouteReadResult.Failure(technicalCode: ErrorInvalidData);
+        }
+        catch (InvalidCastException)
+        {
+            return WindowsPersistentRouteReadResult.Failure(technicalCode: ErrorInvalidData);
+        }
+        catch (OverflowException)
+        {
+            return WindowsPersistentRouteReadResult.Failure(technicalCode: ErrorInvalidData);
+        }
+    }
+
+    public WindowsPersistentRouteOperationResult Delete(
+        WindowsPersistentRoute route,
+        DeleteOptions options)
     {
         try
         {
             using ManagementObject managementRoute = new(route.ObjectPath);
-            managementRoute.Delete();
+            managementRoute.Delete(options);
             return WindowsPersistentRouteOperationResult.Success();
         }
         catch (ManagementException exception)

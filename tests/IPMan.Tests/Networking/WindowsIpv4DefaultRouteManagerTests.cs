@@ -1,8 +1,10 @@
 using System.Runtime.InteropServices;
+using System.Management;
 using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
 using IPMan.Infrastructure.Networking;
 using Xunit;
+using EnumerationOptions = System.Management.EnumerationOptions;
 
 namespace IPMan.Tests.Networking;
 
@@ -226,6 +228,95 @@ public sealed class WindowsIpv4DefaultRouteManagerTests
         Assert.Contains("AddressFamily = 2", query, StringComparison.Ordinal);
         Assert.Contains("DestinationPrefix = '0.0.0.0/0'", query, StringComparison.Ordinal);
         Assert.Contains("Store = 0", query, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void PersistentProvider_InitialEnumeration_ReceivesPersistentStoreContext()
+    {
+        FakePersistentRouteManagementAdapter management = new(Routes());
+        SystemWindowsPersistentRouteProvider provider = new(
+            management,
+            new SystemWindowsPersistentRouteContextFactory());
+
+        WindowsPersistentRouteReadResult result = provider.Enumerate(Identity);
+
+        Assert.True(result.IsSuccess);
+        EnumerationOptions options = Assert.Single(management.EnumerationOptionsReceived);
+        AssertPersistentStoreContext(options.Context);
+    }
+
+    [Fact]
+    public void PersistentProvider_FinalEnumeration_ReceivesPersistentStoreContext()
+    {
+        FakePersistentRouteManagementAdapter management = new(
+            Routes(Route("route-1")),
+            Routes());
+        SystemWindowsPersistentRouteProvider provider = new(
+            management,
+            new SystemWindowsPersistentRouteContextFactory());
+        SystemWindowsPersistentRouteStore store = new(
+            provider,
+            new FakeIdentityResolver(Identity));
+
+        Ipv4DefaultRouteClearResult result = store.Clear(Identity);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, management.EnumerationOptionsReceived.Count);
+        AssertPersistentStoreContext(management.EnumerationOptionsReceived[1].Context);
+    }
+
+    [Fact]
+    public void PersistentProvider_EveryDelete_ReceivesPersistentStoreContext()
+    {
+        FakePersistentRouteManagementAdapter management = new(
+            Routes(Route("route-1"), Route("route-2")),
+            Routes());
+        SystemWindowsPersistentRouteProvider provider = new(
+            management,
+            new SystemWindowsPersistentRouteContextFactory());
+        SystemWindowsPersistentRouteStore store = new(
+            provider,
+            new FakeIdentityResolver(Identity));
+
+        Ipv4DefaultRouteClearResult result = store.Clear(Identity);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(2, management.DeleteOptionsReceived.Count);
+        Assert.All(
+            management.DeleteOptionsReceived,
+            options => AssertPersistentStoreContext(options.Context));
+    }
+
+    [Fact]
+    public void PersistentProvider_DefaultContextZeroRows_CannotProvePersistentStoreEmpty()
+    {
+        FakePersistentRouteManagementAdapter management = new(Routes());
+        SystemWindowsPersistentRouteProvider provider = new(
+            management,
+            new FakePersistentRouteContextFactory());
+
+        WindowsPersistentRouteReadResult result = provider.Enumerate(Identity);
+
+        Assert.False(result.IsSuccess);
+        Assert.Equal(SystemWindowsPersistentRouteProvider.ErrorInvalidData, result.TechnicalCode);
+        Assert.Empty(management.EnumerationOptionsReceived);
+    }
+
+    [Fact]
+    public void PersistentProvider_ProductionContextNeverUsesActiveStore()
+    {
+        SystemWindowsPersistentRouteContextFactory factory = new();
+        EnumerationOptions enumeration = factory.CreateEnumerationOptions();
+        DeleteOptions deletion = factory.CreateDeleteOptions();
+
+        AssertPersistentStoreContext(enumeration.Context);
+        AssertPersistentStoreContext(deletion.Context);
+        Assert.NotEqual(
+            "ActiveStore",
+            enumeration.Context?[SystemWindowsPersistentRouteProvider.PolicyStoreContextKey]);
+        Assert.NotEqual(
+            "ActiveStore",
+            deletion.Context?[SystemWindowsPersistentRouteProvider.PolicyStoreContextKey]);
     }
 
     [Fact]
@@ -641,6 +732,15 @@ public sealed class WindowsIpv4DefaultRouteManagerTests
             Ipv4DefaultRouteClearStatus.InterfaceResolutionFailed,
             TechnicalCode: technicalCode);
 
+    private static void AssertPersistentStoreContext(
+        ManagementNamedValueCollection? context)
+    {
+        Assert.True(SystemWindowsPersistentRouteProvider.HasPersistentStoreContext(context));
+        Assert.Equal(
+            SystemWindowsPersistentRouteProvider.PersistentStoreContextValue,
+            context?[SystemWindowsPersistentRouteProvider.PolicyStoreContextKey]);
+    }
+
     private static WindowsPersistentRouteReadResult Routes(
         params WindowsPersistentRoute[] routes) =>
         new(routes);
@@ -776,6 +876,44 @@ public sealed class WindowsIpv4DefaultRouteManagerTests
             DeleteResults.RemoveAt(0);
             return result;
         }
+    }
+
+    private sealed class FakePersistentRouteManagementAdapter :
+        IWindowsPersistentRouteManagementAdapter
+    {
+        private readonly Queue<WindowsPersistentRouteReadResult> _reads;
+
+        public FakePersistentRouteManagementAdapter(
+            params WindowsPersistentRouteReadResult[] reads) =>
+            _reads = new Queue<WindowsPersistentRouteReadResult>(reads);
+
+        public List<EnumerationOptions> EnumerationOptionsReceived { get; } = new();
+
+        public List<DeleteOptions> DeleteOptionsReceived { get; } = new();
+
+        public WindowsPersistentRouteReadResult Enumerate(
+            string query,
+            EnumerationOptions options)
+        {
+            EnumerationOptionsReceived.Add(options);
+            return _reads.Count > 0 ? _reads.Dequeue() : Routes();
+        }
+
+        public WindowsPersistentRouteOperationResult Delete(
+            WindowsPersistentRoute route,
+            DeleteOptions options)
+        {
+            DeleteOptionsReceived.Add(options);
+            return WindowsPersistentRouteOperationResult.Success();
+        }
+    }
+
+    private sealed class FakePersistentRouteContextFactory :
+        IWindowsPersistentRouteContextFactory
+    {
+        public EnumerationOptions CreateEnumerationOptions() => new();
+
+        public DeleteOptions CreateDeleteOptions() => new();
     }
 
     private sealed class FakePersistentStore : IWindowsPersistentRouteStore
