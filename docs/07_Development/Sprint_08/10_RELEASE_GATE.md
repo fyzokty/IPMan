@@ -53,6 +53,28 @@ been rerun after these fixes, so the gate remains
 The architect will only open the production Apply gate after reviewing real
 isolated-run evidence.
 
+# Current real-run progress
+
+- S08-01 StaticToStatic: PASS.
+- S08-02 DhcpToStatic: PASS.
+- S08-03 SetGateway: PASS.
+- S08-04 ClearGateway attempt 1: invalid non-elevated operator run.
+- S08-04 ClearGateway elevated run: production verification correctly failed.
+
+In the valid S08-04 run, `EnableStatic` and the former WMI host-address gateway
+sentinel both returned `0`, but the exact interface retained an ActiveStore
+`0.0.0.0/0 -> 0.0.0.0` route and a PersistentStore
+`0.0.0.0/0 -> 10.250.0.20` route. Native success therefore did not satisfy the
+no-gateway product semantic.
+
+The local compatibility fix replaces only the gateway-clear transport with an
+exact GUID -> LUID -> interface-index route operation. Persistent exact IPv4
+default routes are deleted through `MSFT_NetRoute` in `Root\StandardCimv2`, and
+remaining active exact rows are deleted with `DeleteIpForwardEntry2` after
+`GetIpForwardTable2(AF_INET)` enumeration. Both stores must verify empty before
+the gateway step succeeds. Non-empty WMI gateway set/restore remains unchanged.
+The S08-04 rerun is pending architect approval.
+
 # Gate states
 
 ## NOT_READY

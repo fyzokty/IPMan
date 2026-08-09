@@ -75,6 +75,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IRollbackSnapshotRepository, JsonRollbackSnapshotRepository>();
         services.AddSingleton<INetworkAdapterRecoveryReader, WmiNetworkAdapterRecoveryReader>();
         services.AddSingleton<INetworkMutationCoordinator, NetworkMutationCoordinator>();
+        services.AddSingleton<IIpv4DefaultRouteManager, WindowsIpv4DefaultRouteManager>();
         services.AddSingleton<INetworkAdapterConfigurator, WmiNetworkAdapterConfigurator>();
         services.AddSingleton(new StaticIpv4ApplyOptions());
         services.AddSingleton<IStaticIpv4ApplyService, StaticIpv4ApplyService>();

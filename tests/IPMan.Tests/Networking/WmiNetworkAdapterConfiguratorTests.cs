@@ -1,4 +1,5 @@
 using System.Management;
+using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
 using IPMan.Infrastructure.Networking;
 using Xunit;
@@ -238,7 +239,7 @@ public sealed class WmiNetworkAdapterConfiguratorTests
         StaticIpv4MutationPlan plan = Plan(gatewayMetric: null);
 
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            new WmiNetworkAdapterConfigurator(factory).ApplyStaticAsync(
+            new WmiNetworkAdapterConfigurator(factory, new FakeDefaultRouteManager()).ApplyStaticAsync(
                 AdapterId,
                 plan,
                 CancellationToken.None));
@@ -247,21 +248,47 @@ public sealed class WmiNetworkAdapterConfiguratorTests
     }
 
     [Fact]
-    public async Task ApplyStaticAsync_WhenGatewayMustBeCleared_UsesDocumentedHostAddressSentinel()
+    public async Task ApplyStaticAsync_WhenGatewayMustBeCleared_UsesExactRouteManagerNotWmiSentinel()
     {
-        FakeWmiSession session = new(0, 0, 0);
+        FakeWmiSession session = new(0, 0);
+        FakeDefaultRouteManager routeManager = new();
         StaticIpv4MutationPlan plan = Plan(
             gateway: null,
             gatewayMode: GatewayMutationMode.Clear,
             gatewayMetric: null);
 
-        NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
+        NetworkApplyResult result = await CreateConfigurator(session, routeManager).ApplyStaticAsync(
             AdapterId,
             plan,
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.Equal(ExpectedIpAddress, session.Calls[1].Parameters!["DefaultIPGateway"]);
+        Assert.Equal(AdapterId, routeManager.LastAdapterId);
+        Assert.DoesNotContain(session.Calls, call => call.Method == "SetGateways");
+    }
+
+    [Fact]
+    public async Task ApplyStaticAsync_WhenRouteManagerReportsRouteRemaining_DoesNotReportSuccess()
+    {
+        FakeWmiSession session = new(0);
+        FakeDefaultRouteManager routeManager = new()
+        {
+            Result = new Ipv4DefaultRouteClearResult(Ipv4DefaultRouteClearStatus.RouteStillPresent)
+        };
+        StaticIpv4MutationPlan plan = Plan(
+            gateway: null,
+            gatewayMode: GatewayMutationMode.Clear,
+            gatewayMetric: null);
+
+        NetworkApplyResult result = await CreateConfigurator(session, routeManager).ApplyStaticAsync(
+            AdapterId,
+            plan,
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.True(result.IsPartialFailure);
+        Assert.Equal(NetworkMutationFailureKind.RouteVerificationFailure, result.FailureKind);
+        Assert.Equal(NetworkMutationStepStatus.NotAttempted, result.DnsStep.Status);
     }
 
     [Theory]
@@ -272,7 +299,7 @@ public sealed class WmiNetworkAdapterConfiguratorTests
         NetworkMutationFailureKind expected)
     {
         FakeWmiFactory factory = new(new WmiAdapterResolution(status));
-        WmiNetworkAdapterConfigurator configurator = new(factory);
+        WmiNetworkAdapterConfigurator configurator = new(factory, new FakeDefaultRouteManager());
 
         NetworkApplyResult result = await configurator.ApplyStaticAsync(
             AdapterId,
@@ -319,7 +346,7 @@ public sealed class WmiNetworkAdapterConfiguratorTests
         await cancellation.CancelAsync();
 
         await Assert.ThrowsAnyAsync<OperationCanceledException>(
-            () => new WmiNetworkAdapterConfigurator(factory).ApplyStaticAsync(
+            () => new WmiNetworkAdapterConfigurator(factory, new FakeDefaultRouteManager()).ApplyStaticAsync(
                 AdapterId,
                 Plan(),
                 cancellation.Token));
@@ -337,9 +364,13 @@ public sealed class WmiNetworkAdapterConfiguratorTests
         Assert.DoesNotContain("Caption", query, StringComparison.Ordinal);
     }
 
-    private static WmiNetworkAdapterConfigurator CreateConfigurator(FakeWmiSession session) =>
-        new(new FakeWmiFactory(
-            new WmiAdapterResolution(WmiAdapterResolutionStatus.Found, session)));
+    private static WmiNetworkAdapterConfigurator CreateConfigurator(
+        FakeWmiSession session,
+        IIpv4DefaultRouteManager? routeManager = null) =>
+        new(
+            new FakeWmiFactory(
+                new WmiAdapterResolution(WmiAdapterResolutionStatus.Found, session)),
+            routeManager ?? new FakeDefaultRouteManager());
 
     private static StaticIpv4MutationPlan Plan(
         string? gateway = "192.168.1.1",
@@ -374,6 +405,20 @@ public sealed class WmiNetworkAdapterConfiguratorTests
             ResolveCount++;
             Assert.Equal(AdapterId.Value, adapterId);
             return _resolution;
+        }
+    }
+
+    private sealed class FakeDefaultRouteManager : IIpv4DefaultRouteManager
+    {
+        public Ipv4DefaultRouteClearResult Result { get; set; } =
+            Ipv4DefaultRouteClearResult.Success();
+
+        public NetworkAdapterId? LastAdapterId { get; private set; }
+
+        public Ipv4DefaultRouteClearResult Clear(NetworkAdapterId adapterId)
+        {
+            LastAdapterId = adapterId;
+            return Result;
         }
     }
 

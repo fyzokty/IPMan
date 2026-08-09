@@ -78,3 +78,23 @@ into production Apply. Recovery policy, DNS semantics, mutation order and
 Architect review is required before another VM transfer. No destructive scenario
 has been rerun after this rollback verification fix. The gate remains
 `HARNESS_READY_REAL_RUN_PENDING`; Sprint 08 is not `INTEGRATION_VALIDATED`.
+
+# ClearGateway runtime compatibility finding
+
+S08-01, S08-02 and S08-03 later passed real isolated validation. The first
+S08-04 attempt was invalid because the operator shell was not elevated. In the
+valid elevated S08-04 run, the starting gateway was `10.250.0.1` with metric `1`.
+Both `EnableStatic` and the former WMI host-address `SetGateways` sentinel
+returned `0`, while final product verification correctly returned
+`VerificationFailed` and rollback fidelity remained true.
+
+Store-aware diagnostics found an ActiveStore default route through `0.0.0.0`
+and a PersistentStore default route through the host address `10.250.0.20`.
+Therefore the sentinel is no longer used as authoritative gateway clear.
+
+The local fix clears only exact-interface IPv4 default routes: adapter GUID is
+resolved to LUID/index, PersistentStore `MSFT_NetRoute` instances are deleted,
+remaining active rows are removed through IP Helper, and both stores must verify
+empty. Other interfaces, non-default IPv4 routes and IPv6 routes are excluded.
+No shell or registry fallback exists. A real S08-04 rerun remains pending
+architect approval; the gate remains `HARNESS_READY_REAL_RUN_PENDING`.

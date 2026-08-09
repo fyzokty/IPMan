@@ -37,3 +37,16 @@ against the harness's earlier recovery read instead of production Apply's exact
 fresh rollback-source read. Those deterministic code paths are corrected locally;
 the destructive scenario has not been rerun again and production Apply remains
 closed.
+
+Real validation subsequently passed S08-01, S08-02 and S08-03. The valid,
+elevated S08-04 ClearGateway run exposed a Windows runtime incompatibility:
+`EnableStatic` and the former WMI host-address `SetGateways` sentinel both
+returned `0`, but Windows retained active and persistent IPv4 default-route
+artifacts. Product verification correctly returned `VerificationFailed`.
+
+The local compatibility fix removes that sentinel from the clear path. It uses
+the exact adapter GUID to resolve LUID/interface index, deletes only the exact
+PersistentStore `MSFT_NetRoute` IPv4 default route, removes remaining exact
+ActiveStore rows through IP Helper, and verifies both stores are empty. Non-empty
+gateway set/restore remains on the proven WMI path. S08-04 has not been rerun
+after this fix and the production Apply gate remains closed.

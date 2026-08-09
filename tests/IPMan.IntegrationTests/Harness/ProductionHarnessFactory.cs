@@ -34,7 +34,8 @@ public static class ProductionHarnessFactory
             });
         WmiNetworkAdapterRecoveryReader recoveryReader = new();
         RecordingNetworkAdapterRecoveryReader applyRecoveryReader = new(recoveryReader);
-        INetworkAdapterConfigurator configurator = new WmiNetworkAdapterConfigurator();
+        IIpv4DefaultRouteManager defaultRouteManager = new WindowsIpv4DefaultRouteManager();
+        INetworkAdapterConfigurator configurator = new WmiNetworkAdapterConfigurator(defaultRouteManager);
         NetworkMutationCoordinator coordinator = new();
         IDelayProvider delay = new SystemDelayProvider();
         IClock clock = new SystemClock();

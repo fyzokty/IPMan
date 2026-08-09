@@ -12,16 +12,21 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
     private const string SetDnsMethod = "SetDNSServerSearchOrder";
 
     private readonly IWmiNetworkAdapterSessionFactory _sessionFactory;
+    private readonly IIpv4DefaultRouteManager _defaultRouteManager;
 
-    public WmiNetworkAdapterConfigurator()
-        : this(new SystemWmiNetworkAdapterSessionFactory())
+    public WmiNetworkAdapterConfigurator(IIpv4DefaultRouteManager defaultRouteManager)
+        : this(new SystemWmiNetworkAdapterSessionFactory(), defaultRouteManager)
     {
     }
 
-    internal WmiNetworkAdapterConfigurator(IWmiNetworkAdapterSessionFactory sessionFactory)
+    internal WmiNetworkAdapterConfigurator(
+        IWmiNetworkAdapterSessionFactory sessionFactory,
+        IIpv4DefaultRouteManager defaultRouteManager)
     {
         ArgumentNullException.ThrowIfNull(sessionFactory);
+        ArgumentNullException.ThrowIfNull(defaultRouteManager);
         _sessionFactory = sessionFactory;
+        _defaultRouteManager = defaultRouteManager;
     }
 
     public async Task<NetworkApplyResult> ApplyStaticAsync(
@@ -92,26 +97,19 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         {
             gateway = new StepExecution(NetworkMutationStepResult.NotRequired());
         }
+        else if (plan.GatewayMode == GatewayMutationMode.Clear)
+        {
+            gateway = ClearDefaultRoutes(adapterId);
+        }
         else
         {
-            // Microsoft documents the EnableStatic host address as SetGateways'
-            // sentinel for clearing the gateway. This is infrastructure-only;
-            // user input still rejects a literal self gateway.
-            string gatewayValue = plan.GatewayMode == GatewayMutationMode.Clear
-                ? configuration.Ipv4Address
-                : configuration.Gateway!;
             gateway = Invoke(
                 session,
                 SetGatewaysMethod,
                 new Dictionary<string, object?>
                 {
-                    ["DefaultIPGateway"] = new[] { gatewayValue },
-                    ["GatewayCostMetric"] = new[]
-                    {
-                        plan.GatewayMode == GatewayMutationMode.Set
-                            ? plan.GatewayMetric!.Value
-                            : (ushort)1
-                    }
+                    ["DefaultIPGateway"] = new[] { configuration.Gateway! },
+                    ["GatewayCostMetric"] = new[] { plan.GatewayMetric!.Value }
                 });
         }
 
@@ -173,6 +171,40 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
                 NetworkMutationFailureKind.ManagementFailure,
                 exception.Message);
         }
+    }
+
+    private StepExecution ClearDefaultRoutes(NetworkAdapterId adapterId)
+    {
+        Ipv4DefaultRouteClearResult result = _defaultRouteManager.Clear(adapterId);
+
+        if (result.IsSuccess)
+        {
+            return new StepExecution(
+                new NetworkMutationStepResult(NetworkMutationStepStatus.Succeeded));
+        }
+
+        NetworkMutationFailureKind failure = result.Status switch
+        {
+            Ipv4DefaultRouteClearStatus.InvalidAdapterIdentity or
+                Ipv4DefaultRouteClearStatus.InterfaceResolutionFailed =>
+                NetworkMutationFailureKind.InterfaceResolutionFailure,
+            Ipv4DefaultRouteClearStatus.PersistentStoreReadFailed or
+                Ipv4DefaultRouteClearStatus.PersistentStoreDeleteFailed =>
+                NetworkMutationFailureKind.PersistentRouteFailure,
+            Ipv4DefaultRouteClearStatus.ActiveStoreReadFailed or
+                Ipv4DefaultRouteClearStatus.ActiveStoreDeleteFailed =>
+                NetworkMutationFailureKind.ActiveRouteFailure,
+            Ipv4DefaultRouteClearStatus.RouteStillPresent =>
+                NetworkMutationFailureKind.RouteVerificationFailure,
+            Ipv4DefaultRouteClearStatus.AccessDenied =>
+                NetworkMutationFailureKind.AccessDenied,
+            _ => NetworkMutationFailureKind.OperationalFailure
+        };
+
+        return new StepExecution(
+            new NetworkMutationStepResult(NetworkMutationStepStatus.Failed, result.TechnicalCode),
+            failure,
+            result.Status.ToString());
     }
 
     private static StepExecution InvokeEnableStatic(
