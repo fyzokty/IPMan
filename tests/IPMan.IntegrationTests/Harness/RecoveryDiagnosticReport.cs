@@ -33,6 +33,9 @@ public sealed record RecoveryDiagnosticReport(
     DnsConfigurationMode? DnsMode,
     DnsRecoveryProbeStatus? DnsProbeStatus,
     uint? DnsNativeResult,
+    ulong? DnsNativeFlags,
+    bool? DnsNameServerPresent,
+    int? ConfiguredIpv4DnsCount,
     int? Ipv4Count,
     bool? SubnetMasksComplete,
     int? GatewayCount,
@@ -66,6 +69,9 @@ public sealed record RecoveryDiagnosticReport(
             snapshot?.DnsMode,
             recoveryDiagnostic.DnsProbe?.Status,
             recoveryDiagnostic.DnsProbe?.NativeResult,
+            recoveryDiagnostic.DnsProbe?.NativeFlags,
+            recoveryDiagnostic.DnsProbe?.NameServerPresent,
+            recoveryDiagnostic.DnsProbe?.UsableIpv4ServerCount,
             snapshot?.Adapter.Ipv4Addresses.Count,
             snapshot is null
                 ? null
@@ -93,6 +99,9 @@ public sealed record RecoveryDiagnosticReport(
             $"DnsMode: {Format(DnsMode)}",
             $"DnsProbeStatus: {Format(DnsProbeStatus)}",
             $"DnsNativeResult: {Format(DnsNativeResult)}",
+            $"DnsNativeFlags: {Format(DnsNativeFlags)}",
+            $"DnsNameServerPresent: {Format(DnsNameServerPresent)}",
+            $"ConfiguredIpv4DnsCount: {Format(ConfiguredIpv4DnsCount)}",
             $"Ipv4Count: {Format(Ipv4Count)}",
             $"SubnetMasksComplete: {Format(SubnetMasksComplete)}",
             $"GatewayCount: {Format(GatewayCount)}",
@@ -108,6 +117,9 @@ public sealed record RecoveryDiagnosticReport(
         value?.ToString() ?? "N/A";
 
     private static string Format(uint? value) =>
+        value?.ToString(CultureInfo.InvariantCulture) ?? "N/A";
+
+    private static string Format(ulong? value) =>
         value?.ToString(CultureInfo.InvariantCulture) ?? "N/A";
 }
 

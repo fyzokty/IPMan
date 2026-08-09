@@ -13,20 +13,34 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
 
     private readonly IWmiNetworkAdapterSessionFactory _sessionFactory;
     private readonly IIpv4DefaultRouteManager _defaultRouteManager;
+    private readonly IManualIpv4DnsWriter _manualDnsWriter;
 
     public WmiNetworkAdapterConfigurator(IIpv4DefaultRouteManager defaultRouteManager)
-        : this(new SystemWmiNetworkAdapterSessionFactory(), defaultRouteManager)
+        : this(
+            new SystemWmiNetworkAdapterSessionFactory(),
+            defaultRouteManager,
+            new WindowsManualIpv4DnsWriter())
     {
     }
 
     internal WmiNetworkAdapterConfigurator(
         IWmiNetworkAdapterSessionFactory sessionFactory,
         IIpv4DefaultRouteManager defaultRouteManager)
+        : this(sessionFactory, defaultRouteManager, new WindowsManualIpv4DnsWriter())
+    {
+    }
+
+    internal WmiNetworkAdapterConfigurator(
+        IWmiNetworkAdapterSessionFactory sessionFactory,
+        IIpv4DefaultRouteManager defaultRouteManager,
+        IManualIpv4DnsWriter manualDnsWriter)
     {
         ArgumentNullException.ThrowIfNull(sessionFactory);
         ArgumentNullException.ThrowIfNull(defaultRouteManager);
+        ArgumentNullException.ThrowIfNull(manualDnsWriter);
         _sessionFactory = sessionFactory;
         _defaultRouteManager = defaultRouteManager;
+        _manualDnsWriter = manualDnsWriter;
     }
 
     public async Task<NetworkApplyResult> ApplyStaticAsync(
@@ -129,21 +143,19 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         {
             dns = new StepExecution(NetworkMutationStepResult.NotRequired());
         }
+        else if (plan.DnsMode == DnsMutationMode.ClearToAutomatic)
+        {
+            // Microsoft documents omission of all input parameters as the way
+            // to return from static DNS to automatic source semantics.
+            dns = Invoke(session, SetDnsMethod, parameters: null);
+        }
         else
         {
             string[] dnsServers = new[] { configuration.PrimaryDns, configuration.SecondaryDns }
                 .Where(value => value is not null)
                 .Select(value => value!)
                 .ToArray();
-
-            // Microsoft documents omission of all input parameters as the way
-            // to return from static DNS to automatic source semantics.
-            dns = Invoke(
-                session,
-                SetDnsMethod,
-                plan.DnsMode == DnsMutationMode.ClearToAutomatic
-                    ? null
-                    : new Dictionary<string, object?> { ["DNSServerSearchOrder"] = dnsServers });
+            dns = SetManualIpv4Dns(adapterId, dnsServers);
         }
 
         return new NetworkApplyResult(
@@ -204,6 +216,30 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         return new StepExecution(
             new NetworkMutationStepResult(NetworkMutationStepStatus.Failed, result.TechnicalCode),
             failure,
+            result.Status.ToString());
+    }
+
+    private StepExecution SetManualIpv4Dns(
+        NetworkAdapterId adapterId,
+        IReadOnlyList<string> servers)
+    {
+        ManualIpv4DnsWriteResult result = _manualDnsWriter.Write(adapterId, servers);
+
+        if (result.IsSuccess)
+        {
+            return new StepExecution(
+                new NetworkMutationStepResult(
+                    NetworkMutationStepStatus.Succeeded,
+                    result.TechnicalCode));
+        }
+
+        return new StepExecution(
+            new NetworkMutationStepResult(
+                NetworkMutationStepStatus.Failed,
+                result.TechnicalCode),
+            result.Status == ManualIpv4DnsWriteStatus.InvalidAdapterIdentity
+                ? NetworkMutationFailureKind.InterfaceResolutionFailure
+                : NetworkMutationFailureKind.OperationalFailure,
             result.Status.ToString());
     }
 

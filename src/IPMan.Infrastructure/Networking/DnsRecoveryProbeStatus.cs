@@ -10,5 +10,7 @@ public enum DnsRecoveryProbeStatus
     ProfileOrPolicyDnsDetected = 4,
     ManualAdapterFlagWithoutUsableIpv4Servers = 5,
     Automatic = 6,
-    Manual = 7
+    Manual = 7,
+    InvalidNameServerPayload = 8,
+    UnsupportedRicherDnsState = 9
 }

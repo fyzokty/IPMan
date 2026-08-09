@@ -29,6 +29,26 @@ public sealed class RecoveryDiagnosticReportTests
     }
 
     [Fact]
+    public void FormatSanitizedLines_WithManualDns_IncludesNativeSourceShapeWithoutValues()
+    {
+        NetworkAdapterRecoverySnapshot snapshot = Snapshot(
+            dnsMode: DnsConfigurationMode.Manual,
+            configuredDns: ["1.1.1.1"]);
+        RecoveryDiagnosticReport report = CreateReport(
+            new ManagedAdapterDiagnosticRead(
+                ManagedAdapterReadDiagnosticStatus.Found,
+                snapshot.Adapter),
+            RecoveryDiagnostic(snapshot));
+
+        string output = string.Join(Environment.NewLine, report.FormatSanitizedLines());
+
+        Assert.Contains("DnsNativeFlags: 2", output, StringComparison.Ordinal);
+        Assert.Contains("DnsNameServerPresent: True", output, StringComparison.Ordinal);
+        Assert.Contains("ConfiguredIpv4DnsCount: 1", output, StringComparison.Ordinal);
+        Assert.DoesNotContain("1.1.1.1", output, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Create_WhenAnyRestoreCapabilityReasonExists_CannotPassDestructiveGate()
     {
         NetworkAdapterRecoverySnapshot[] blockedSnapshots =
@@ -165,6 +185,8 @@ public sealed class RecoveryDiagnosticReportTests
                     _ => DnsRecoveryProbeStatus.NativeCallFailed
                 },
                 NativeResult: snapshot.DnsMode == DnsConfigurationMode.Unknown ? 87u : 0u,
+                NativeFlags: snapshot.DnsMode == DnsConfigurationMode.Manual ? 0x0002UL : 0,
+                NameServerPresent: snapshot.DnsMode == DnsConfigurationMode.Manual,
                 AdapterManualServerFlag: snapshot.DnsMode == DnsConfigurationMode.Manual,
                 ProfileServerFlag: false,
                 UsableIpv4ServerCount: snapshot.ConfiguredIpv4DnsServers.Length));

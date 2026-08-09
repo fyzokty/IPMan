@@ -8,7 +8,8 @@ namespace IPMan.Tests.Networking;
 
 public sealed class WmiNetworkAdapterConfiguratorTests
 {
-    private static readonly NetworkAdapterId AdapterId = new("{A}");
+    private static readonly NetworkAdapterId AdapterId =
+        new("{AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE}");
 
     private static readonly string[] ExpectedIpAddress = { "192.168.1.60" };
 
@@ -18,11 +19,17 @@ public sealed class WmiNetworkAdapterConfiguratorTests
 
     private static readonly string[] ExpectedDnsServers = { "1.1.1.1", "8.8.8.8" };
 
+    private static readonly string[] ExpectedPrimaryDnsServer = { "1.1.1.1" };
+
     [Fact]
-    public async Task ApplyStaticAsync_WhenAllStepsReturnZero_InvokesDocumentedMethodsInOrder()
+    public async Task ApplyStaticAsync_WhenManualDnsHasTwoServers_UsesNativeWriterAfterIpv4AndGateway()
     {
-        FakeWmiSession session = new(0, 0, 0);
-        WmiNetworkAdapterConfigurator configurator = CreateConfigurator(session);
+        List<string> order = new();
+        FakeWmiSession session = new(0, 0) { Order = order };
+        FakeManualIpv4DnsWriter dnsWriter = new() { Order = order };
+        WmiNetworkAdapterConfigurator configurator = CreateConfigurator(
+            session,
+            dnsWriter: dnsWriter);
 
         NetworkApplyResult result = await configurator.ApplyStaticAsync(
             AdapterId,
@@ -30,6 +37,7 @@ public sealed class WmiNetworkAdapterConfiguratorTests
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
+        Assert.Equal(["EnableStatic", "SetGateways", "ManualDns"], order);
         Assert.Collection(
             session.Calls,
             call =>
@@ -43,12 +51,27 @@ public sealed class WmiNetworkAdapterConfiguratorTests
                 Assert.Equal("SetGateways", call.Method);
                 Assert.Equal(ExpectedGateway, call.Parameters!["DefaultIPGateway"]);
                 Assert.Equal(new ushort[] { 1 }, call.Parameters["GatewayCostMetric"]);
-            },
-            call =>
-            {
-                Assert.Equal("SetDNSServerSearchOrder", call.Method);
-                Assert.Equal(ExpectedDnsServers, call.Parameters!["DNSServerSearchOrder"]);
             });
+        Assert.Equal(AdapterId, dnsWriter.AdapterId);
+        Assert.Equal(ExpectedDnsServers, dnsWriter.Servers);
+        Assert.DoesNotContain(session.Calls, call => call.Method == "SetDNSServerSearchOrder");
+    }
+
+    [Fact]
+    public async Task ApplyStaticAsync_WhenManualDnsHasOneServer_UsesNativeWriterNotWmiDns()
+    {
+        FakeWmiSession session = new(0, 0);
+        FakeManualIpv4DnsWriter dnsWriter = new();
+
+        NetworkApplyResult result = await CreateConfigurator(session, dnsWriter: dnsWriter)
+            .ApplyStaticAsync(
+                AdapterId,
+                Plan(primaryDns: "1.1.1.1", secondaryDns: null),
+                CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(ExpectedPrimaryDnsServer, dnsWriter.Servers);
+        Assert.DoesNotContain(session.Calls, call => call.Method == "SetDNSServerSearchOrder");
     }
 
     [Fact]
@@ -96,7 +119,7 @@ public sealed class WmiNetworkAdapterConfiguratorTests
         Assert.True(result.IsSuccess);
         Assert.Equal(NetworkMutationStepStatus.SucceededProvisionally, result.Ipv4Step.Status);
         Assert.Equal((uint)81, result.Ipv4Step.TechnicalCode);
-        Assert.Equal(3, session.Calls.Count);
+        Assert.Equal(2, session.Calls.Count);
     }
 
     [Theory]
@@ -125,9 +148,17 @@ public sealed class WmiNetworkAdapterConfiguratorTests
     {
         FakeWmiSession session = failingCall == 1
             ? new FakeWmiSession(0, 81)
-            : new FakeWmiSession(0, 0, 81);
+            : new FakeWmiSession(0, 0);
+        FakeManualIpv4DnsWriter dnsWriter = new();
 
-        NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
+        if (failingCall == 2)
+        {
+            dnsWriter.Result = new ManualIpv4DnsWriteResult(
+                ManualIpv4DnsWriteStatus.NativeCallFailed,
+                81);
+        }
+
+        NetworkApplyResult result = await CreateConfigurator(session, dnsWriter: dnsWriter).ApplyStaticAsync(
             AdapterId,
             Plan(),
             CancellationToken.None);
@@ -157,9 +188,19 @@ public sealed class WmiNetworkAdapterConfiguratorTests
     [Fact]
     public async Task ApplyStaticAsync_WhenDnsStepFails_ReturnsPartialFailure()
     {
-        NetworkApplyResult result = await CreateConfigurator(new FakeWmiSession(0, 0, 96))
+        FakeManualIpv4DnsWriter dnsWriter = new()
+        {
+            Result = new ManualIpv4DnsWriteResult(
+                ManualIpv4DnsWriteStatus.NativeCallFailed,
+                96)
+        };
+
+        NetworkApplyResult result = await CreateConfigurator(
+                new FakeWmiSession(0, 0),
+                dnsWriter: dnsWriter)
             .ApplyStaticAsync(AdapterId, Plan(), CancellationToken.None);
 
+        Assert.False(result.IsSuccess);
         Assert.True(result.IsPartialFailure);
         Assert.Equal((uint)96, result.DnsStep.TechnicalCode);
     }
@@ -168,18 +209,20 @@ public sealed class WmiNetworkAdapterConfiguratorTests
     public async Task ApplyStaticAsync_WhenDnsIsEmpty_OmitsAllDnsInputParameters()
     {
         FakeWmiSession session = new(0, 0, 0);
+        FakeManualIpv4DnsWriter dnsWriter = new();
         StaticIpv4MutationPlan plan = Plan(
             primaryDns: null,
             secondaryDns: null,
             dnsMode: DnsMutationMode.ClearToAutomatic);
 
-        NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
+        NetworkApplyResult result = await CreateConfigurator(session, dnsWriter: dnsWriter).ApplyStaticAsync(
             AdapterId,
             plan,
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
         Assert.Null(session.Calls[2].Parameters);
+        Assert.Equal(0, dnsWriter.CallCount);
     }
 
     [Fact]
@@ -366,11 +409,13 @@ public sealed class WmiNetworkAdapterConfiguratorTests
 
     private static WmiNetworkAdapterConfigurator CreateConfigurator(
         FakeWmiSession session,
-        IIpv4DefaultRouteManager? routeManager = null) =>
+        IIpv4DefaultRouteManager? routeManager = null,
+        IManualIpv4DnsWriter? dnsWriter = null) =>
         new(
             new FakeWmiFactory(
                 new WmiAdapterResolution(WmiAdapterResolutionStatus.Found, session)),
-            routeManager ?? new FakeDefaultRouteManager());
+            routeManager ?? new FakeDefaultRouteManager(),
+            dnsWriter ?? new FakeManualIpv4DnsWriter());
 
     private static StaticIpv4MutationPlan Plan(
         string? gateway = "192.168.1.1",
@@ -422,6 +467,31 @@ public sealed class WmiNetworkAdapterConfiguratorTests
         }
     }
 
+    private sealed class FakeManualIpv4DnsWriter : IManualIpv4DnsWriter
+    {
+        public ManualIpv4DnsWriteResult Result { get; set; } =
+            new(ManualIpv4DnsWriteStatus.Success, 0);
+
+        public NetworkAdapterId? AdapterId { get; private set; }
+
+        public string[]? Servers { get; private set; }
+
+        public List<string>? Order { get; set; }
+
+        public int CallCount { get; private set; }
+
+        public ManualIpv4DnsWriteResult Write(
+            NetworkAdapterId adapterId,
+            IReadOnlyList<string> servers)
+        {
+            CallCount++;
+            AdapterId = adapterId;
+            Servers = servers.ToArray();
+            Order?.Add("ManualDns");
+            return Result;
+        }
+    }
+
     private sealed class FakeWmiSession : IWmiNetworkAdapterSession
     {
         private readonly Queue<uint> _codes;
@@ -432,9 +502,12 @@ public sealed class WmiNetworkAdapterConfiguratorTests
 
         public Exception? Failure { get; set; }
 
+        public List<string>? Order { get; set; }
+
         public uint Invoke(string methodName, IReadOnlyDictionary<string, object?>? parameters)
         {
             Calls.Add(new WmiCall(methodName, parameters));
+            Order?.Add(methodName);
 
             if (Failure is not null)
             {

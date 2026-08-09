@@ -7,6 +7,8 @@ namespace IPMan.Infrastructure.Networking;
 public sealed record DnsRecoveryProbeDiagnostic(
     DnsRecoveryProbeStatus Status,
     uint? NativeResult,
+    ulong NativeFlags,
+    bool NameServerPresent,
     bool AdapterManualServerFlag,
     bool ProfileServerFlag,
     int UsableIpv4ServerCount);

@@ -15,6 +15,8 @@ public sealed class WmiNetworkAdapterRecoveryReaderTests
 
     private static readonly string[] ExpectedIpv4Dns = { "1.1.1.1", "8.8.8.8" };
 
+    private static readonly string[] ExpectedReversedIpv4Dns = { "8.8.8.8", "1.1.1.1" };
+
     private static readonly string[] RawAddresses = { "192.168.1.50", "2001:db8::1" };
 
     private static readonly string[] RawSubnets = { "255.255.255.0", "64" };
@@ -27,9 +29,21 @@ public sealed class WmiNetworkAdapterRecoveryReaderTests
 
     [Theory]
     [InlineData(0, null, DnsConfigurationMode.Automatic, DnsRecoveryProbeStatus.Automatic, 0)]
+    [InlineData(0, "", DnsConfigurationMode.Automatic, DnsRecoveryProbeStatus.Automatic, 0)]
+    [InlineData(0, "1.1.1.1", DnsConfigurationMode.Manual, DnsRecoveryProbeStatus.Manual, 1)]
+    [InlineData(0, "1.1.1.1,8.8.8.8", DnsConfigurationMode.Manual, DnsRecoveryProbeStatus.Manual, 2)]
+    [InlineData(0x0004, "1.1.1.1", DnsConfigurationMode.Manual, DnsRecoveryProbeStatus.Manual, 1)]
+    [InlineData(0x0004, null, DnsConfigurationMode.Automatic, DnsRecoveryProbeStatus.Automatic, 0)]
+    [InlineData(0x0002, "1.1.1.1", DnsConfigurationMode.Manual, DnsRecoveryProbeStatus.Manual, 1)]
     [InlineData(0x0002, "1.1.1.1, 8.8.8.8", DnsConfigurationMode.Manual, DnsRecoveryProbeStatus.Manual, 2)]
     [InlineData(0x0002, null, DnsConfigurationMode.Unknown, DnsRecoveryProbeStatus.ManualAdapterFlagWithoutUsableIpv4Servers, 0)]
+    [InlineData(0, "invalid", DnsConfigurationMode.Unknown, DnsRecoveryProbeStatus.InvalidNameServerPayload, 0)]
+    [InlineData(0, "1.1.1.1;8.8.8.8", DnsConfigurationMode.Unknown, DnsRecoveryProbeStatus.InvalidNameServerPayload, 0)]
+    [InlineData(0, "2001:4860:4860::8888", DnsConfigurationMode.Unknown, DnsRecoveryProbeStatus.InvalidNameServerPayload, 0)]
+    [InlineData(0, "1.1.1.1,8.8.8.8,9.9.9.9", DnsConfigurationMode.Unknown, DnsRecoveryProbeStatus.InvalidNameServerPayload, 0)]
+    [InlineData(0x0001, "1.1.1.1", DnsConfigurationMode.Unknown, DnsRecoveryProbeStatus.UnsupportedRicherDnsState, 0)]
     [InlineData(0x0200, "9.9.9.9", DnsConfigurationMode.Unknown, DnsRecoveryProbeStatus.ProfileOrPolicyDnsDetected, 0)]
+    [InlineData(0x1000, "1.1.1.1", DnsConfigurationMode.Unknown, DnsRecoveryProbeStatus.UnsupportedRicherDnsState, 0)]
     internal void DnsSettings_MapOnlyRestoreCapableSourceSemantics(
         ulong flags,
         string? nameServers,
@@ -42,6 +56,39 @@ public sealed class WmiNetworkAdapterRecoveryReaderTests
         Assert.Equal(expectedMode, result.Mode);
         Assert.Equal(expectedStatus, result.Diagnostic.Status);
         Assert.Equal(expectedServerCount, result.Diagnostic.UsableIpv4ServerCount);
+    }
+
+    [Theory]
+    [InlineData(0UL, "8.8.8.8,1.1.1.1")]
+    [InlineData(0x0002UL, "8.8.8.8,1.1.1.1")]
+    [InlineData(0x0004UL, "8.8.8.8 1.1.1.1")]
+    internal void DnsSettings_ManualTwoServers_PreservesExactOrder(
+        ulong flags,
+        string nameServers)
+    {
+        DnsRecoveryState result = WindowsDnsRecoveryStateProbe.MapSettings(
+            flags,
+            nameServers);
+
+        Assert.Equal(DnsConfigurationMode.Manual, result.Mode);
+        Assert.Equal(ExpectedReversedIpv4Dns, result.ConfiguredServers);
+        Assert.Equal(flags, result.Diagnostic.NativeFlags);
+        Assert.True(result.Diagnostic.NameServerPresent);
+    }
+
+    [Fact]
+    public void DnsSettings_ProfilePayloadWithoutProfileFlag_RemainsFailClosed()
+    {
+        DnsRecoveryState result = WindowsDnsRecoveryStateProbe.MapSettings(
+            flags: 0,
+            nameServers: null,
+            profileNameServers: "9.9.9.9");
+
+        Assert.Equal(DnsConfigurationMode.Unknown, result.Mode);
+        Assert.Equal(
+            DnsRecoveryProbeStatus.ProfileOrPolicyDnsDetected,
+            result.Diagnostic.Status);
+        Assert.True(result.Diagnostic.ProfileServerFlag);
     }
 
     [Fact]
@@ -270,6 +317,8 @@ public sealed class WmiNetworkAdapterRecoveryReaderTests
                         _ => DnsRecoveryProbeStatus.NativeCallFailed
                     },
                     NativeResult: _mode == DnsConfigurationMode.Unknown ? 87u : 0u,
+                    NativeFlags: _mode == DnsConfigurationMode.Manual ? 0x0002UL : 0,
+                    NameServerPresent: _mode == DnsConfigurationMode.Manual,
                     AdapterManualServerFlag: _mode == DnsConfigurationMode.Manual,
                     ProfileServerFlag: false,
                     UsableIpv4ServerCount: _mode == DnsConfigurationMode.Manual

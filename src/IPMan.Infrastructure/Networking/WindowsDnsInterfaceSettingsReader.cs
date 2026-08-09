@@ -10,7 +10,8 @@ internal interface IDnsInterfaceSettingsReader
 internal sealed record DnsInterfaceSettingsReadResult(
     uint NativeResult,
     ulong Flags,
-    string? NameServers);
+    string? NameServers,
+    string? ProfileNameServers = null);
 
 internal sealed class WindowsDnsInterfaceSettingsReader : IDnsInterfaceSettingsReader
 {
@@ -42,7 +43,8 @@ internal sealed class WindowsDnsInterfaceSettingsReader : IDnsInterfaceSettingsR
             return new DnsInterfaceSettingsReadResult(
                 result,
                 settings.Flags,
-                Marshal.PtrToStringUni(settings.NameServer));
+                Marshal.PtrToStringUni(settings.NameServer),
+                Marshal.PtrToStringUni(settings.ProfileNameServer));
         }
         finally
         {
