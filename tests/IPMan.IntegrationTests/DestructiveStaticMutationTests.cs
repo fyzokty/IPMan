@@ -62,11 +62,11 @@ public sealed class DestructiveStaticMutationTests
                 string.Join(Environment.NewLine, diagnosticReport.FormatSanitizedLines()));
         }
 
-        NetworkAdapterRecoverySnapshot recoverySnapshot = recoveryRead.Snapshot!;
+        NetworkAdapterRecoverySnapshot preconditionRecoverySnapshot = recoveryRead.Snapshot!;
 
         ScenarioPreconditionResult preconditions = ScenarioPreconditionValidator.Validate(
             settings.Scenario,
-            recoverySnapshot,
+            preconditionRecoverySnapshot,
             settings.DesiredConfiguration);
 
         if (!preconditions.IsAllowed)
@@ -94,7 +94,7 @@ public sealed class DestructiveStaticMutationTests
             settings.AdapterId,
             settings.DesiredConfiguration,
             beforeObservation,
-            recoverySnapshot);
+            preconditionRecoverySnapshot);
         await evidenceWriter.WriteBeforeAsync(beforeEvidence, CancellationToken.None);
         _output.WriteLine($"Evidence directory: {evidenceWriter.DirectoryPath}");
 
@@ -102,23 +102,42 @@ public sealed class DestructiveStaticMutationTests
         NetworkObservation? afterObservation = null;
         NetworkAdapterRecoveryReadResult? afterRecovery = null;
         bool rollbackMatches = false;
+        NetworkAdapterRecoveryReadResult? applyRollbackSourceRead = null;
         IReadOnlyList<string> differences = Array.Empty<string>();
         string? failure = null;
 
         try
         {
-            applyResult = await production.ApplyService.ApplyAsync(
-                    new StaticIpv4ApplyRequest(
-                        settings.AdapterId,
-                        settings.DesiredConfiguration,
-                        ConfirmPotentialConflict: true,
-                        ContinueAfterIndeterminateProbe: true),
-                    CancellationToken.None);
+            production.ApplyRecoveryReader.BeginApplyCapture();
+            try
+            {
+                applyResult = await production.ApplyService.ApplyAsync(
+                        new StaticIpv4ApplyRequest(
+                            settings.AdapterId,
+                            settings.DesiredConfiguration,
+                            ConfirmPotentialConflict: true,
+                            ContinueAfterIndeterminateProbe: true),
+                        CancellationToken.None);
+            }
+            finally
+            {
+                applyRollbackSourceRead = production.ApplyRecoveryReader.EndApplyCapture();
+            }
+
             afterObservation = ExactNetworkObserver.Read(settings.AdapterId);
             afterRecovery = await production.RecoveryReader
                 .ReadAsync(settings.AdapterId, CancellationToken.None);
-            rollbackMatches = await RollbackSnapshotVerifier
-                .MatchesAsync(applyResult.Rollback, recoverySnapshot, CancellationToken.None);
+            NetworkAdapterRecoverySnapshot? applyRollbackSource =
+                applyRollbackSourceRead?.Status == NetworkAdapterRecoveryReadStatus.Success
+                    ? applyRollbackSourceRead.Snapshot
+                    : null;
+            rollbackMatches = applyRollbackSource is not null &&
+                await RollbackSnapshotVerifier
+                    .MatchesAsync(
+                        applyResult.Rollback,
+                        applyRollbackSource,
+                        CancellationToken.None)
+                    .ConfigureAwait(false);
             ObservationComparisonResult nonInterference = ObservationComparer.CompareNonInterference(
                 beforeObservation,
                 afterObservation,
@@ -126,7 +145,7 @@ public sealed class DestructiveStaticMutationTests
             differences = ScenarioOutcomeVerifier.Verify(
                 settings,
                 applyResult,
-                recoverySnapshot,
+                preconditionRecoverySnapshot,
                 afterRecovery,
                 preconditions.RequestedDimensions,
                 nonInterference,

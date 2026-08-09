@@ -33,6 +33,7 @@ public static class ProductionHarnessFactory
                     "Backup")
             });
         WmiNetworkAdapterRecoveryReader recoveryReader = new();
+        RecordingNetworkAdapterRecoveryReader applyRecoveryReader = new(recoveryReader);
         INetworkAdapterConfigurator configurator = new WmiNetworkAdapterConfigurator();
         NetworkMutationCoordinator coordinator = new();
         IDelayProvider delay = new SystemDelayProvider();
@@ -42,7 +43,7 @@ public static class ProductionHarnessFactory
             rollback,
             configurator,
             reader,
-            recoveryReader,
+            applyRecoveryReader,
             coordinator,
             comparer,
             delay,
@@ -53,6 +54,11 @@ public static class ProductionHarnessFactory
                 VerificationDelay = TimeSpan.FromMilliseconds(500)
             });
 
-        return new ProductionHarnessContext(reader, recoveryReader, apply, coordinator);
+        return new ProductionHarnessContext(
+            reader,
+            recoveryReader,
+            applyRecoveryReader,
+            apply,
+            coordinator);
     }
 }

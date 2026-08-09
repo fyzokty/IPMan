@@ -1,4 +1,3 @@
-using System.Text.Json;
 using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
 
@@ -7,13 +6,8 @@ namespace IPMan.Infrastructure.Networking;
 /// <summary>Atomic, durable JSON persistence for pre-mutation recovery snapshots.</summary>
 public sealed class JsonRollbackSnapshotRepository : IRollbackSnapshotRepository
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true
-    };
-
     private readonly string _backupDirectory;
+    private readonly RollbackSnapshotJsonCodec _codec = new();
 
     public JsonRollbackSnapshotRepository(RollbackSnapshotRepositoryOptions options)
     {
@@ -51,8 +45,8 @@ public sealed class JsonRollbackSnapshotRepository : IRollbackSnapshotRepository
                 bufferSize: 4096,
                 FileOptions.Asynchronous | FileOptions.WriteThrough))
             {
-                await JsonSerializer
-                    .SerializeAsync(stream, snapshot, SerializerOptions, cancellationToken)
+                await _codec
+                    .SerializeAsync(stream, snapshot, cancellationToken)
                     .ConfigureAwait(false);
                 await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
             }

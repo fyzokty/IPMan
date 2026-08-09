@@ -27,9 +27,28 @@ On the same VM, `NetworkInterface.Id` and `Get-NetAdapter InterfaceGuid` returne
 the same uppercase GUID. The managed-reader blocker was traced to textual GUID
 case/format equality in `NetworkAdapterId`, not to Windows identity, WMI recovery
 or DNS recovery. GUID-shaped application identities are now canonicalized at the
-Domain value-object boundary. No destructive scenario has been rerun after this
-fix, so the gate remains `HARNESS_READY_REAL_RUN_PENDING`, not
-`INTEGRATION_VALIDATED`.
+Domain value-object boundary.
+
+After identity canonicalization, one isolated `StaticToStatic` run executed.
+Production returned `VerifiedSuccess`, the IPv4 WMI/native result was `0`, and
+Windows changed `10.250.0.10/24` to `10.250.0.20/24`. Gateway remained absent,
+IPv4 DNS remained automatic/empty, rollback JSON was created, and IPv6, route and
+richer DNS observation ran. The harness failed only because
+`rollbackMatchesBeforeState` was false even though manual inspection showed the
+raw rollback fields matched the evidence.
+
+Source review found two deterministic verification defects:
+
+- default typed deserialization did not reconstruct `NetworkAdapterId` through
+  its canonicalizing constructor;
+- the harness compared rollback with its earlier precondition recovery read,
+  not production Apply's exact second fresh rollback-source read.
+
+The rollback v2 wire format is now read and written through one authoritative
+Infrastructure codec, and a harness-only recorder captures the exact Apply source
+without changing production mutation semantics. The destructive scenario has not
+been rerun after these fixes, so the gate remains
+`HARNESS_READY_REAL_RUN_PENDING`, not `INTEGRATION_VALIDATED`.
 
 The architect will only open the production Apply gate after reviewing real
 isolated-run evidence.

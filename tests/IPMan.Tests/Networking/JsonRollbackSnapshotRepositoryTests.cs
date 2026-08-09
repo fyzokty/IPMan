@@ -77,6 +77,32 @@ public sealed class JsonRollbackSnapshotRepositoryTests
     }
 
     [Fact]
+    public async Task SaveAsync_WhenSnapshotIsReadWithAuthoritativeCodec_PreservesCanonicalAdapterIdentity()
+    {
+        string directory = CreateTestDirectory();
+
+        try
+        {
+            JsonRollbackSnapshotRepository repository = CreateRepository(directory);
+            NetworkRollbackSnapshot snapshot = Snapshot() with
+            {
+                AdapterId = new NetworkAdapterId("827a2938-bb14-4d18-b67f-94e9c4f818ba")
+            };
+            RollbackCaptureResult saved = await repository.SaveAsync(snapshot, CancellationToken.None);
+
+            await using FileStream stream = File.OpenRead(saved.Reference!.StoragePath);
+            NetworkRollbackSnapshot restored = await new RollbackSnapshotJsonCodec()
+                .DeserializeAsync(stream, CancellationToken.None);
+
+            Assert.Equal(snapshot.AdapterId, restored.AdapterId);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task SaveAsync_WhenBackupPathIsAFile_ReturnsIoFailure()
     {
         string parent = CreateTestDirectory();

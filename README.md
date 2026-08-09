@@ -26,5 +26,14 @@ diagnostic then reported WMI recovery success, automatic DNS with native result
 `Get-NetAdapter InterfaceGuid` reported the same uppercase GUID. The blocker was
 application identity semantics: equivalent uppercase/lowercase GUID text
 produced unequal `NetworkAdapterId` values. Parseable GUID identities are now
-canonicalized at that Domain boundary. The destructive scenario has not been
-rerun and production Apply remains closed.
+canonicalized at that Domain boundary.
+
+After that fix, the isolated `StaticToStatic` run reached production
+`VerifiedSuccess`: Windows changed `10.250.0.10/24` to `10.250.0.20/24`, the WMI
+IPv4 result was `0`, and gateway/DNS remained absent/automatic. The harness
+failed only because rollback fidelity verification returned false. The remaining
+blocker was traced to the typed rollback JSON identity contract and to comparison
+against the harness's earlier recovery read instead of production Apply's exact
+fresh rollback-source read. Those deterministic code paths are corrected locally;
+the destructive scenario has not been rerun again and production Apply remains
+closed.

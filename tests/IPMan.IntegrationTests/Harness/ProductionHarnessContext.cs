@@ -10,11 +10,13 @@ public sealed class ProductionHarnessContext : IDisposable
     internal ProductionHarnessContext(
         INetworkAdapterReader adapterReader,
         WmiNetworkAdapterRecoveryReader recoveryReader,
+        RecordingNetworkAdapterRecoveryReader applyRecoveryReader,
         IStaticIpv4ApplyService applyService,
         NetworkMutationCoordinator coordinator)
     {
         AdapterReader = adapterReader;
         RecoveryReader = recoveryReader;
+        ApplyRecoveryReader = applyRecoveryReader;
         ApplyService = applyService;
         _coordinator = coordinator;
     }
@@ -22,6 +24,8 @@ public sealed class ProductionHarnessContext : IDisposable
     public INetworkAdapterReader AdapterReader { get; }
 
     public WmiNetworkAdapterRecoveryReader RecoveryReader { get; }
+
+    public RecordingNetworkAdapterRecoveryReader ApplyRecoveryReader { get; }
 
     public IStaticIpv4ApplyService ApplyService { get; }
 

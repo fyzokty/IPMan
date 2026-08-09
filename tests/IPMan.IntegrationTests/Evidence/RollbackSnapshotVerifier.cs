@@ -1,14 +1,12 @@
 using System.Text.Json;
 using IPMan.Domain.Networking;
+using IPMan.Infrastructure.Networking;
 
 namespace IPMan.IntegrationTests.Evidence;
 
 public static class RollbackSnapshotVerifier
 {
-    private static readonly JsonSerializerOptions SerializerOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
+    private static readonly RollbackSnapshotJsonCodec Codec = new();
 
     public static async Task<bool> MatchesAsync(
         RollbackSnapshotReference? reference,
@@ -20,13 +18,21 @@ public static class RollbackSnapshotVerifier
             return false;
         }
 
-        await using FileStream stream = File.OpenRead(reference.StoragePath);
-        NetworkRollbackSnapshot? snapshot = await JsonSerializer
-            .DeserializeAsync<NetworkRollbackSnapshot>(stream, SerializerOptions, cancellationToken)
-            .ConfigureAwait(false);
+        NetworkRollbackSnapshot snapshot;
 
-        return snapshot is not null &&
-            snapshot.SnapshotId == reference.SnapshotId &&
+        try
+        {
+            await using FileStream stream = File.OpenRead(reference.StoragePath);
+            snapshot = await Codec
+                .DeserializeAsync(stream, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+
+        return snapshot.SnapshotId == reference.SnapshotId &&
             snapshot.AdapterId == before.Adapter.Id &&
             snapshot.Mode == before.Adapter.Mode &&
             snapshot.DnsMode == before.DnsMode &&
