@@ -68,3 +68,25 @@ Output is sanitized to stable statuses, numeric native return codes, counts and
 booleans. It does not print adapter IP/DNS values, display metadata, raw native
 pointers or exception messages. A diagnostic run is not integration validation
 and does not authorize a destructive rerun.
+
+## Read-only DNS truth-source diagnostic
+
+This separately opted-in diagnostic compares `GetInterfaceDnsSettings`,
+`MSFT_DNSClientServerAddress`, and native `GetAdaptersAddresses` for one exact
+adapter GUID. It has no mutation-service dependency and is skipped by default.
+
+```text
+IPMAN_DNS_TRUTH_DIAGNOSTIC=1
+IPMAN_TEST_ADAPTER_ID={EXACT-INTERFACE-GUID}
+```
+
+Run only the DNS truth diagnostic category:
+
+```powershell
+dotnet test tests/IPMan.IntegrationTests/IPMan.IntegrationTests.csproj `
+  --filter "Category=DnsTruthDiagnostic" `
+  --logger "console;verbosity=detailed"
+```
+
+The diagnostic prints raw DNS values from its three read-only sources for local
+before/after comparison. It never invokes DNS, route, registry, or shell mutation.
