@@ -206,14 +206,18 @@ public sealed class WmiNetworkAdapterConfiguratorTests
     }
 
     [Fact]
-    public async Task ApplyStaticAsync_WhenDnsIsEmpty_OmitsAllDnsInputParameters()
+    public async Task ApplyStaticAsync_WhenDnsIsCleared_UsesExplicitNullInputWithoutEmptyValue()
     {
-        FakeWmiSession session = new(0, 0, 0);
+        FakeWmiSession session = new(0, 0);
         FakeManualIpv4DnsWriter dnsWriter = new();
         StaticIpv4MutationPlan plan = Plan(
+            gateway: null,
             primaryDns: null,
             secondaryDns: null,
-            dnsMode: DnsMutationMode.ClearToAutomatic);
+            gatewayMode: GatewayMutationMode.LeaveAbsent,
+            gatewayMetric: null,
+            dnsMode: DnsMutationMode.ClearToAutomatic,
+            previousMode: NetworkConfigurationMode.Static);
 
         NetworkApplyResult result = await CreateConfigurator(session, dnsWriter: dnsWriter).ApplyStaticAsync(
             AdapterId,
@@ -221,8 +225,60 @@ public sealed class WmiNetworkAdapterConfiguratorTests
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.Null(session.Calls[2].Parameters);
+        Assert.Collection(
+            session.Calls,
+            call =>
+            {
+                Assert.Equal("EnableStatic", call.Method);
+                Assert.Equal(ExpectedIpAddress, call.Parameters!["IPAddress"]);
+                Assert.Equal(ExpectedSubnetMask, call.Parameters["SubnetMask"]);
+            },
+            call =>
+            {
+                Assert.Equal("SetDNSServerSearchOrder", call.Method);
+                KeyValuePair<string, object?> parameter = Assert.Single(call.Parameters!);
+                Assert.Equal("DNSServerSearchOrder", parameter.Key);
+                Assert.Null(parameter.Value);
+                Assert.False(parameter.Value is string);
+                Assert.False(parameter.Value is Array);
+            });
+        Assert.Equal(NetworkMutationStepStatus.NotRequired, result.GatewayStep.Status);
         Assert.Equal(0, dnsWriter.CallCount);
+    }
+
+    [Theory]
+    [InlineData(64, NetworkMutationFailureKind.OperationalFailure,
+        "Automatic DNS reset is not supported by the WMI provider.")]
+    [InlineData(68, NetworkMutationFailureKind.OperationalFailure,
+        "Automatic DNS reset was rejected as an invalid input parameter.")]
+    [InlineData(91, NetworkMutationFailureKind.AccessDenied,
+        "Automatic DNS reset was denied by the WMI provider.")]
+    public async Task ApplyStaticAsync_WhenAutomaticDnsResetFails_PreservesProviderFailure(
+        uint code,
+        NetworkMutationFailureKind expectedFailure,
+        string expectedMessage)
+    {
+        FakeWmiSession session = new(0, code);
+        StaticIpv4MutationPlan plan = Plan(
+            gateway: null,
+            primaryDns: null,
+            secondaryDns: null,
+            gatewayMode: GatewayMutationMode.LeaveAbsent,
+            gatewayMetric: null,
+            dnsMode: DnsMutationMode.ClearToAutomatic,
+            previousMode: NetworkConfigurationMode.Static);
+
+        NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
+            AdapterId,
+            plan,
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.True(result.IsPartialFailure);
+        Assert.Equal(NetworkMutationStepStatus.Failed, result.DnsStep.Status);
+        Assert.Equal(code, result.DnsStep.TechnicalCode);
+        Assert.Equal(expectedFailure, result.FailureKind);
+        Assert.Equal(expectedMessage, result.TechnicalMessage);
     }
 
     [Fact]

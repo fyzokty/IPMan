@@ -5,6 +5,12 @@ namespace IPMan.IntegrationTests.Observation;
 public static class ObservationComparer
 {
     private const ulong NameServerFlag = 0x2;
+    private static readonly string[] WindowsUnconfiguredIpv6DnsPlaceholders =
+    {
+        "fec0:0:0:ffff::1",
+        "fec0:0:0:ffff::2",
+        "fec0:0:0:ffff::3"
+    };
 
     public static ObservationComparisonResult CompareNonInterference(
         NetworkObservation before,
@@ -23,7 +29,11 @@ public static class ObservationComparer
         AddIfDifferent(differences, "IPv6 enabled state", before.Ipv6Enabled, after.Ipv6Enabled);
         AddSequenceIfDifferent(differences, "IPv6 addresses", before.Ipv6Addresses, after.Ipv6Addresses);
         AddSequenceIfDifferent(differences, "IPv6 gateways", before.Ipv6Gateways, after.Ipv6Gateways);
-        AddSequenceIfDifferent(differences, "IPv6 DNS servers", before.Ipv6DnsServers, after.Ipv6DnsServers);
+        AddSequenceIfDifferent(
+            differences,
+            "IPv6 DNS servers",
+            NormalizeIpv6DnsServers(before.Ipv6DnsServers),
+            NormalizeIpv6DnsServers(after.Ipv6DnsServers));
         CompareIpv6Routes(before.Ipv6Routes, after.Ipv6Routes, differences);
 
         bool changesDns = requestedDimensions.Contains(
@@ -33,6 +43,24 @@ public static class ObservationComparer
         CompareDnsSettings(before.DnsSettings, after.DnsSettings, changesDns, differences);
 
         return new ObservationComparisonResult(differences.Count == 0, differences);
+    }
+
+    private static string[] NormalizeIpv6DnsServers(IReadOnlyList<string> servers)
+    {
+        // GetAdaptersAddresses/.NET can project this exact legacy FEC0 trio
+        // when no IPv6 DNS server is configured. Treat only the complete trio
+        // as the unconfigured sentinel; every configured IPv6 value stays strict.
+        string[] normalized = servers
+            .Select(server => server.Split('%', 2)[0])
+            .OrderBy(server => server, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        string[] placeholders = WindowsUnconfiguredIpv6DnsPlaceholders
+            .OrderBy(server => server, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        return normalized.SequenceEqual(placeholders, StringComparer.OrdinalIgnoreCase)
+            ? Array.Empty<string>()
+            : normalized;
     }
 
     private static void CompareIpv6Routes(

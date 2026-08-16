@@ -133,6 +133,47 @@ public sealed class ObservationComparerTests
     }
 
     [Fact]
+    public void CompareNonInterference_WhenWindowsIpv6DnsPlaceholdersDisappear_Passes()
+    {
+        NetworkObservation before = Observation("192.0.2.10", "1.1.1.1") with
+        {
+            Ipv6DnsServers = new[]
+            {
+                "fec0:0:0:ffff::1%1",
+                "fec0:0:0:ffff::2%1",
+                "fec0:0:0:ffff::3%1"
+            }
+        };
+        NetworkObservation after = Observation("192.0.2.10", "8.8.8.8");
+
+        ObservationComparisonResult result = ObservationComparer.CompareNonInterference(
+            before,
+            after,
+            new[] { ScenarioPreconditionValidator.DnsDimension });
+
+        Assert.True(result.IsMatch);
+    }
+
+    [Fact]
+    public void CompareNonInterference_WhenConfiguredIpv6DnsChanges_RemainsStrict()
+    {
+        NetworkObservation before = Observation("192.0.2.10", "1.1.1.1") with
+        {
+            Ipv6DnsServers = new[] { "2001:4860:4860::8888" }
+        };
+        NetworkObservation after = Observation("192.0.2.10", "8.8.8.8");
+
+        ObservationComparisonResult result = ObservationComparer.CompareNonInterference(
+            before,
+            after,
+            new[] { ScenarioPreconditionValidator.DnsDimension });
+
+        Assert.False(result.IsMatch);
+        Assert.Contains(result.Differences, difference =>
+            difference.Contains("IPv6 DNS servers", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void CompareNonInterference_WhenIpv6RouteIsLost_Fails()
     {
         NetworkObservation before = Observation("192.0.2.10", "1.1.1.1");

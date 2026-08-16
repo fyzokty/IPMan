@@ -145,9 +145,12 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         }
         else if (plan.DnsMode == DnsMutationMode.ClearToAutomatic)
         {
-            // Microsoft documents omission of all input parameters as the way
-            // to return from static DNS to automatic source semantics.
-            dns = Invoke(session, SetDnsMethod, parameters: null);
+            // The WMI contract resets DNS when its one input value is null.
+            // Supplying no input object causes some providers to reject the
+            // call with code 68; an empty string or array is also invalid.
+            dns = InvokeDnsReset(
+                session,
+                new Dictionary<string, object?> { ["DNSServerSearchOrder"] = null });
         }
         else
         {
@@ -175,6 +178,24 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         {
             uint code = session.Invoke(methodName, parameters);
             return MapResult(code);
+        }
+        catch (ManagementException exception)
+        {
+            return new StepExecution(
+                new NetworkMutationStepResult(NetworkMutationStepStatus.Failed),
+                NetworkMutationFailureKind.ManagementFailure,
+                exception.Message);
+        }
+    }
+
+    private static StepExecution InvokeDnsReset(
+        IWmiNetworkAdapterSession session,
+        IReadOnlyDictionary<string, object?> parameters)
+    {
+        try
+        {
+            uint code = session.Invoke(SetDnsMethod, parameters);
+            return MapDnsResetResult(code);
         }
         catch (ManagementException exception)
         {
@@ -285,6 +306,37 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
             result.IsSuccessful
                 ? NetworkMutationFailureKind.None
                 : NetworkMutationFailureKind.OperationalFailure);
+    }
+
+    private static StepExecution MapDnsResetResult(uint code)
+    {
+        StepExecution execution = MapResult(code);
+
+        if (execution.Result.IsSuccessful)
+        {
+            return execution;
+        }
+
+        return code switch
+        {
+            64 => execution with
+            {
+                TechnicalMessage = "Automatic DNS reset is not supported by the WMI provider."
+            },
+            68 => execution with
+            {
+                TechnicalMessage = "Automatic DNS reset was rejected as an invalid input parameter."
+            },
+            91 => execution with
+            {
+                FailureKind = NetworkMutationFailureKind.AccessDenied,
+                TechnicalMessage = "Automatic DNS reset was denied by the WMI provider."
+            },
+            _ => execution with
+            {
+                TechnicalMessage = "Automatic DNS reset failed in the WMI provider."
+            }
+        };
     }
 
     private static NetworkApplyResult FailureBeforeMutation(
