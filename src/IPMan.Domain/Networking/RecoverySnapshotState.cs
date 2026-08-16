@@ -1,6 +1,6 @@
 namespace IPMan.Domain.Networking;
 
-public enum RollbackSnapshotState
+public enum RecoverySnapshotState
 {
     Captured = 0
 }

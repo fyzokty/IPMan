@@ -6,12 +6,12 @@ namespace IPMan.Application.Networking;
 
 /// <summary>
 /// Owns the complete static apply transaction: preflight, safety gates,
-/// rollback capture, one serialized mutation and bounded fresh-read verification.
+/// recovery capture, one serialized mutation and bounded fresh-read verification.
 /// </summary>
 public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
 {
     private readonly INetworkConfigurationPreflightService _preflightService;
-    private readonly IRollbackSnapshotRepository _rollbackRepository;
+    private readonly IRecoverySnapshotRepository _recoveryRepository;
     private readonly INetworkAdapterConfigurator _configurator;
     private readonly INetworkAdapterReader _adapterReader;
     private readonly INetworkAdapterRecoveryReader _recoveryReader;
@@ -23,7 +23,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
 
     public StaticIpv4ApplyService(
         INetworkConfigurationPreflightService preflightService,
-        IRollbackSnapshotRepository rollbackRepository,
+        IRecoverySnapshotRepository recoveryRepository,
         INetworkAdapterConfigurator configurator,
         INetworkAdapterReader adapterReader,
         INetworkAdapterRecoveryReader recoveryReader,
@@ -34,7 +34,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
         StaticIpv4ApplyOptions options)
     {
         ArgumentNullException.ThrowIfNull(preflightService);
-        ArgumentNullException.ThrowIfNull(rollbackRepository);
+        ArgumentNullException.ThrowIfNull(recoveryRepository);
         ArgumentNullException.ThrowIfNull(configurator);
         ArgumentNullException.ThrowIfNull(adapterReader);
         ArgumentNullException.ThrowIfNull(recoveryReader);
@@ -55,7 +55,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
         }
 
         _preflightService = preflightService;
-        _rollbackRepository = rollbackRepository;
+        _recoveryRepository = recoveryRepository;
         _configurator = configurator;
         _adapterReader = adapterReader;
         _recoveryReader = recoveryReader;
@@ -169,13 +169,13 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
             return new StaticIpv4ApplyResult(StaticIpv4ApplyStatus.Cancelled, preflight);
         }
 
-        NetworkRollbackSnapshot rollbackSnapshot = CreateRollbackSnapshot(recovery);
-        RollbackCaptureResult capture;
+        RecoverySnapshot recoverySnapshot = CreateRecoverySnapshot(recovery);
+        RecoveryCaptureResult capture;
 
         try
         {
-            capture = await _rollbackRepository
-                .SaveAsync(rollbackSnapshot, cancellationToken)
+            capture = await _recoveryRepository
+                .SaveAsync(recoverySnapshot, cancellationToken)
                 .ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
@@ -186,18 +186,18 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
         if (!capture.IsSuccess)
         {
             return new StaticIpv4ApplyResult(
-                StaticIpv4ApplyStatus.RollbackCaptureFailed,
+                StaticIpv4ApplyStatus.RecoveryCaptureFailed,
                 preflight);
         }
 
-        RollbackSnapshotReference rollback = capture.Reference!;
+        RecoverySnapshotReference recoveryReference = capture.Reference!;
 
         if (cancellationToken.IsCancellationRequested)
         {
             return new StaticIpv4ApplyResult(
                 StaticIpv4ApplyStatus.Cancelled,
                 preflight,
-                Rollback: rollback);
+                Recovery: recoveryReference);
         }
 
         StaticIpv4MutationPlan plan = new(
@@ -208,7 +208,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
             GetDnsMutationMode(recovery, desired),
             current.Mode);
 
-        // From this point onward cancellation cannot mean rollback. Complete the
+        // From this point onward cancellation cannot mean recovery. Complete the
         // critical call and fresh-read actual Windows state with a non-cancelled
         // token, then report the real outcome.
         NetworkApplyResult mutation = await _configurator
@@ -226,7 +226,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
                     ? StaticIpv4ApplyStatus.PartialFailure
                     : StaticIpv4ApplyStatus.MutationFailed,
                 preflight,
-                Rollback: rollback,
+                Recovery: recoveryReference,
                 Mutation: mutation,
                 ActualSnapshot: read.Snapshot);
         }
@@ -235,7 +235,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
                 request.AdapterId,
                 plan,
                 preflight,
-                rollback,
+                recoveryReference,
                 mutation)
             .ConfigureAwait(false);
     }
@@ -293,12 +293,12 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
             : StaticIpv4SafetyBlock.None;
     }
 
-    private NetworkRollbackSnapshot CreateRollbackSnapshot(NetworkAdapterRecoverySnapshot recovery) =>
+    private RecoverySnapshot CreateRecoverySnapshot(NetworkAdapterRecoverySnapshot recovery) =>
         new(
             SchemaVersion: 2,
             SnapshotId: Guid.NewGuid().ToString("N"),
             CapturedAtUtc: _clock.UtcNow.ToUniversalTime(),
-            State: RollbackSnapshotState.Captured,
+            State: RecoverySnapshotState.Captured,
             AdapterId: recovery.Adapter.Id,
             AdapterName: recovery.Adapter.Name,
             AdapterDescription: recovery.Adapter.Description,
@@ -313,7 +313,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
         NetworkAdapterId adapterId,
         StaticIpv4MutationPlan plan,
         NetworkConfigurationPreflightResult preflight,
-        RollbackSnapshotReference rollback,
+        RecoverySnapshotReference recoveryReference,
         NetworkApplyResult mutation)
     {
         StaticIpv4Configuration desired = plan.Configuration;
@@ -329,7 +329,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
                 return new StaticIpv4ApplyResult(
                     StaticIpv4ApplyStatus.VerificationFailed,
                     preflight,
-                    Rollback: rollback,
+                    Recovery: recoveryReference,
                     Mutation: mutation);
             }
 
@@ -340,7 +340,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
                 return new StaticIpv4ApplyResult(
                     StaticIpv4ApplyStatus.AdapterUnavailableDuringVerification,
                     preflight,
-                    Rollback: rollback,
+                    Recovery: recoveryReference,
                     Mutation: mutation);
             }
 
@@ -356,7 +356,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
                 return new StaticIpv4ApplyResult(
                     StaticIpv4ApplyStatus.VerificationFailed,
                     preflight,
-                    Rollback: rollback,
+                    Recovery: recoveryReference,
                     Mutation: mutation,
                     ActualSnapshot: actual);
             }
@@ -371,7 +371,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
                 return new StaticIpv4ApplyResult(
                     StaticIpv4ApplyStatus.VerifiedSuccess,
                     preflight,
-                    Rollback: rollback,
+                    Recovery: recoveryReference,
                     Mutation: mutation,
                     ActualSnapshot: actual,
                     VerificationComparison: lastComparison);
@@ -388,7 +388,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
         return new StaticIpv4ApplyResult(
             StaticIpv4ApplyStatus.VerificationFailed,
             preflight,
-            Rollback: rollback,
+            Recovery: recoveryReference,
             Mutation: mutation,
             ActualSnapshot: lastSnapshot,
             VerificationComparison: lastComparison);

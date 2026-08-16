@@ -72,7 +72,7 @@ public sealed class EvidenceWriterTests
             ApplyResult: null,
             observation,
             NetworkAdapterRecoveryReadResult.Success(recovery),
-            RollbackMatchesBeforeState: false,
+            RecoveryMatchesBeforeState: false,
             Passed: false,
             differences,
             failure);

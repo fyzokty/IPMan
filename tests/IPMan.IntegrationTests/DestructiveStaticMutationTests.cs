@@ -101,8 +101,8 @@ public sealed class DestructiveStaticMutationTests
         StaticIpv4ApplyResult? applyResult = null;
         NetworkObservation? afterObservation = null;
         NetworkAdapterRecoveryReadResult? afterRecovery = null;
-        bool rollbackMatches = false;
-        NetworkAdapterRecoveryReadResult? applyRollbackSourceRead = null;
+        bool recoveryMatches = false;
+        NetworkAdapterRecoveryReadResult? applyRecoverySourceRead = null;
         IReadOnlyList<string> differences = Array.Empty<string>();
         string? failure = null;
 
@@ -121,21 +121,21 @@ public sealed class DestructiveStaticMutationTests
             }
             finally
             {
-                applyRollbackSourceRead = production.ApplyRecoveryReader.EndApplyCapture();
+                applyRecoverySourceRead = production.ApplyRecoveryReader.EndApplyCapture();
             }
 
             afterObservation = ExactNetworkObserver.Read(settings.AdapterId);
             afterRecovery = await production.RecoveryReader
                 .ReadAsync(settings.AdapterId, CancellationToken.None);
-            NetworkAdapterRecoverySnapshot? applyRollbackSource =
-                applyRollbackSourceRead?.Status == NetworkAdapterRecoveryReadStatus.Success
-                    ? applyRollbackSourceRead.Snapshot
+            NetworkAdapterRecoverySnapshot? applyRecoverySource =
+                applyRecoverySourceRead?.Status == NetworkAdapterRecoveryReadStatus.Success
+                    ? applyRecoverySourceRead.Snapshot
                     : null;
-            rollbackMatches = applyRollbackSource is not null &&
-                await RollbackSnapshotVerifier
+            recoveryMatches = applyRecoverySource is not null &&
+                await RecoverySnapshotVerifier
                     .MatchesAsync(
-                        applyResult.Rollback,
-                        applyRollbackSource,
+                        applyResult.Recovery,
+                        applyRecoverySource,
                         CancellationToken.None)
                     .ConfigureAwait(false);
             ObservationComparisonResult nonInterference = ObservationComparer.CompareNonInterference(
@@ -149,7 +149,7 @@ public sealed class DestructiveStaticMutationTests
                 afterRecovery,
                 preconditions.RequestedDimensions,
                 nonInterference,
-                rollbackMatches);
+                recoveryMatches);
         }
         catch (Exception exception) when (exception is not OutOfMemoryException)
         {
@@ -164,7 +164,7 @@ public sealed class DestructiveStaticMutationTests
             applyResult,
             afterObservation,
             afterRecovery,
-            rollbackMatches,
+            recoveryMatches,
             passed,
             differences,
             failure);

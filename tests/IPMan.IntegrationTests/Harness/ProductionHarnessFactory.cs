@@ -24,8 +24,8 @@ public static class ProductionHarnessFactory
             validator,
             comparer,
             conflictProbe);
-        IRollbackSnapshotRepository rollback = new JsonRollbackSnapshotRepository(
-            new RollbackSnapshotRepositoryOptions
+        IRecoverySnapshotRepository recovery = new JsonRecoverySnapshotRepository(
+            new RecoverySnapshotRepositoryOptions
             {
                 BackupDirectory = Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -41,7 +41,7 @@ public static class ProductionHarnessFactory
         IClock clock = new SystemClock();
         IStaticIpv4ApplyService apply = new StaticIpv4ApplyService(
             preflight,
-            rollback,
+            recovery,
             configurator,
             reader,
             applyRecoveryReader,

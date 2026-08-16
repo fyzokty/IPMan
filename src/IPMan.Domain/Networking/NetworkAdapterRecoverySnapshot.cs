@@ -1,7 +1,7 @@
 namespace IPMan.Domain.Networking;
 
 /// <summary>
-/// Exact-identity Windows state used immediately before rollback capture and mutation.
+/// Exact-identity Windows state used immediately before recovery capture and mutation.
 /// </summary>
 public sealed record NetworkAdapterRecoverySnapshot(
     NetworkAdapterSnapshot Adapter,

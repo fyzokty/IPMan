@@ -5,13 +5,13 @@ using IPMan.Domain.Networking;
 namespace IPMan.Infrastructure.Networking;
 
 /// <summary>
-/// Authoritative JSON contract for the versioned rollback snapshot wire format.
+/// Authoritative JSON contract for the versioned recovery snapshot wire format.
 /// </summary>
-public sealed class RollbackSnapshotJsonCodec
+public sealed class RecoverySnapshotJsonCodec
 {
     private readonly JsonSerializerOptions _serializerOptions;
 
-    public RollbackSnapshotJsonCodec()
+    public RecoverySnapshotJsonCodec()
     {
         _serializerOptions = new JsonSerializerOptions
         {
@@ -24,7 +24,7 @@ public sealed class RollbackSnapshotJsonCodec
 
     public async Task SerializeAsync(
         Stream destination,
-        NetworkRollbackSnapshot snapshot,
+        RecoverySnapshot snapshot,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(destination);
@@ -36,14 +36,14 @@ public sealed class RollbackSnapshotJsonCodec
             .ConfigureAwait(false);
     }
 
-    public async Task<NetworkRollbackSnapshot> DeserializeAsync(
+    public async Task<RecoverySnapshot> DeserializeAsync(
         Stream source,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(source);
 
-        NetworkRollbackSnapshot? snapshot = await JsonSerializer
-            .DeserializeAsync<NetworkRollbackSnapshot>(
+        RecoverySnapshot? snapshot = await JsonSerializer
+            .DeserializeAsync<RecoverySnapshot>(
                 source,
                 _serializerOptions,
                 cancellationToken)
@@ -51,7 +51,7 @@ public sealed class RollbackSnapshotJsonCodec
 
         if (snapshot is null)
         {
-            throw new JsonException("Rollback snapshot JSON cannot be null.");
+            throw new JsonException("Recovery snapshot JSON cannot be null.");
         }
 
         EnsureAdapterIdentity(snapshot.AdapterId);
@@ -62,7 +62,7 @@ public sealed class RollbackSnapshotJsonCodec
     {
         if (string.IsNullOrWhiteSpace(adapterId.Value))
         {
-            throw new JsonException("Rollback snapshot adapter identity is missing or invalid.");
+            throw new JsonException("Recovery snapshot adapter identity is missing or invalid.");
         }
     }
 
@@ -75,7 +75,7 @@ public sealed class RollbackSnapshotJsonCodec
         {
             if (reader.TokenType != JsonTokenType.StartObject)
             {
-                throw new JsonException("Rollback snapshot adapter identity must be an object.");
+                throw new JsonException("Recovery snapshot adapter identity must be an object.");
             }
 
             string? value = null;
@@ -88,7 +88,7 @@ public sealed class RollbackSnapshotJsonCodec
                     if (!valueSeen || string.IsNullOrWhiteSpace(value))
                     {
                         throw new JsonException(
-                            "Rollback snapshot adapter identity is missing or invalid.");
+                            "Recovery snapshot adapter identity is missing or invalid.");
                     }
 
                     try
@@ -98,21 +98,21 @@ public sealed class RollbackSnapshotJsonCodec
                     catch (ArgumentException exception)
                     {
                         throw new JsonException(
-                            "Rollback snapshot adapter identity is missing or invalid.",
+                            "Recovery snapshot adapter identity is missing or invalid.",
                             exception);
                     }
                 }
 
                 if (reader.TokenType != JsonTokenType.PropertyName)
                 {
-                    throw new JsonException("Rollback snapshot adapter identity is malformed.");
+                    throw new JsonException("Recovery snapshot adapter identity is malformed.");
                 }
 
                 string propertyName = reader.GetString() ?? string.Empty;
 
                 if (!reader.Read())
                 {
-                    throw new JsonException("Rollback snapshot adapter identity is malformed.");
+                    throw new JsonException("Recovery snapshot adapter identity is malformed.");
                 }
 
                 if (string.Equals(propertyName, "value", StringComparison.OrdinalIgnoreCase))
@@ -120,7 +120,7 @@ public sealed class RollbackSnapshotJsonCodec
                     if (valueSeen || reader.TokenType != JsonTokenType.String)
                     {
                         throw new JsonException(
-                            "Rollback snapshot adapter identity is missing or invalid.");
+                            "Recovery snapshot adapter identity is missing or invalid.");
                     }
 
                     valueSeen = true;
@@ -132,7 +132,7 @@ public sealed class RollbackSnapshotJsonCodec
                 }
             }
 
-            throw new JsonException("Rollback snapshot adapter identity is malformed.");
+            throw new JsonException("Recovery snapshot adapter identity is malformed.");
         }
 
         public override void Write(

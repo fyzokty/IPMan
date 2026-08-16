@@ -7,20 +7,20 @@ using Xunit;
 
 namespace IPMan.Tests.Networking;
 
-public sealed class RollbackSnapshotJsonCodecTests
+public sealed class RecoverySnapshotJsonCodecTests
 {
     private const string CanonicalAdapterId = "{827A2938-BB14-4D18-B67F-94E9C4F818BA}";
 
     [Fact]
     public async Task RoundTrip_WhenSnapshotIsComplete_PreservesFullRecoveryState()
     {
-        RollbackSnapshotJsonCodec codec = new();
-        NetworkRollbackSnapshot expected = Snapshot();
+        RecoverySnapshotJsonCodec codec = new();
+        RecoverySnapshot expected = Snapshot();
         await using MemoryStream stream = new();
 
         await codec.SerializeAsync(stream, expected, CancellationToken.None);
         stream.Position = 0;
-        NetworkRollbackSnapshot actual = await codec.DeserializeAsync(stream, CancellationToken.None);
+        RecoverySnapshot actual = await codec.DeserializeAsync(stream, CancellationToken.None);
 
         AssertSnapshotEqual(expected, actual);
         Assert.Equal(CanonicalAdapterId, actual.AdapterId.Value);
@@ -63,7 +63,7 @@ public sealed class RollbackSnapshotJsonCodecTests
             }
             """;
 
-        NetworkRollbackSnapshot snapshot = await DeserializeAsync(v2Json);
+        RecoverySnapshot snapshot = await DeserializeAsync(v2Json);
 
         Assert.Equal(2, snapshot.SchemaVersion);
         Assert.Equal(CanonicalAdapterId, snapshot.AdapterId.Value);
@@ -71,19 +71,19 @@ public sealed class RollbackSnapshotJsonCodecTests
         Assert.Equal(DnsConfigurationMode.Automatic, snapshot.DnsMode);
     }
 
-    private static async Task<NetworkRollbackSnapshot> DeserializeAsync(string json)
+    private static async Task<RecoverySnapshot> DeserializeAsync(string json)
     {
         await using MemoryStream stream = new(Encoding.UTF8.GetBytes(json));
-        return await new RollbackSnapshotJsonCodec()
+        return await new RecoverySnapshotJsonCodec()
             .DeserializeAsync(stream, CancellationToken.None);
     }
 
-    private static NetworkRollbackSnapshot Snapshot() =>
+    private static RecoverySnapshot Snapshot() =>
         new(
             SchemaVersion: 2,
             SnapshotId: "snapshot-1",
             CapturedAtUtc: new DateTimeOffset(2026, 8, 8, 9, 30, 0, TimeSpan.Zero),
-            State: RollbackSnapshotState.Captured,
+            State: RecoverySnapshotState.Captured,
             AdapterId: new NetworkAdapterId("827a2938-bb14-4d18-b67f-94e9c4f818ba"),
             AdapterName: "Ethernet",
             AdapterDescription: "Contoso Adapter",
@@ -99,8 +99,8 @@ public sealed class RollbackSnapshotJsonCodecTests
             Ipv4DnsServers: ["1.1.1.1", "8.8.8.8"]);
 
     private static void AssertSnapshotEqual(
-        NetworkRollbackSnapshot expected,
-        NetworkRollbackSnapshot actual)
+        RecoverySnapshot expected,
+        RecoverySnapshot actual)
     {
         Assert.Equal(expected.SchemaVersion, actual.SchemaVersion);
         Assert.Equal(expected.SnapshotId, actual.SnapshotId);

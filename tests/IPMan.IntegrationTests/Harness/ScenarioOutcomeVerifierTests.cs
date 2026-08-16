@@ -88,12 +88,12 @@ public sealed class ScenarioOutcomeVerifierTests
                 "evidence"),
             new StaticIpv4ApplyResult(
                 StaticIpv4ApplyStatus.VerifiedSuccess,
-                Rollback: new RollbackSnapshotReference("snapshot", "rollback.json")),
+                Recovery: new RecoverySnapshotReference("snapshot", "recovery.json")),
             before,
             NetworkAdapterRecoveryReadResult.Success(after),
             requestedDimensions,
             new ObservationComparisonResult(true, Array.Empty<string>()),
-            rollbackMatchesBefore: true);
+            recoveryMatchesBefore: true);
 
     private static StaticIpv4Configuration Configuration(string address, string? gateway) =>
         new(address, "255.255.255.0", gateway, null, null);

@@ -101,8 +101,8 @@ public sealed class EvidenceWriter
             result?.Mutation?.Ipv4Step.TechnicalCode,
             result?.Mutation?.GatewayStep.TechnicalCode,
             result?.Mutation?.DnsStep.TechnicalCode,
-            result?.Rollback?.SnapshotId,
-            evidence.RollbackMatchesBeforeState,
+            result?.Recovery?.SnapshotId,
+            evidence.RecoveryMatchesBeforeState,
             evidence.Before.Observation.Ipv6Enabled,
             evidence.Before.Observation.Ipv6Routes.Complete &&
                 (evidence.AfterObservation?.Ipv6Routes.Complete ?? false),

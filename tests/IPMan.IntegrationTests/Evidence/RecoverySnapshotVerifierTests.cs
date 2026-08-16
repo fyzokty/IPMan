@@ -6,7 +6,7 @@ using Xunit;
 
 namespace IPMan.IntegrationTests.Evidence;
 
-public sealed class RollbackSnapshotVerifierTests
+public sealed class RecoverySnapshotVerifierTests
 {
     private static readonly NetworkAdapterId AdapterId =
         new("{827A2938-BB14-4D18-B67F-94E9C4F818BA}");
@@ -15,11 +15,11 @@ public sealed class RollbackSnapshotVerifierTests
     public async Task MatchesAsync_WhenPersistedSnapshotMatchesExactSource_ReturnsTrue()
     {
         NetworkAdapterRecoverySnapshot source = Recovery("10.250.0.10");
-        RollbackSnapshotReference reference = await WriteRollbackAsync(source);
+        RecoverySnapshotReference reference = await WriteRecoveryAsync(source);
 
         try
         {
-            Assert.True(await RollbackSnapshotVerifier.MatchesAsync(
+            Assert.True(await RecoverySnapshotVerifier.MatchesAsync(
                 reference,
                 source,
                 CancellationToken.None));
@@ -35,11 +35,11 @@ public sealed class RollbackSnapshotVerifierTests
     {
         NetworkAdapterRecoverySnapshot persistedSource = Recovery("10.250.0.10");
         NetworkAdapterRecoverySnapshot differentState = Recovery("10.250.0.11");
-        RollbackSnapshotReference reference = await WriteRollbackAsync(persistedSource);
+        RecoverySnapshotReference reference = await WriteRecoveryAsync(persistedSource);
 
         try
         {
-            Assert.False(await RollbackSnapshotVerifier.MatchesAsync(
+            Assert.False(await RecoverySnapshotVerifier.MatchesAsync(
                 reference,
                 differentState,
                 CancellationToken.None));
@@ -54,11 +54,11 @@ public sealed class RollbackSnapshotVerifierTests
     public async Task ApplyCapture_WhenHarnessPreReadDiffers_VerifiesAgainstFirstApplyRead()
     {
         NetworkAdapterRecoverySnapshot harnessPreRead = Recovery("10.250.0.9");
-        NetworkAdapterRecoverySnapshot applyRollbackSource = Recovery("10.250.0.10");
+        NetworkAdapterRecoverySnapshot applyRecoverySource = Recovery("10.250.0.10");
         NetworkAdapterRecoverySnapshot applyVerificationRead = Recovery("10.250.0.20");
         SequencedRecoveryReader inner = new(
             harnessPreRead,
-            applyRollbackSource,
+            applyRecoverySource,
             applyVerificationRead);
         RecordingNetworkAdapterRecoveryReader recorder = new(inner);
 
@@ -70,17 +70,17 @@ public sealed class RollbackSnapshotVerifierTests
         _ = await recorder.ReadAsync(AdapterId, CancellationToken.None);
         NetworkAdapterRecoveryReadResult captured = Assert.IsType<NetworkAdapterRecoveryReadResult>(
             recorder.EndApplyCapture());
-        RollbackSnapshotReference reference = await WriteRollbackAsync(applyRollbackSource);
+        RecoverySnapshotReference reference = await WriteRecoveryAsync(applyRecoverySource);
 
         try
         {
             Assert.NotEqual(first.Snapshot, captured.Snapshot);
-            Assert.Equal(applyRollbackSource, captured.Snapshot);
-            Assert.False(await RollbackSnapshotVerifier.MatchesAsync(
+            Assert.Equal(applyRecoverySource, captured.Snapshot);
+            Assert.False(await RecoverySnapshotVerifier.MatchesAsync(
                 reference,
                 first.Snapshot!,
                 CancellationToken.None));
-            Assert.True(await RollbackSnapshotVerifier.MatchesAsync(
+            Assert.True(await RecoverySnapshotVerifier.MatchesAsync(
                 reference,
                 captured.Snapshot!,
                 CancellationToken.None));
@@ -91,14 +91,14 @@ public sealed class RollbackSnapshotVerifierTests
         }
     }
 
-    private static async Task<RollbackSnapshotReference> WriteRollbackAsync(
+    private static async Task<RecoverySnapshotReference> WriteRecoveryAsync(
         NetworkAdapterRecoverySnapshot source)
     {
-        NetworkRollbackSnapshot snapshot = new(
+        RecoverySnapshot snapshot = new(
             SchemaVersion: 2,
             SnapshotId: Guid.NewGuid().ToString("N"),
             CapturedAtUtc: new DateTimeOffset(2026, 8, 9, 9, 0, 0, TimeSpan.Zero),
-            State: RollbackSnapshotState.Captured,
+            State: RecoverySnapshotState.Captured,
             AdapterId: source.Adapter.Id,
             AdapterName: source.Adapter.Name,
             AdapterDescription: source.Adapter.Description,
@@ -108,7 +108,7 @@ public sealed class RollbackSnapshotVerifierTests
             DnsMode: source.DnsMode,
             ConfiguredIpv4DnsServers: source.ConfiguredIpv4DnsServers.ToArray(),
             Ipv4DnsServers: source.Adapter.Ipv4DnsServers.ToArray());
-        string path = Path.Combine(Path.GetTempPath(), $"IPMan-rollback-{Guid.NewGuid():N}.json");
+        string path = Path.Combine(Path.GetTempPath(), $"IPMan-recovery-{Guid.NewGuid():N}.json");
 
         await using (FileStream stream = new(
             path,
@@ -118,11 +118,11 @@ public sealed class RollbackSnapshotVerifierTests
             bufferSize: 4096,
             FileOptions.Asynchronous))
         {
-            await new RollbackSnapshotJsonCodec()
+            await new RecoverySnapshotJsonCodec()
                 .SerializeAsync(stream, snapshot, CancellationToken.None);
         }
 
-        return new RollbackSnapshotReference(snapshot.SnapshotId, path);
+        return new RecoverySnapshotReference(snapshot.SnapshotId, path);
     }
 
     private static NetworkAdapterRecoverySnapshot Recovery(string ipv4Address)

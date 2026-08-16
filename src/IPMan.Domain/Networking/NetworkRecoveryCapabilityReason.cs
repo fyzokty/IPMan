@@ -1,6 +1,6 @@
 namespace IPMan.Domain.Networking;
 
-/// <summary>Stable reasons why a recovery snapshot cannot safely drive rollback.</summary>
+/// <summary>Stable reasons why a recovery snapshot cannot safely drive recovery.</summary>
 public enum NetworkRecoveryCapabilityReason
 {
     AdapterModeUnknown = 0,

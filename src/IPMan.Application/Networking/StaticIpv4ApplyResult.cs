@@ -6,7 +6,7 @@ public sealed record StaticIpv4ApplyResult(
     StaticIpv4ApplyStatus Status,
     NetworkConfigurationPreflightResult? Preflight = null,
     StaticIpv4SafetyBlock SafetyBlock = StaticIpv4SafetyBlock.None,
-    RollbackSnapshotReference? Rollback = null,
+    RecoverySnapshotReference? Recovery = null,
     NetworkApplyResult? Mutation = null,
     NetworkAdapterSnapshot? ActualSnapshot = null,
     NetworkConfigurationComparisonResult? VerificationComparison = null);

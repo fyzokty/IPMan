@@ -7,7 +7,7 @@ using Xunit;
 
 namespace IPMan.Tests.Networking;
 
-public sealed class JsonRollbackSnapshotRepositoryTests
+public sealed class JsonRecoverySnapshotRepositoryTests
 {
     private static readonly Ipv4GatewayRecoveryState[] SnapshotGateways =
     {
@@ -23,10 +23,10 @@ public sealed class JsonRollbackSnapshotRepositoryTests
 
         try
         {
-            JsonRollbackSnapshotRepository repository = CreateRepository(directory);
-            NetworkRollbackSnapshot snapshot = Snapshot();
+            JsonRecoverySnapshotRepository repository = CreateRepository(directory);
+            RecoverySnapshot snapshot = Snapshot();
 
-            RollbackCaptureResult result = await repository.SaveAsync(snapshot, CancellationToken.None);
+            RecoveryCaptureResult result = await repository.SaveAsync(snapshot, CancellationToken.None);
 
             Assert.True(result.IsSuccess);
             Assert.True(File.Exists(result.Reference!.StoragePath));
@@ -58,15 +58,15 @@ public sealed class JsonRollbackSnapshotRepositoryTests
 
         try
         {
-            JsonRollbackSnapshotRepository repository = CreateRepository(directory);
-            NetworkRollbackSnapshot snapshot = Snapshot();
-            RollbackCaptureResult first = await repository.SaveAsync(snapshot, CancellationToken.None);
+            JsonRecoverySnapshotRepository repository = CreateRepository(directory);
+            RecoverySnapshot snapshot = Snapshot();
+            RecoveryCaptureResult first = await repository.SaveAsync(snapshot, CancellationToken.None);
             string original = await File.ReadAllTextAsync(first.Reference!.StoragePath);
 
-            RollbackCaptureResult second = await repository.SaveAsync(snapshot, CancellationToken.None);
+            RecoveryCaptureResult second = await repository.SaveAsync(snapshot, CancellationToken.None);
 
             Assert.False(second.IsSuccess);
-            Assert.Equal(RollbackCaptureFailure.IoFailure, second.Failure);
+            Assert.Equal(RecoveryCaptureFailure.IoFailure, second.Failure);
             Assert.Equal(original, await File.ReadAllTextAsync(first.Reference.StoragePath));
             Assert.Empty(Directory.GetFiles(directory, "*.tmp"));
         }
@@ -83,15 +83,15 @@ public sealed class JsonRollbackSnapshotRepositoryTests
 
         try
         {
-            JsonRollbackSnapshotRepository repository = CreateRepository(directory);
-            NetworkRollbackSnapshot snapshot = Snapshot() with
+            JsonRecoverySnapshotRepository repository = CreateRepository(directory);
+            RecoverySnapshot snapshot = Snapshot() with
             {
                 AdapterId = new NetworkAdapterId("827a2938-bb14-4d18-b67f-94e9c4f818ba")
             };
-            RollbackCaptureResult saved = await repository.SaveAsync(snapshot, CancellationToken.None);
+            RecoveryCaptureResult saved = await repository.SaveAsync(snapshot, CancellationToken.None);
 
             await using FileStream stream = File.OpenRead(saved.Reference!.StoragePath);
-            NetworkRollbackSnapshot restored = await new RollbackSnapshotJsonCodec()
+            RecoverySnapshot restored = await new RecoverySnapshotJsonCodec()
                 .DeserializeAsync(stream, CancellationToken.None);
 
             Assert.Equal(snapshot.AdapterId, restored.AdapterId);
@@ -111,11 +111,11 @@ public sealed class JsonRollbackSnapshotRepositoryTests
 
         try
         {
-            RollbackCaptureResult result = await CreateRepository(invalidDirectory)
+            RecoveryCaptureResult result = await CreateRepository(invalidDirectory)
                 .SaveAsync(Snapshot(), CancellationToken.None);
 
             Assert.False(result.IsSuccess);
-            Assert.Equal(RollbackCaptureFailure.IoFailure, result.Failure);
+            Assert.Equal(RecoveryCaptureFailure.IoFailure, result.Failure);
         }
         finally
         {
@@ -123,15 +123,15 @@ public sealed class JsonRollbackSnapshotRepositoryTests
         }
     }
 
-    private static JsonRollbackSnapshotRepository CreateRepository(string directory) =>
-        new(new RollbackSnapshotRepositoryOptions { BackupDirectory = directory });
+    private static JsonRecoverySnapshotRepository CreateRepository(string directory) =>
+        new(new RecoverySnapshotRepositoryOptions { BackupDirectory = directory });
 
-    private static NetworkRollbackSnapshot Snapshot() =>
+    private static RecoverySnapshot Snapshot() =>
         new(
             2,
             "snapshot-1",
             new DateTimeOffset(2026, 8, 8, 9, 30, 0, TimeSpan.Zero),
-            RollbackSnapshotState.Captured,
+            RecoverySnapshotState.Captured,
             new NetworkAdapterId("{A}"),
             "Ethernet",
             "Contoso Adapter",

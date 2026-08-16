@@ -4,12 +4,12 @@ using IPMan.Domain.Networking;
 namespace IPMan.Infrastructure.Networking;
 
 /// <summary>Atomic, durable JSON persistence for pre-mutation recovery snapshots.</summary>
-public sealed class JsonRollbackSnapshotRepository : IRollbackSnapshotRepository
+public sealed class JsonRecoverySnapshotRepository : IRecoverySnapshotRepository
 {
     private readonly string _backupDirectory;
-    private readonly RollbackSnapshotJsonCodec _codec = new();
+    private readonly RecoverySnapshotJsonCodec _codec = new();
 
-    public JsonRollbackSnapshotRepository(RollbackSnapshotRepositoryOptions options)
+    public JsonRecoverySnapshotRepository(RecoverySnapshotRepositoryOptions options)
     {
         ArgumentNullException.ThrowIfNull(options);
 
@@ -21,14 +21,14 @@ public sealed class JsonRollbackSnapshotRepository : IRollbackSnapshotRepository
         _backupDirectory = Path.GetFullPath(options.BackupDirectory);
     }
 
-    public async Task<RollbackCaptureResult> SaveAsync(
-        NetworkRollbackSnapshot snapshot,
+    public async Task<RecoveryCaptureResult> SaveAsync(
+        RecoverySnapshot snapshot,
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         cancellationToken.ThrowIfCancellationRequested();
 
-        string finalPath = Path.Combine(_backupDirectory, $"rollback-{snapshot.SnapshotId}.json");
+        string finalPath = Path.Combine(_backupDirectory, $"recovery-{snapshot.SnapshotId}.json");
         string temporaryPath = Path.Combine(
             _backupDirectory,
             $".{snapshot.SnapshotId}-{Guid.NewGuid():N}.tmp");
@@ -52,16 +52,16 @@ public sealed class JsonRollbackSnapshotRepository : IRollbackSnapshotRepository
             }
 
             File.Move(temporaryPath, finalPath, overwrite: false);
-            return RollbackCaptureResult.Success(
-                new RollbackSnapshotReference(snapshot.SnapshotId, finalPath));
+            return RecoveryCaptureResult.Success(
+                new RecoverySnapshotReference(snapshot.SnapshotId, finalPath));
         }
         catch (UnauthorizedAccessException)
         {
-            return RollbackCaptureResult.Failed(RollbackCaptureFailure.AccessDenied);
+            return RecoveryCaptureResult.Failed(RecoveryCaptureFailure.AccessDenied);
         }
         catch (IOException)
         {
-            return RollbackCaptureResult.Failed(RollbackCaptureFailure.IoFailure);
+            return RecoveryCaptureResult.Failed(RecoveryCaptureFailure.IoFailure);
         }
         finally
         {

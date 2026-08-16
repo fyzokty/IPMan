@@ -14,9 +14,9 @@ public sealed class StaticIpv4ApplyServiceTests
 
     private static readonly string[] ThreeDnsServers = { "1.1.1.1", "8.8.8.8", "9.9.9.9" };
 
-    private static readonly string[] RollbackGateways = { "192.168.1.1" };
+    private static readonly string[] RecoveryGateways = { "192.168.1.1" };
 
-    private static readonly string[] RollbackDnsServers = { "1.1.1.1", "8.8.8.8" };
+    private static readonly string[] RecoveryDnsServers = { "1.1.1.1", "8.8.8.8" };
 
     private static readonly string[] DriftGateway = { "192.168.1.254" };
 
@@ -40,12 +40,12 @@ public sealed class StaticIpv4ApplyServiceTests
         StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
 
         Assert.Equal(expected, result.Status);
-        Assert.Empty(context.Rollback.SavedSnapshots);
+        Assert.Empty(context.Recovery.SavedSnapshots);
         Assert.Equal(0, context.Configurator.ApplyCount);
     }
 
     [Fact]
-    public async Task ApplyAsync_WhenNoChange_DoesNotCaptureRollbackOrMutate()
+    public async Task ApplyAsync_WhenNoChange_DoesNotCaptureRecoveryOrMutate()
     {
         NetworkAdapterSnapshot current = Verified();
         using ApplyContext context = CreateContext(
@@ -56,7 +56,7 @@ public sealed class StaticIpv4ApplyServiceTests
         StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.NoChange, result.Status);
-        Assert.Empty(context.Rollback.SavedSnapshots);
+        Assert.Empty(context.Recovery.SavedSnapshots);
         Assert.Equal(0, context.Configurator.ApplyCount);
     }
 
@@ -141,7 +141,7 @@ public sealed class StaticIpv4ApplyServiceTests
     }
 
     [Fact]
-    public async Task ApplyAsync_WhenMultipleGatewaysExist_BlocksBeforeRollback()
+    public async Task ApplyAsync_WhenMultipleGatewaysExist_BlocksBeforeRecovery()
     {
         NetworkAdapterSnapshot current = Current(
             gateways: new Ipv4AddressValueCollection(MultipleGateways));
@@ -151,11 +151,11 @@ public sealed class StaticIpv4ApplyServiceTests
 
         Assert.Equal(StaticIpv4ApplyStatus.SafetyBlocked, result.Status);
         Assert.Equal(StaticIpv4SafetyBlock.MultipleIpv4Gateways, result.SafetyBlock);
-        Assert.Empty(context.Rollback.SavedSnapshots);
+        Assert.Empty(context.Recovery.SavedSnapshots);
     }
 
     [Fact]
-    public async Task ApplyAsync_WhenMoreThanTwoDnsServersExist_BlocksBeforeRollback()
+    public async Task ApplyAsync_WhenMoreThanTwoDnsServersExist_BlocksBeforeRecovery()
     {
         NetworkAdapterSnapshot current = Current(
             dnsServers: new Ipv4AddressValueCollection(ThreeDnsServers));
@@ -169,7 +169,7 @@ public sealed class StaticIpv4ApplyServiceTests
     }
 
     [Fact]
-    public async Task ApplyAsync_WhenAdapterDisappearsOnPreMutationRefresh_StopsWithoutRollback()
+    public async Task ApplyAsync_WhenAdapterDisappearsOnPreMutationRefresh_StopsWithoutRecovery()
     {
         using ApplyContext context = CreateContext(
             recoveryResult: new NetworkAdapterRecoveryReadResult(
@@ -178,7 +178,7 @@ public sealed class StaticIpv4ApplyServiceTests
         StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.AdapterUnavailable, result.Status);
-        Assert.Empty(context.Rollback.SavedSnapshots);
+        Assert.Empty(context.Recovery.SavedSnapshots);
         Assert.Equal(0, context.Configurator.ApplyCount);
     }
 
@@ -192,7 +192,7 @@ public sealed class StaticIpv4ApplyServiceTests
         StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.NoChange, result.Status);
-        Assert.Empty(context.Rollback.SavedSnapshots);
+        Assert.Empty(context.Recovery.SavedSnapshots);
         Assert.Equal(0, context.Configurator.ApplyCount);
     }
 
@@ -212,7 +212,7 @@ public sealed class StaticIpv4ApplyServiceTests
 
         Assert.Equal(StaticIpv4ApplyStatus.SafetyBlocked, result.Status);
         Assert.Equal(StaticIpv4SafetyBlock.MultipleIpv4Addresses, result.SafetyBlock);
-        Assert.Empty(context.Rollback.SavedSnapshots);
+        Assert.Empty(context.Recovery.SavedSnapshots);
     }
 
     [Fact]
@@ -227,7 +227,7 @@ public sealed class StaticIpv4ApplyServiceTests
 
         Assert.Equal(StaticIpv4ApplyStatus.SafetyBlocked, result.Status);
         Assert.Equal(StaticIpv4SafetyBlock.MultipleIpv4Gateways, result.SafetyBlock);
-        Assert.Empty(context.Rollback.SavedSnapshots);
+        Assert.Empty(context.Recovery.SavedSnapshots);
     }
 
     [Fact]
@@ -242,7 +242,7 @@ public sealed class StaticIpv4ApplyServiceTests
 
         Assert.Equal(StaticIpv4ApplyStatus.SafetyBlocked, result.Status);
         Assert.Equal(StaticIpv4SafetyBlock.TooManyIpv4DnsServers, result.SafetyBlock);
-        Assert.Empty(context.Rollback.SavedSnapshots);
+        Assert.Empty(context.Recovery.SavedSnapshots);
     }
 
     [Fact]
@@ -291,15 +291,15 @@ public sealed class StaticIpv4ApplyServiceTests
     }
 
     [Fact]
-    public async Task ApplyAsync_CapturesCompleteRollbackBeforeFirstMutation()
+    public async Task ApplyAsync_CapturesCompleteRecoveryBeforeFirstMutation()
     {
         int sequence = 0;
-        int rollbackSequence = 0;
+        int recoverySequence = 0;
         int mutationSequence = 0;
         NetworkAdapterSnapshot current = Current(
-            dnsServers: new Ipv4AddressValueCollection(RollbackDnsServers));
+            dnsServers: new Ipv4AddressValueCollection(RecoveryDnsServers));
         using ApplyContext context = CreateContext(current);
-        context.Rollback.OnSave = () => rollbackSequence = Interlocked.Increment(ref sequence);
+        context.Recovery.OnSave = () => recoverySequence = Interlocked.Increment(ref sequence);
         context.Configurator.Handler = (_, _) =>
         {
             mutationSequence = Interlocked.Increment(ref sequence);
@@ -309,23 +309,23 @@ public sealed class StaticIpv4ApplyServiceTests
         StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
-        Assert.Equal(1, rollbackSequence);
+        Assert.Equal(1, recoverySequence);
         Assert.Equal(2, mutationSequence);
-        NetworkRollbackSnapshot saved = Assert.Single(context.Rollback.SavedSnapshots);
+        RecoverySnapshot saved = Assert.Single(context.Recovery.SavedSnapshots);
         Assert.Equal(2, saved.SchemaVersion);
         Assert.Equal(AdapterId, saved.AdapterId);
         Assert.Equal(new DateTimeOffset(2026, 8, 8, 10, 0, 0, TimeSpan.Zero), saved.CapturedAtUtc);
         Ipv4GatewayRecoveryState gateway = Assert.Single(saved.Ipv4Gateways);
-        Assert.Equal(RollbackGateways[0], gateway.Address);
+        Assert.Equal(RecoveryGateways[0], gateway.Address);
         Assert.Equal((ushort)25, gateway.Metric);
         Assert.Equal(DnsConfigurationMode.Automatic, saved.DnsMode);
-        Assert.Equal(RollbackDnsServers, saved.Ipv4DnsServers);
+        Assert.Equal(RecoveryDnsServers, saved.Ipv4DnsServers);
         Assert.Single(saved.Ipv4Addresses);
-        Assert.NotNull(result.Rollback);
+        Assert.NotNull(result.Recovery);
     }
 
     [Fact]
-    public async Task ApplyAsync_UsesSecondFreshStateForRollbackAndMutationPlan()
+    public async Task ApplyAsync_UsesSecondFreshStateForRecoveryAndMutationPlan()
     {
         NetworkAdapterSnapshot drifted = TestData.Snapshot(
             id: AdapterId.Value,
@@ -347,7 +347,7 @@ public sealed class StaticIpv4ApplyServiceTests
         StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
-        NetworkRollbackSnapshot saved = Assert.Single(context.Rollback.SavedSnapshots);
+        RecoverySnapshot saved = Assert.Single(context.Recovery.SavedSnapshots);
         Assert.Equal("192.168.1.55", Assert.Single(saved.Ipv4Addresses).Address);
         Ipv4GatewayRecoveryState gateway = Assert.Single(saved.Ipv4Gateways);
         Assert.Equal("192.168.1.254", gateway.Address);
@@ -370,19 +370,19 @@ public sealed class StaticIpv4ApplyServiceTests
         StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.RecoveryStateUnavailable, result.Status);
-        Assert.Empty(context.Rollback.SavedSnapshots);
+        Assert.Empty(context.Recovery.SavedSnapshots);
         Assert.Equal(0, context.Configurator.ApplyCount);
     }
 
     [Fact]
-    public async Task ApplyAsync_WhenRollbackPersistenceFails_DoesNotMutate()
+    public async Task ApplyAsync_WhenRecoveryPersistenceFails_DoesNotMutate()
     {
         using ApplyContext context = CreateContext();
-        context.Rollback.Result = RollbackCaptureResult.Failed(RollbackCaptureFailure.IoFailure);
+        context.Recovery.Result = RecoveryCaptureResult.Failed(RecoveryCaptureFailure.IoFailure);
 
         StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
 
-        Assert.Equal(StaticIpv4ApplyStatus.RollbackCaptureFailed, result.Status);
+        Assert.Equal(StaticIpv4ApplyStatus.RecoveryCaptureFailed, result.Status);
         Assert.Equal(0, context.Configurator.ApplyCount);
     }
 
@@ -731,7 +731,7 @@ public sealed class StaticIpv4ApplyServiceTests
         StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.PartialFailure, result.Status);
-        Assert.NotNull(result.Rollback);
+        Assert.NotNull(result.Recovery);
         Assert.NotNull(result.ActualSnapshot);
         Assert.Equal(1, context.Reader.ReadCount);
     }
@@ -744,7 +744,7 @@ public sealed class StaticIpv4ApplyServiceTests
         StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.AdapterUnavailableDuringVerification, result.Status);
-        Assert.NotNull(result.Rollback);
+        Assert.NotNull(result.Recovery);
     }
 
     [Fact]
@@ -756,20 +756,20 @@ public sealed class StaticIpv4ApplyServiceTests
         StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.VerificationFailed, result.Status);
-        Assert.NotNull(result.Rollback);
+        Assert.NotNull(result.Recovery);
     }
 
     [Fact]
-    public async Task ApplyAsync_WhenCancelledAfterRollbackButBeforeMutation_StopsSafely()
+    public async Task ApplyAsync_WhenCancelledAfterRecoveryButBeforeMutation_StopsSafely()
     {
         using CancellationTokenSource cancellation = new();
         using ApplyContext context = CreateContext();
-        context.Rollback.OnSave = cancellation.Cancel;
+        context.Recovery.OnSave = cancellation.Cancel;
 
         StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), cancellation.Token);
 
         Assert.Equal(StaticIpv4ApplyStatus.Cancelled, result.Status);
-        Assert.Single(context.Rollback.SavedSnapshots);
+        Assert.Single(context.Recovery.SavedSnapshots);
         Assert.Equal(0, context.Configurator.ApplyCount);
     }
 
@@ -798,7 +798,7 @@ public sealed class StaticIpv4ApplyServiceTests
             serializedApplyCount: 2);
         StaticIpv4ApplyService secondService = new(
             context.Preflight,
-            context.Rollback,
+            context.Recovery,
             context.Configurator,
             context.Reader,
             context.RecoveryReader,
@@ -857,7 +857,7 @@ public sealed class StaticIpv4ApplyServiceTests
         current ??= Current();
         NetworkConfigurationPreflightResult preflightResult = Preflight(preflightStatus, current, desired);
         FakeNetworkConfigurationPreflightService preflight = new() { Result = preflightResult };
-        FakeRollbackSnapshotRepository rollback = new();
+        FakeRecoverySnapshotRepository recovery = new();
         FakeNetworkAdapterConfigurator configurator = new();
         FakeNetworkAdapterReader reader = new();
         FakeNetworkAdapterRecoveryReader recoveryReader = new();
@@ -907,7 +907,7 @@ public sealed class StaticIpv4ApplyServiceTests
         NetworkMutationCoordinator coordinator = new();
         StaticIpv4ApplyService service = new(
             preflight,
-            rollback,
+            recovery,
             configurator,
             reader,
             recoveryReader,
@@ -924,7 +924,7 @@ public sealed class StaticIpv4ApplyServiceTests
         return new ApplyContext(
             service,
             preflight,
-            rollback,
+            recovery,
             configurator,
             reader,
             recoveryReader,
@@ -1025,7 +1025,7 @@ public sealed class StaticIpv4ApplyServiceTests
     private sealed record ApplyContext(
         StaticIpv4ApplyService Service,
         FakeNetworkConfigurationPreflightService Preflight,
-        FakeRollbackSnapshotRepository Rollback,
+        FakeRecoverySnapshotRepository Recovery,
         FakeNetworkAdapterConfigurator Configurator,
         FakeNetworkAdapterReader Reader,
         FakeNetworkAdapterRecoveryReader RecoveryReader,

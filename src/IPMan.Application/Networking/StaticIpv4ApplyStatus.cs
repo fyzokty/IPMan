@@ -10,7 +10,7 @@ public enum StaticIpv4ApplyStatus
     SafetyBlocked = 5,
     ConflictConfirmationRequired = 6,
     ProbeIndeterminateConfirmationRequired = 7,
-    RollbackCaptureFailed = 8,
+    RecoveryCaptureFailed = 8,
     MutationFailed = 9,
     PartialFailure = 10,
     VerificationFailed = 11,

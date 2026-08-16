@@ -1,11 +1,11 @@
 namespace IPMan.Domain.Networking;
 
 /// <summary>Persisted recovery state captured before any Windows mutation begins.</summary>
-public sealed record NetworkRollbackSnapshot(
+public sealed record RecoverySnapshot(
     int SchemaVersion,
     string SnapshotId,
     DateTimeOffset CapturedAtUtc,
-    RollbackSnapshotState State,
+    RecoverySnapshotState State,
     NetworkAdapterId AdapterId,
     string AdapterName,
     string AdapterDescription,

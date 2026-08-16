@@ -4,12 +4,12 @@ using IPMan.Infrastructure.Networking;
 
 namespace IPMan.IntegrationTests.Evidence;
 
-public static class RollbackSnapshotVerifier
+public static class RecoverySnapshotVerifier
 {
-    private static readonly RollbackSnapshotJsonCodec Codec = new();
+    private static readonly RecoverySnapshotJsonCodec Codec = new();
 
     public static async Task<bool> MatchesAsync(
-        RollbackSnapshotReference? reference,
+        RecoverySnapshotReference? reference,
         NetworkAdapterRecoverySnapshot before,
         CancellationToken cancellationToken)
     {
@@ -18,7 +18,7 @@ public static class RollbackSnapshotVerifier
             return false;
         }
 
-        NetworkRollbackSnapshot snapshot;
+        RecoverySnapshot snapshot;
 
         try
         {

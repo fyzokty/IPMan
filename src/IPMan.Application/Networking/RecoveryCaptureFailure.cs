@@ -1,6 +1,6 @@
 namespace IPMan.Application.Networking;
 
-public enum RollbackCaptureFailure
+public enum RecoveryCaptureFailure
 {
     None = 0,
     IoFailure = 1,

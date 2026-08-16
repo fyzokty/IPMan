@@ -65,14 +65,14 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IStaticIpv4ConfigurationValidator, StaticIpv4ConfigurationValidator>();
         services.AddSingleton<IStaticIpv4ConfigurationComparer, StaticIpv4ConfigurationComparer>();
         services.AddSingleton<INetworkConfigurationPreflightService, NetworkConfigurationPreflightService>();
-        services.AddSingleton(new RollbackSnapshotRepositoryOptions
+        services.AddSingleton(new RecoverySnapshotRepositoryOptions
         {
             BackupDirectory = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                 "IPMan",
                 "Backup")
         });
-        services.AddSingleton<IRollbackSnapshotRepository, JsonRollbackSnapshotRepository>();
+        services.AddSingleton<IRecoverySnapshotRepository, JsonRecoverySnapshotRepository>();
         services.AddSingleton<INetworkAdapterRecoveryReader, WmiNetworkAdapterRecoveryReader>();
         services.AddSingleton<INetworkMutationCoordinator, NetworkMutationCoordinator>();
         services.AddSingleton<IIpv4DefaultRouteManager, WindowsIpv4DefaultRouteManager>();

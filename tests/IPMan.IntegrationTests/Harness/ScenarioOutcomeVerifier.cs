@@ -13,7 +13,7 @@ public static class ScenarioOutcomeVerifier
         NetworkAdapterRecoveryReadResult? afterRecovery,
         IReadOnlyList<string> requestedDimensions,
         ObservationComparisonResult? nonInterference,
-        bool rollbackMatchesBefore)
+        bool recoveryMatchesBefore)
     {
         ArgumentNullException.ThrowIfNull(settings);
         ArgumentNullException.ThrowIfNull(beforeRecovery);
@@ -25,14 +25,14 @@ public static class ScenarioOutcomeVerifier
             differences.Add($"Product apply status was {result?.Status.ToString() ?? "unavailable"}.");
         }
 
-        if (result?.Rollback is null)
+        if (result?.Recovery is null)
         {
-            differences.Add("No rollback snapshot reference was returned.");
+            differences.Add("No recovery snapshot reference was returned.");
         }
 
-        if (!rollbackMatchesBefore)
+        if (!recoveryMatchesBefore)
         {
-            differences.Add("Rollback snapshot did not match the immediate pre-mutation recovery state.");
+            differences.Add("Recovery snapshot did not match the immediate pre-mutation recovery state.");
         }
 
         if (afterRecovery?.Status != NetworkAdapterRecoveryReadStatus.Success ||
