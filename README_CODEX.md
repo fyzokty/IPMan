@@ -1,31 +1,20 @@
-# IPMan — Codex Control Pack
+# IPMan Codex Workflow
 
-This package adds Codex-specific repository instructions without replacing the
-existing product, architecture, sprint or Claude-oriented documentation.
+IPMan uses this repository workflow:
 
-The authoritative project documentation remains under:
+`TASK.md -> Codex -> RESULT.md + REVIEW.patch/evidence -> Architect -> next TASK.md`
 
-- `.claude/`
-- `docs/`
-- `docs/ADR/`
+The current task is explicitly supplied. Codex implements and validates it,
+writes the architect handoff and review artifacts, then stops for architect
+review.
 
-Codex receives its repository-level working rules from the root `AGENTS.md`.
+Transient task, result, review, and evidence files live under
+`artifacts/codex/`. The repository's existing `artifacts/` rule keeps these files
+out of Git.
 
-## Installation
+Persistent repository rules live in root `AGENTS.md` and `.codex/`.
 
-Extract this package over the existing IPMan repository.
-
-Expected result:
-
-- `IPMan/AGENTS.md`
-- `IPMan/.codex/CODEX_WORKFLOW.md`
-- `IPMan/.codex/CODE_REVIEW_HANDOFF.md`
-- `IPMan/docs/07_Development/Sprint_06/11_PROMPT_TO_CODEX.md`
-- `IPMan/docs/Templates/CODEX_SPRINT_PROMPT_TEMPLATE.md`
-
-## Important
-
-Codex must not commit changes unless the user explicitly asks it to.
-
-This is intentional: the architect review workflow depends on inspecting the
-working-tree diff before the user creates the sprint commit.
+Historical `.claude` files and sprint documents remain available as project
+history, reference material, and specification. They are not automatically
+active instructions; the current task must explicitly reference any that are
+needed.
