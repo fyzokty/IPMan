@@ -5,17 +5,19 @@ Windows 11, .NET 8, WPF. Build: `dotnet build`. Test: `dotnet test`.
 Explanations in Turkish. Code, identifiers, commit messages, and file names in English.
 
 ## Roles
-This repository is worked on by multiple agents. Respect ownership boundaries.
+All source is written through a single channel: the `codex-coder` agent. Scope is not
+owned per agent — it is set per run by the file whitelist in
+`.agent/runs/<run-id>/brief.md`. Anything outside that list is off limits for that run.
 
-| Path | Owner |
+| Path | Rule |
 |---|---|
-| `src/IPMan.App/**` | Claude |
-| `src/IPMan.Application/**`, `src/IPMan.Domain/**` | Claude |
-| `src/IPMan.Elevated/**` | Codex (do not edit) |
+| `src/**`, `tests/**` | Written only by `codex-coder`, and only inside the brief's whitelist |
 | `docs/contracts/**` | Frozen — nobody edits without an approved contract-change task |
+| `docs/STATE.md`, `docs/tasks/**` | Main agent |
 
-If you need a change in a path you do not own, write the request to
-`docs/contract-change-requests.md` and stop. Do not edit it yourself.
+If a task needs a change outside the brief's whitelist, stop and report it. Widening the
+brief is the main agent's call; a frozen-path change needs a request written to
+`docs/contract-change-requests.md` by the main agent.
 
 ## Workflow
 1. Every unit of work has a task file in `docs/tasks/`.

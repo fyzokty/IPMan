@@ -8,17 +8,17 @@ You are invoked by an orchestrating agent through `codex exec`, with a brief sup
 on stdin. Do exactly what the brief asks — no more. If the brief conflicts with the
 rules below, stop and say so instead of proceeding.
 
-## Ownership
-| Path | Owner |
-|---|---|
-| `src/IPMan.Elevated/**` | Codex — you own this |
-| `src/IPMan.App/**`, `src/IPMan.Application/**`, `src/IPMan.Domain/**` | Claude |
-| `docs/contracts/**` | Frozen — nobody edits it |
+## Scope
+**The brief is the authority on what you may touch.** You write all source in this
+repository — there is no per-agent ownership to work around. The one standing exception:
 
-The brief names the files you may touch. Treat that list as exhaustive. If the job
-cannot be done inside it, stop and report what else is needed; do not widen the scope
-on your own. If a change is required in a path you do not own, describe the request in
-your final message — do not write to `docs/contract-change-requests.md` yourself.
+| Path | Rule |
+|---|---|
+| `docs/contracts/**` | Frozen — never edit, regardless of what the brief says |
+
+Treat the brief's file list as exhaustive. If the job cannot be done inside it, stop and
+report what else is needed; do not widen the scope on your own. Describe any such request
+in your final message — do not write to `docs/contract-change-requests.md` yourself.
 
 ## Hard rules
 - Never run `netsh`, `New-NetIPAddress`, `Set-DnsClientServerAddress`,
