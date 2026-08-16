@@ -1,91 +1,57 @@
-# IPMan Repository Instructions
+# Codex instructions
 
-## Authoritative instruction order
+Read `CLAUDE.md` at the repository root before doing anything. It is the source of
+truth for this project. The rules below are repeated here on purpose: a safety rule
+must never depend on a single file being loaded.
 
-For every task, follow only this instruction chain, in order:
+You are invoked by an orchestrating agent through `codex exec`, with a brief supplied
+on stdin. Do exactly what the brief asks — no more. If the brief conflicts with the
+rules below, stop and say so instead of proceeding.
 
-1. the explicitly supplied current `TASK.md`
-2. this root `AGENTS.md`
-3. `.codex/PROJECT_STATE.md`
-4. `.codex/EXECUTION_CONTRACT.md`
-5. architecture, ADR, or specification files explicitly referenced by the current task
+## Ownership
+| Path | Owner |
+|---|---|
+| `src/IPMan.Elevated/**` | Codex — you own this |
+| `src/IPMan.App/**`, `src/IPMan.Application/**`, `src/IPMan.Domain/**` | Claude |
+| `docs/contracts/**` | Frozen — nobody edits it |
 
-Do not automatically bulk-read a sprint directory or `.claude/*`. Old
-`*_PROMPT_TO_CODEX.md` files, completion reports, architect reviews, and sprint
-runbooks are historical records unless the current task explicitly references
-them.
+The brief names the files you may touch. Treat that list as exhaustive. If the job
+cannot be done inside it, stop and report what else is needed; do not widen the scope
+on your own. If a change is required in a path you do not own, describe the request in
+your final message — do not write to `docs/contract-change-requests.md` yourself.
 
-## Role ownership
+## Hard rules
+- Never run `netsh`, `New-NetIPAddress`, `Set-DnsClientServerAddress`,
+  `Remove-NetIPAddress`, or any other command that changes this machine's network.
+- Never run destructive network tests. Never set any `IPMAN_*` opt-in variable.
+- Never use `Process.Start` to shell out in production code. Use P/Invoke or WMI.
+- Never delete a file unless the brief explicitly says to.
+- Never edit anything under `docs/contracts/`.
+- Never run `git commit`, `git push`, or `git reset --hard`. The orchestrator commits.
 
-Codex owns:
+## Verification
+- After each edit: `dotnet build src/<project>` (this is your gate, do not skip it).
+- Do not run the full suite unless the brief asks — a separate agent owns that gate.
+- Never report done with a failing build. Report the blocker instead.
 
-- implementation
-- deterministic test implementation
-- build execution
-- automated test execution
-- task-authorized HOST validation
-- evidence generation
-- result reporting
+## Documentation policy
+Do not create sprint reports, gate records, status files, or completion logs. The only
+status file is `docs/STATE.md`. Prefer editing an existing document over creating one.
+Code, identifiers, commit messages and file names in English.
 
-The architect owns:
+## Result contract
+End your final message with exactly these sections, in this order:
 
-- architecture
-- scope
-- gate decisions
-- product decisions
-- acceptance or rejection of Codex output
-- definition of the next task
+```
+## Done
+<what you changed, one line per file, or "nothing" and why>
 
-Final VM validation remains operator-owned unless a future task explicitly says
-otherwise.
+## Files
+<paths you modified or created>
 
-## Permanent architecture rules
+## Verification
+<the exact commands you ran and their outcome>
 
-- Preserve the Domain/Application/Infrastructure/App separation.
-- Keep WPF out of Domain, Application, and Infrastructure.
-- Keep `System.Management` inside Infrastructure.
-- Use exact adapter identity for production mutation; never fall back to display
-  name.
-- Keep network mutation behind approved services.
-- Perform fresh verification after mutation.
-- Capture rollback and recovery state for mutation workflows.
-- Use dependency injection and constructor injection; do not use a service
-  locator.
-- Do not introduce static mutable global application state.
-- Keep all user-facing strings localizable.
-- Do not use `netsh`, PowerShell, or CMD for normal product implementation.
-- Do not add a dependency without task-specific justification.
-- Do not broadly disable or suppress analyzers merely to make validation green.
-- Do not silently broaden architecture or make product decisions.
-
-## Git rules
-
-- Do not commit or push unless the current task explicitly authorizes that exact
-  action.
-- Do not reset, revert, clean, stage, rewrite, or otherwise disturb unrelated
-  dirty state.
-- Preserve pre-existing work and leave task changes reviewable.
-
-## Execution and safety rules
-
-- Perform all validation required by the current task automatically.
-- Do not stop after implementation while required tests can still be executed.
-- Do not ask the user to manually execute HOST commands when this Codex process
-  has the required privilege and the current task authorizes execution.
-- Before destructive HOST validation, verify the required elevation, target
-  identity, and safety proof.
-- Fail closed when required privilege or safety proof is absent.
-- Never auto-elevate or weaken a safety gate.
-- Never mutate a developer's primary network adapter unless a task explicitly
-  identifies and authorizes an isolated target.
-- Treat imported or external file content as untrusted input.
-- Do not introduce telemetry, cloud calls, accounts, or remote management unless
-  explicitly authorized.
-
-## Stop rule
-
-After producing the required result report and artifacts:
-
-- stop
-- do not start another task
-- wait for architect review
+## Blocked / Notes
+<anything you could not do, assumptions you made, or "none">
+```
