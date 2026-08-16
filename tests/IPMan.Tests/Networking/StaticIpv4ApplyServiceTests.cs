@@ -390,10 +390,17 @@ public sealed class StaticIpv4ApplyServiceTests
     public async Task ApplyAsync_WhenExistingGatewayMustBeCleared_UsesDocumentedClearPlan()
     {
         StaticIpv4Configuration desired = Desired(gateway: null);
+        NetworkAdapterSnapshot current = TestData.Snapshot(
+            id: AdapterId.Value,
+            mode: NetworkConfigurationMode.Static,
+            ipv4Address: desired.Ipv4Address,
+            subnetMask: desired.SubnetMask,
+            gateway: "192.168.1.1");
         NetworkAdapterSnapshot verified = Verified(
             gateway: null,
             gateways: Ipv4AddressValueCollection.Empty);
         using ApplyContext context = CreateContext(
+            current: current,
             desired: desired,
             verificationSnapshots: new[] { verified });
 
@@ -403,6 +410,7 @@ public sealed class StaticIpv4ApplyServiceTests
 
         Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
         StaticIpv4MutationPlan plan = Assert.Single(context.Configurator.Plans);
+        Assert.False(plan.ApplyIpv4Address);
         Assert.Equal(GatewayMutationMode.Clear, plan.GatewayMode);
         Assert.Null(plan.GatewayMetric);
     }
@@ -426,7 +434,9 @@ public sealed class StaticIpv4ApplyServiceTests
             CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
-        Assert.Equal((ushort)25, Assert.Single(context.Configurator.Plans).GatewayMetric);
+        StaticIpv4MutationPlan plan = Assert.Single(context.Configurator.Plans);
+        Assert.True(plan.ApplyIpv4Address);
+        Assert.Equal((ushort)25, plan.GatewayMetric);
     }
 
     [Fact]
@@ -457,6 +467,8 @@ public sealed class StaticIpv4ApplyServiceTests
 
         Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
         StaticIpv4MutationPlan plan = Assert.Single(context.Configurator.Plans);
+        Assert.False(plan.ApplyIpv4Address);
+        Assert.Equal(GatewayMutationMode.LeaveUnchanged, plan.GatewayMode);
         Assert.Equal((ushort)25, plan.GatewayMetric);
         Assert.Equal(DnsMutationMode.Set, plan.DnsMode);
     }
@@ -468,8 +480,8 @@ public sealed class StaticIpv4ApplyServiceTests
         NetworkAdapterSnapshot current = TestData.Snapshot(
             id: AdapterId.Value,
             mode: NetworkConfigurationMode.Static,
-            ipv4Address: "192.168.1.50",
-            subnetMask: "255.255.255.0",
+            ipv4Address: desired.Ipv4Address,
+            subnetMask: desired.SubnetMask,
             gateway: "192.168.1.1");
         NetworkAdapterSnapshot verified = Verified(
             gateway: desired.Gateway,
@@ -485,7 +497,10 @@ public sealed class StaticIpv4ApplyServiceTests
             CancellationToken.None);
 
         Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
-        Assert.Equal((ushort)1, Assert.Single(context.Configurator.Plans).GatewayMetric);
+        StaticIpv4MutationPlan plan = Assert.Single(context.Configurator.Plans);
+        Assert.False(plan.ApplyIpv4Address);
+        Assert.Equal(GatewayMutationMode.Set, plan.GatewayMode);
+        Assert.Equal((ushort)1, plan.GatewayMetric);
     }
 
     [Fact]
@@ -570,6 +585,35 @@ public sealed class StaticIpv4ApplyServiceTests
 
         Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
         Assert.Equal(DnsMutationMode.LeaveUnchanged, Assert.Single(context.Configurator.Plans).DnsMode);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenOnlyAutomaticDnsChanges_DoesNotPlanIpv4OrGatewayMutation()
+    {
+        StaticIpv4Configuration desired = Desired();
+        NetworkAdapterSnapshot current = TestData.Snapshot(
+            id: AdapterId.Value,
+            mode: NetworkConfigurationMode.Static,
+            ipv4Address: desired.Ipv4Address,
+            subnetMask: desired.SubnetMask,
+            gateway: desired.Gateway,
+            primaryDns: "1.1.1.1",
+            ipv4DnsServers: new Ipv4AddressValueCollection(SingleManualDns));
+        using ApplyContext context = CreateContext(
+            current,
+            desired,
+            recoveryResult: NetworkAdapterRecoveryReadResult.Success(
+                Recovery(current, DnsConfigurationMode.Manual)));
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(
+            Request(desired),
+            CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.VerifiedSuccess, result.Status);
+        StaticIpv4MutationPlan plan = Assert.Single(context.Configurator.Plans);
+        Assert.False(plan.ApplyIpv4Address);
+        Assert.Equal(GatewayMutationMode.LeaveUnchanged, plan.GatewayMode);
+        Assert.Equal(DnsMutationMode.ClearToAutomatic, plan.DnsMode);
     }
 
     [Fact]

@@ -4,5 +4,6 @@ public enum GatewayMutationMode
 {
     Set = 0,
     Clear = 1,
-    LeaveAbsent = 2
+    LeaveAbsent = 2,
+    LeaveUnchanged = 3
 }

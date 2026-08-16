@@ -86,14 +86,16 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         using IWmiNetworkAdapterSession session = resolution.Session;
         StaticIpv4Configuration configuration = plan.Configuration;
 
-        StepExecution ipv4 = InvokeEnableStatic(
-            session,
-            new Dictionary<string, object?>
-            {
-                ["IPAddress"] = new[] { configuration.Ipv4Address },
-                ["SubnetMask"] = new[] { configuration.SubnetMask }
-            },
-            plan.PreviousMode);
+        StepExecution ipv4 = plan.ApplyIpv4Address
+            ? InvokeEnableStatic(
+                session,
+                new Dictionary<string, object?>
+                {
+                    ["IPAddress"] = new[] { configuration.Ipv4Address },
+                    ["SubnetMask"] = new[] { configuration.SubnetMask }
+                },
+                plan.PreviousMode)
+            : new StepExecution(NetworkMutationStepResult.NotRequired());
 
         if (!ipv4.Result.IsSuccessful)
         {
@@ -107,7 +109,8 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
 
         StepExecution gateway;
 
-        if (plan.GatewayMode == GatewayMutationMode.LeaveAbsent)
+        if (plan.GatewayMode is GatewayMutationMode.LeaveAbsent or
+            GatewayMutationMode.LeaveUnchanged)
         {
             gateway = new StepExecution(NetworkMutationStepResult.NotRequired());
         }
@@ -361,12 +364,21 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
                 plan.GatewayMetric is >= 1 and <= 9999,
             GatewayMutationMode.Clear or GatewayMutationMode.LeaveAbsent =>
                 !hasGateway && plan.GatewayMetric is null,
+            GatewayMutationMode.LeaveUnchanged => hasGateway &&
+                plan.GatewayMetric is >= 1 and <= 9999,
             _ => false
         };
 
         if (!gatewayPlanIsValid)
         {
             throw new ArgumentException("Gateway mutation mode does not match the configuration.", nameof(plan));
+        }
+
+        if (!plan.ApplyIpv4Address && plan.PreviousMode != NetworkConfigurationMode.Static)
+        {
+            throw new ArgumentException(
+                "A DHCP or unknown prior mode requires static IPv4 application.",
+                nameof(plan));
         }
 
         bool hasDns = plan.Configuration.PrimaryDns is not null;

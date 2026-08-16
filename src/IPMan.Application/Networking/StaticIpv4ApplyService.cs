@@ -202,6 +202,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
 
         StaticIpv4MutationPlan plan = new(
             desired,
+            Ipv4AddressMutationIsRequired(current, desired),
             GetGatewayMutationMode(current, desired),
             GetGatewayMetric(recovery, desired),
             GetDnsMutationMode(recovery, desired),
@@ -462,12 +463,34 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
 
     private static GatewayMutationMode GetGatewayMutationMode(
         NetworkAdapterSnapshot current,
-        StaticIpv4Configuration desired) =>
-        desired.Gateway is null
-            ? current.Ipv4Gateways.Count == 0
+        StaticIpv4Configuration desired)
+    {
+        if (desired.Gateway is null)
+        {
+            return current.Ipv4Gateways.Count == 0
                 ? GatewayMutationMode.LeaveAbsent
-                : GatewayMutationMode.Clear
-            : GatewayMutationMode.Set;
+                : GatewayMutationMode.Clear;
+        }
+
+        return current.Ipv4Gateways.Count == 1 &&
+            string.Equals(current.Ipv4Gateways[0], desired.Gateway, StringComparison.Ordinal)
+                ? GatewayMutationMode.LeaveUnchanged
+                : GatewayMutationMode.Set;
+    }
+
+    private static bool Ipv4AddressMutationIsRequired(
+        NetworkAdapterSnapshot current,
+        StaticIpv4Configuration desired) =>
+        current.Mode != NetworkConfigurationMode.Static ||
+        current.Ipv4Addresses.Count != 1 ||
+        !string.Equals(
+            current.Ipv4Addresses[0].Address,
+            desired.Ipv4Address,
+            StringComparison.Ordinal) ||
+        !string.Equals(
+            current.Ipv4Addresses[0].SubnetMask,
+            desired.SubnetMask,
+            StringComparison.Ordinal);
 
     private static bool CanPlanGatewayMutation(
         NetworkAdapterRecoverySnapshot current,

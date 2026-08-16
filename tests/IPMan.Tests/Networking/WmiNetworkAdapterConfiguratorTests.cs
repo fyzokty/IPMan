@@ -75,6 +75,111 @@ public sealed class WmiNetworkAdapterConfiguratorTests
     }
 
     [Fact]
+    public async Task ApplyStaticAsync_WhenStaticIpv4AddressChanges_InvokesOnlyEnableStatic()
+    {
+        FakeWmiSession session = new(0);
+
+        NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
+            AdapterId,
+            Plan(
+                gatewayMode: GatewayMutationMode.LeaveUnchanged,
+                dnsMode: DnsMutationMode.LeaveUnchanged,
+                previousMode: NetworkConfigurationMode.Static),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        WmiCall call = Assert.Single(session.Calls);
+        Assert.Equal("EnableStatic", call.Method);
+        Assert.Equal(NetworkMutationStepStatus.NotRequired, result.GatewayStep.Status);
+        Assert.Equal(NetworkMutationStepStatus.NotRequired, result.DnsStep.Status);
+    }
+
+    [Fact]
+    public async Task ApplyStaticAsync_WhenDhcpTransitionsToStatic_InvokesEnableStatic()
+    {
+        FakeWmiSession session = new(0);
+
+        NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
+            AdapterId,
+            Plan(
+                gatewayMode: GatewayMutationMode.LeaveUnchanged,
+                dnsMode: DnsMutationMode.LeaveUnchanged,
+                previousMode: NetworkConfigurationMode.Dhcp),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal("EnableStatic", Assert.Single(session.Calls).Method);
+    }
+
+    [Fact]
+    public async Task ApplyStaticAsync_WhenOnlyGatewayIsSet_DoesNotInvokeEnableStatic()
+    {
+        FakeWmiSession session = new(0);
+
+        NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
+            AdapterId,
+            Plan(
+                dnsMode: DnsMutationMode.LeaveUnchanged,
+                previousMode: NetworkConfigurationMode.Static,
+                applyIpv4Address: false),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(NetworkMutationStepStatus.NotRequired, result.Ipv4Step.Status);
+        Assert.Equal("SetGateways", Assert.Single(session.Calls).Method);
+    }
+
+    [Theory]
+    [InlineData("1.1.1.1", null)]
+    [InlineData("1.1.1.1", "8.8.8.8")]
+    public async Task ApplyStaticAsync_WhenOnlyManualDnsChanges_DoesNotInvokeEnableStaticOrGateway(
+        string primaryDns,
+        string? secondaryDns)
+    {
+        FakeWmiSession session = new();
+        FakeManualIpv4DnsWriter dnsWriter = new();
+
+        NetworkApplyResult result = await CreateConfigurator(session, dnsWriter: dnsWriter)
+            .ApplyStaticAsync(
+                AdapterId,
+                Plan(
+                    primaryDns: primaryDns,
+                    secondaryDns: secondaryDns,
+                    gatewayMode: GatewayMutationMode.LeaveUnchanged,
+                    previousMode: NetworkConfigurationMode.Static,
+                    applyIpv4Address: false),
+                CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(NetworkMutationStepStatus.NotRequired, result.Ipv4Step.Status);
+        Assert.Equal(NetworkMutationStepStatus.NotRequired, result.GatewayStep.Status);
+        Assert.Empty(session.Calls);
+        Assert.Equal(
+            new[] { primaryDns, secondaryDns }.Where(value => value is not null).ToArray(),
+            dnsWriter.Servers);
+    }
+
+    [Fact]
+    public async Task ApplyStaticAsync_WhenGatewayOnlyProviderFails_PreservesFailureWithoutLaterCall()
+    {
+        FakeWmiSession session = new(71);
+
+        NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
+            AdapterId,
+            Plan(
+                dnsMode: DnsMutationMode.LeaveUnchanged,
+                previousMode: NetworkConfigurationMode.Static,
+                applyIpv4Address: false),
+            CancellationToken.None);
+
+        Assert.False(result.IsSuccess);
+        Assert.True(result.IsPartialFailure);
+        Assert.Equal((uint)71, result.GatewayStep.TechnicalCode);
+        Assert.Equal("SetGateways", Assert.Single(session.Calls).Method);
+        Assert.Equal(NetworkMutationStepStatus.NotAttempted, result.DnsStep.Status);
+    }
+
+    [Fact]
     public async Task ApplyStaticAsync_WhenSuccessRequiresRestart_RetainsRestartState()
     {
         WmiNetworkAdapterConfigurator configurator = CreateConfigurator(new FakeWmiSession(1, 0, 0));
@@ -196,9 +301,15 @@ public sealed class WmiNetworkAdapterConfiguratorTests
         };
 
         NetworkApplyResult result = await CreateConfigurator(
-                new FakeWmiSession(0, 0),
+                new FakeWmiSession(),
                 dnsWriter: dnsWriter)
-            .ApplyStaticAsync(AdapterId, Plan(), CancellationToken.None);
+            .ApplyStaticAsync(
+                AdapterId,
+                Plan(
+                    applyIpv4Address: false,
+                    gatewayMode: GatewayMutationMode.LeaveUnchanged,
+                    previousMode: NetworkConfigurationMode.Static),
+                CancellationToken.None);
 
         Assert.False(result.IsSuccess);
         Assert.True(result.IsPartialFailure);
@@ -208,7 +319,7 @@ public sealed class WmiNetworkAdapterConfiguratorTests
     [Fact]
     public async Task ApplyStaticAsync_WhenDnsIsCleared_UsesExplicitNullInputWithoutEmptyValue()
     {
-        FakeWmiSession session = new(0, 0);
+        FakeWmiSession session = new(0);
         FakeManualIpv4DnsWriter dnsWriter = new();
         StaticIpv4MutationPlan plan = Plan(
             gateway: null,
@@ -217,7 +328,8 @@ public sealed class WmiNetworkAdapterConfiguratorTests
             gatewayMode: GatewayMutationMode.LeaveAbsent,
             gatewayMetric: null,
             dnsMode: DnsMutationMode.ClearToAutomatic,
-            previousMode: NetworkConfigurationMode.Static);
+            previousMode: NetworkConfigurationMode.Static,
+            applyIpv4Address: false);
 
         NetworkApplyResult result = await CreateConfigurator(session, dnsWriter: dnsWriter).ApplyStaticAsync(
             AdapterId,
@@ -225,23 +337,14 @@ public sealed class WmiNetworkAdapterConfiguratorTests
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
-        Assert.Collection(
-            session.Calls,
-            call =>
-            {
-                Assert.Equal("EnableStatic", call.Method);
-                Assert.Equal(ExpectedIpAddress, call.Parameters!["IPAddress"]);
-                Assert.Equal(ExpectedSubnetMask, call.Parameters["SubnetMask"]);
-            },
-            call =>
-            {
-                Assert.Equal("SetDNSServerSearchOrder", call.Method);
-                KeyValuePair<string, object?> parameter = Assert.Single(call.Parameters!);
-                Assert.Equal("DNSServerSearchOrder", parameter.Key);
-                Assert.Null(parameter.Value);
-                Assert.False(parameter.Value is string);
-                Assert.False(parameter.Value is Array);
-            });
+        WmiCall call = Assert.Single(session.Calls);
+        Assert.Equal("SetDNSServerSearchOrder", call.Method);
+        KeyValuePair<string, object?> parameter = Assert.Single(call.Parameters!);
+        Assert.Equal("DNSServerSearchOrder", parameter.Key);
+        Assert.Null(parameter.Value);
+        Assert.False(parameter.Value is string);
+        Assert.False(parameter.Value is Array);
+        Assert.Equal(NetworkMutationStepStatus.NotRequired, result.Ipv4Step.Status);
         Assert.Equal(NetworkMutationStepStatus.NotRequired, result.GatewayStep.Status);
         Assert.Equal(0, dnsWriter.CallCount);
     }
@@ -258,7 +361,7 @@ public sealed class WmiNetworkAdapterConfiguratorTests
         NetworkMutationFailureKind expectedFailure,
         string expectedMessage)
     {
-        FakeWmiSession session = new(0, code);
+        FakeWmiSession session = new(code);
         StaticIpv4MutationPlan plan = Plan(
             gateway: null,
             primaryDns: null,
@@ -266,7 +369,8 @@ public sealed class WmiNetworkAdapterConfiguratorTests
             gatewayMode: GatewayMutationMode.LeaveAbsent,
             gatewayMetric: null,
             dnsMode: DnsMutationMode.ClearToAutomatic,
-            previousMode: NetworkConfigurationMode.Static);
+            previousMode: NetworkConfigurationMode.Static,
+            applyIpv4Address: false);
 
         NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
             AdapterId,
@@ -349,12 +453,14 @@ public sealed class WmiNetworkAdapterConfiguratorTests
     [Fact]
     public async Task ApplyStaticAsync_WhenGatewayMustBeCleared_UsesExactRouteManagerNotWmiSentinel()
     {
-        FakeWmiSession session = new(0, 0);
+        FakeWmiSession session = new();
         FakeDefaultRouteManager routeManager = new();
         StaticIpv4MutationPlan plan = Plan(
             gateway: null,
             gatewayMode: GatewayMutationMode.Clear,
-            gatewayMetric: null);
+            gatewayMetric: null,
+            previousMode: NetworkConfigurationMode.Static,
+            applyIpv4Address: false);
 
         NetworkApplyResult result = await CreateConfigurator(session, routeManager).ApplyStaticAsync(
             AdapterId,
@@ -363,13 +469,15 @@ public sealed class WmiNetworkAdapterConfiguratorTests
 
         Assert.True(result.IsSuccess);
         Assert.Equal(AdapterId, routeManager.LastAdapterId);
+        Assert.Equal(NetworkMutationStepStatus.NotRequired, result.Ipv4Step.Status);
+        Assert.Empty(session.Calls);
         Assert.DoesNotContain(session.Calls, call => call.Method == "SetGateways");
     }
 
     [Fact]
     public async Task ApplyStaticAsync_WhenRouteManagerReportsRouteRemaining_DoesNotReportSuccess()
     {
-        FakeWmiSession session = new(0);
+        FakeWmiSession session = new();
         FakeDefaultRouteManager routeManager = new()
         {
             Result = new Ipv4DefaultRouteClearResult(Ipv4DefaultRouteClearStatus.RouteStillPresent)
@@ -377,7 +485,9 @@ public sealed class WmiNetworkAdapterConfiguratorTests
         StaticIpv4MutationPlan plan = Plan(
             gateway: null,
             gatewayMode: GatewayMutationMode.Clear,
-            gatewayMetric: null);
+            gatewayMetric: null,
+            previousMode: NetworkConfigurationMode.Static,
+            applyIpv4Address: false);
 
         NetworkApplyResult result = await CreateConfigurator(session, routeManager).ApplyStaticAsync(
             AdapterId,
@@ -480,7 +590,8 @@ public sealed class WmiNetworkAdapterConfiguratorTests
         GatewayMutationMode gatewayMode = GatewayMutationMode.Set,
         ushort? gatewayMetric = 1,
         DnsMutationMode dnsMode = DnsMutationMode.Set,
-        NetworkConfigurationMode previousMode = NetworkConfigurationMode.Dhcp) =>
+        NetworkConfigurationMode previousMode = NetworkConfigurationMode.Dhcp,
+        bool applyIpv4Address = true) =>
         new(
             new StaticIpv4Configuration(
                 "192.168.1.60",
@@ -488,6 +599,7 @@ public sealed class WmiNetworkAdapterConfiguratorTests
                 gateway,
                 primaryDns,
                 secondaryDns),
+            applyIpv4Address,
             gatewayMode,
             gatewayMetric,
             dnsMode,
