@@ -19,6 +19,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
     private readonly IStaticIpv4ConfigurationComparer _comparer;
     private readonly IDelayProvider _delayProvider;
     private readonly IClock _clock;
+    private readonly IElevationStateProvider _elevationStateProvider;
     private readonly StaticIpv4ApplyOptions _options;
 
     public StaticIpv4ApplyService(
@@ -31,6 +32,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
         IStaticIpv4ConfigurationComparer comparer,
         IDelayProvider delayProvider,
         IClock clock,
+        IElevationStateProvider elevationStateProvider,
         StaticIpv4ApplyOptions options)
     {
         ArgumentNullException.ThrowIfNull(preflightService);
@@ -42,6 +44,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
         ArgumentNullException.ThrowIfNull(comparer);
         ArgumentNullException.ThrowIfNull(delayProvider);
         ArgumentNullException.ThrowIfNull(clock);
+        ArgumentNullException.ThrowIfNull(elevationStateProvider);
         ArgumentNullException.ThrowIfNull(options);
 
         if (options.VerificationAttempts < 1)
@@ -63,6 +66,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
         _comparer = comparer;
         _delayProvider = delayProvider;
         _clock = clock;
+        _elevationStateProvider = elevationStateProvider;
         _options = options;
     }
 
@@ -72,6 +76,14 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(request.DesiredConfiguration);
+
+        // Reject before acquiring the mutation lease so a non-elevated process has no observable side effects.
+        if (!_elevationStateProvider.IsElevated)
+        {
+            return new StaticIpv4ApplyResult(
+                StaticIpv4ApplyStatus.SafetyBlocked,
+                SafetyBlock: StaticIpv4SafetyBlock.NotElevated);
+        }
 
         IDisposable lease;
         try

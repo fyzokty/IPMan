@@ -49,6 +49,7 @@ public static class ProductionHarnessFactory
             comparer,
             delay,
             clock,
+            new WindowsElevationStateProvider(),
             new StaticIpv4ApplyOptions
             {
                 VerificationAttempts = 4,

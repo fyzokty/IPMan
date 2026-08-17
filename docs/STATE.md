@@ -10,11 +10,14 @@ but no ViewModel consumes it.
 Profiles / settings persistence: not started.
 CI: GitHub Actions, `windows-latest`, Release build + full test suite on push
 to `main` and on PRs. Destructive tests stay skipped — no `IPMAN_*` in CI.
-Elevation: whole app runs `requireAdministrator`. Helper split not started.
+Elevation: settled — whole app runs `requireAdministrator`, helper split rejected
+(ADR-013). Apply refuses to mutate when the process is not elevated.
+**Single-instance (ADR-011) is unimplemented** and mutation exclusion is
+in-process only — both must be fixed before Apply UI.
 i18n: `Strings.resx` exists, 42 entries, single language.
 
 # Next
-1. Decide elevation architecture before writing Apply UI
+1. Single instance + cross-process mutation lock (ADR-011) — blocks Apply UI
 2. Profile / settings persistence
 3. Apply UI
 

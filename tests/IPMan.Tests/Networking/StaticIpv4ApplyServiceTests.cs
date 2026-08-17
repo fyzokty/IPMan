@@ -26,6 +26,33 @@ public sealed class StaticIpv4ApplyServiceTests
 
     private static readonly string[] SingleManualDns = { "1.1.1.1" };
 
+    [Fact]
+    public async Task ApplyAsync_WhenProcessIsNotElevated_ReturnsSafetyBlock()
+    {
+        using ApplyContext context = CreateContext(isElevated: false);
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.SafetyBlocked, result.Status);
+        Assert.Equal(StaticIpv4SafetyBlock.NotElevated, result.SafetyBlock);
+    }
+
+    [Fact]
+    public async Task ApplyAsync_WhenProcessIsNotElevated_DoesNotAcquireLeaseOrCallDependencies()
+    {
+        using ApplyContext context = CreateContext(isElevated: false);
+        // A disposed coordinator throws if AcquireAsync is reached.
+        context.Coordinator.Dispose();
+
+        StaticIpv4ApplyResult result = await context.Service.ApplyAsync(Request(), CancellationToken.None);
+
+        Assert.Equal(StaticIpv4ApplyStatus.SafetyBlocked, result.Status);
+        Assert.Equal(0, context.Preflight.CallCount);
+        Assert.Equal(0, context.RecoveryReader.ReadCount);
+        Assert.Empty(context.Recovery.SavedSnapshots);
+        Assert.Equal(0, context.Configurator.ApplyCount);
+    }
+
     [Theory]
     [InlineData(NetworkConfigurationPreflightStatus.ValidationFailed, StaticIpv4ApplyStatus.ValidationFailed)]
     [InlineData(NetworkConfigurationPreflightStatus.AdapterUnavailable, StaticIpv4ApplyStatus.AdapterUnavailable)]
@@ -806,6 +833,7 @@ public sealed class StaticIpv4ApplyServiceTests
             new StaticIpv4ConfigurationComparer(),
             context.Delay,
             new FakeClock(new DateTimeOffset(2026, 8, 8, 10, 0, 0, TimeSpan.Zero)),
+            new FakeElevationStateProvider(true),
             new StaticIpv4ApplyOptions());
         TaskCompletionSource firstEntered = new(TaskCreationOptions.RunContinuationsAsynchronously);
         TaskCompletionSource releaseFirst = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -851,7 +879,8 @@ public sealed class StaticIpv4ApplyServiceTests
         IReadOnlyList<NetworkAdapterSnapshot>? verificationSnapshots = null,
         int verificationAttempts = 4,
         int serializedApplyCount = 1,
-        ushort? verificationGatewayMetric = null)
+        ushort? verificationGatewayMetric = null,
+        bool isElevated = true)
     {
         desired ??= Desired();
         current ??= Current();
@@ -915,6 +944,7 @@ public sealed class StaticIpv4ApplyServiceTests
             new StaticIpv4ConfigurationComparer(),
             delay,
             new FakeClock(new DateTimeOffset(2026, 8, 8, 10, 0, 0, TimeSpan.Zero)),
+            new FakeElevationStateProvider(isElevated),
             new StaticIpv4ApplyOptions
             {
                 VerificationAttempts = verificationAttempts,
