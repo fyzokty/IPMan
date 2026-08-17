@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Supersede an in-flight run when new commits land on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and test (Release)
+    # Four of the six projects target net8.0-windows and two of them use WPF,
+    # so there is no cross-platform subset worth splitting out.
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          # global.json pins the 8.0.1xx feature band with rollForward: latestFeature.
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore IPMan.sln
+
+      - name: Build
+        run: dotnet build IPMan.sln --configuration Release --no-restore
+
+      # The three destructive and diagnostic tests skip at discovery time because
+      # none of the IPMAN_* opt-in variables are set. Never add those variables to
+      # this workflow, and never invoke tools/host-lab from CI: both would arm a
+      # code path that mutates a real network adapter.
+      - name: Test
+        run: dotnet test IPMan.sln --configuration Release --no-build
