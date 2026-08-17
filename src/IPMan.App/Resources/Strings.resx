@@ -170,6 +170,9 @@
   <data name="RefreshFailedTitle" xml:space="preserve">
     <value>Bağdaştırıcı bilgileri yenilenemedi. Görüntülenen değerler son başarılı okumaya aittir.</value>
   </data>
+  <data name="ExistingInstanceNotResponding" xml:space="preserve">
+    <value>Çalışan IPMan örneğine ulaşılamadı. Lütfen mevcut pencereyi denetleyip yeniden deneyin.</value>
+  </data>
 
   <data name="StatusAdministratorYes" xml:space="preserve">
     <value>Yönetici: Evet</value>

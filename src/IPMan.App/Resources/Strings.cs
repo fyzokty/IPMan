@@ -75,6 +75,8 @@ public static class Strings
 
     public static string RefreshFailedTitle => Get(nameof(RefreshFailedTitle));
 
+    public static string ExistingInstanceNotResponding => Get(nameof(ExistingInstanceNotResponding));
+
     public static string StatusAdministratorYes => Get(nameof(StatusAdministratorYes));
 
     public static string StatusAdministratorNo => Get(nameof(StatusAdministratorNo));

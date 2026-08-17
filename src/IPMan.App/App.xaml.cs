@@ -12,15 +12,49 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
+[assembly: System.Runtime.CompilerServices.InternalsVisibleTo("IPMan.Tests")]
+
 namespace IPMan.App;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Design",
+    "CA1001:Types that own disposable fields should be disposable",
+    Justification = "WPF application lifetime releases process resources in OnExit.")]
 public partial class App : System.Windows.Application
 {
     private ServiceProvider? _serviceProvider;
+    private WindowsSingleInstanceGuard? _singleInstanceGuard;
+    private IActivationChannelServer? _activationChannelServer;
+    private MainWindowActivationHandler? _activationHandler;
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+
+        _singleInstanceGuard = new WindowsSingleInstanceGuard();
+        IActivationChannelClient activationClient = new NamedPipeActivationChannelClient(
+            new SystemDelayProvider(),
+            new ActivationChannelOptions());
+        SingleInstanceStartupCoordinator startupCoordinator = new(
+            _singleInstanceGuard,
+            activationClient,
+            AllowExistingInstanceToSetForegroundWindow);
+
+        SingleInstanceStartupOutcome startupOutcome = startupCoordinator
+            .CoordinateAsync(CancellationToken.None)
+            .GetAwaiter()
+            .GetResult();
+
+        if (startupOutcome != SingleInstanceStartupOutcome.PrimaryInstance)
+        {
+            if (startupOutcome == SingleInstanceStartupOutcome.ActivationFailed)
+            {
+                MessageBox.Show(IPMan.App.Resources.Strings.ExistingInstanceNotResponding);
+            }
+
+            Shutdown();
+            return;
+        }
 
         ServiceCollection services = new();
 
@@ -37,14 +71,35 @@ public partial class App : System.Windows.Application
         MainWindow = window;
         window.Show();
 
+        IUiDispatcher uiDispatcher = _serviceProvider.GetRequiredService<IUiDispatcher>();
+        _activationHandler = new MainWindowActivationHandler(uiDispatcher, window);
+        _activationChannelServer = _serviceProvider.GetRequiredService<IActivationChannelServer>();
+        _activationChannelServer.ActivationRequested += _activationHandler.OnActivationRequested;
+        _activationChannelServer.StartListening();
+
         _serviceProvider.GetRequiredService<MainWindowViewModel>().Initialize();
     }
 
     protected override void OnExit(ExitEventArgs e)
     {
+        if (_activationChannelServer is not null)
+        {
+            if (_activationHandler is not null)
+            {
+                _activationChannelServer.ActivationRequested -=
+                    _activationHandler.OnActivationRequested;
+            }
+
+            _activationChannelServer.StopListening();
+        }
+
         // Disposes the refresh coordinator and the network change monitor, which
         // releases the Windows network change subscriptions.
         _serviceProvider?.Dispose();
+
+        _singleInstanceGuard?.Release();
+        _singleInstanceGuard?.Dispose();
+
         base.OnExit(e);
     }
 
@@ -83,6 +138,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<INetworkChangeMonitor, NetworkChangeMonitor>();
         services.AddSingleton(new AdapterRefreshCoordinatorOptions());
         services.AddSingleton<IAdapterRefreshCoordinator, AdapterRefreshCoordinator>();
+        services.AddSingleton<IActivationChannelServer, NamedPipeActivationChannelServer>();
 
         services.AddSingleton<IUiDispatcher>(new WpfUiDispatcher(uiDispatcher));
         services.AddSingleton<IClipboardService, WpfClipboardService>();
@@ -90,5 +146,75 @@ public partial class App : System.Windows.Application
 
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<MainWindow>();
+    }
+
+    private static void AllowExistingInstanceToSetForegroundWindow() =>
+        _ = NativeMethods.AllowSetForegroundWindow(NativeMethods.AllowSetForegroundWindowAnyProcess);
+
+    private static class NativeMethods
+    {
+        public const uint AllowSetForegroundWindowAnyProcess = uint.MaxValue;
+
+        [System.Runtime.InteropServices.DllImport(
+            "user32.dll",
+            ExactSpelling = true,
+            SetLastError = true)]
+        [return: System.Runtime.InteropServices.MarshalAs(System.Runtime.InteropServices.UnmanagedType.Bool)]
+        public static extern bool AllowSetForegroundWindow(uint processId);
+    }
+}
+
+internal enum SingleInstanceStartupOutcome
+{
+    PrimaryInstance,
+    ExistingInstanceActivated,
+    ActivationFailed
+}
+
+/// <summary>
+/// Keeps startup ownership and secondary-instance signalling testable without
+/// constructing WPF application state or opening operating-system primitives.
+/// </summary>
+internal sealed class SingleInstanceStartupCoordinator
+{
+    private readonly ISingleInstanceGuard _guard;
+    private readonly IActivationChannelClient _activationClient;
+    private readonly Action _allowSetForegroundWindow;
+
+    public SingleInstanceStartupCoordinator(
+        ISingleInstanceGuard guard,
+        IActivationChannelClient activationClient,
+        Action allowSetForegroundWindow)
+    {
+        ArgumentNullException.ThrowIfNull(guard);
+        ArgumentNullException.ThrowIfNull(activationClient);
+        ArgumentNullException.ThrowIfNull(allowSetForegroundWindow);
+
+        _guard = guard;
+        _activationClient = activationClient;
+        _allowSetForegroundWindow = allowSetForegroundWindow;
+    }
+
+    public async Task<SingleInstanceStartupOutcome> CoordinateAsync(
+        CancellationToken cancellationToken)
+    {
+        SingleInstanceAcquisition acquisition = _guard.TryAcquire();
+
+        if (acquisition != SingleInstanceAcquisition.Unavailable)
+        {
+            return SingleInstanceStartupOutcome.PrimaryInstance;
+        }
+
+        // The launching process transfers foreground permission immediately
+        // before signalling, allowing the existing process to call Activate().
+        _allowSetForegroundWindow();
+
+        bool activationSent = await _activationClient
+            .TrySendActivationAsync(cancellationToken)
+            .ConfigureAwait(false);
+
+        return activationSent
+            ? SingleInstanceStartupOutcome.ExistingInstanceActivated
+            : SingleInstanceStartupOutcome.ActivationFailed;
     }
 }
