@@ -4,10 +4,11 @@ using IPMan.Domain.Networking;
 
 namespace IPMan.Infrastructure.Networking;
 
-/// <summary>Persistent static IPv4 mutation through Win32_NetworkAdapterConfiguration.</summary>
+/// <summary>Persistent IPv4 mutation through Win32_NetworkAdapterConfiguration.</summary>
 public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
 {
     private const string EnableStaticMethod = "EnableStatic";
+    private const string EnableDhcpMethod = "EnableDHCP";
     private const string SetGatewaysMethod = "SetGateways";
     private const string SetDnsMethod = "SetDNSServerSearchOrder";
 
@@ -43,6 +44,7 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         _manualDnsWriter = manualDnsWriter;
     }
 
+    /// <inheritdoc />
     public async Task<NetworkApplyResult> ApplyStaticAsync(
         NetworkAdapterId adapterId,
         StaticIpv4MutationPlan mutationPlan,
@@ -56,6 +58,21 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         // caller cancellation cannot imply that Windows was rolled back.
         return await Task.Run(
                 () => ApplyCore(adapterId, mutationPlan),
+                CancellationToken.None)
+            .ConfigureAwait(false);
+    }
+
+    /// <inheritdoc />
+    public async Task<NetworkApplyResult> ApplyDhcpAsync(
+        NetworkAdapterId adapterId,
+        DhcpMutationPlan mutationPlan,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(mutationPlan);
+        cancellationToken.ThrowIfCancellationRequested();
+
+        return await Task.Run(
+                () => ApplyDhcpCore(adapterId, mutationPlan),
                 CancellationToken.None)
             .ConfigureAwait(false);
     }
@@ -167,6 +184,56 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         return new NetworkApplyResult(
             ipv4.Result,
             gateway.Result,
+            dns.Result,
+            dns.FailureKind,
+            dns.TechnicalMessage);
+    }
+
+    private NetworkApplyResult ApplyDhcpCore(
+        NetworkAdapterId adapterId,
+        DhcpMutationPlan plan)
+    {
+        WmiAdapterResolution resolution;
+
+        try
+        {
+            resolution = _sessionFactory.ResolveBySettingId(adapterId.Value);
+        }
+        catch (ManagementException exception)
+        {
+            return FailureBeforeMutation(NetworkMutationFailureKind.ManagementFailure, exception.Message);
+        }
+
+        if (resolution.Status != WmiAdapterResolutionStatus.Found || resolution.Session is null)
+        {
+            return FailureBeforeMutation(
+                resolution.Status == WmiAdapterResolutionStatus.Ambiguous
+                    ? NetworkMutationFailureKind.AdapterMappingAmbiguous
+                    : NetworkMutationFailureKind.AdapterUnavailable);
+        }
+
+        using IWmiNetworkAdapterSession session = resolution.Session;
+        StepExecution ipv4 = Invoke(session, EnableDhcpMethod, null);
+
+        if (!ipv4.Result.IsSuccessful)
+        {
+            return new NetworkApplyResult(
+                ipv4.Result,
+                NetworkMutationStepResult.NotAttempted(),
+                NetworkMutationStepResult.NotAttempted(),
+                ipv4.FailureKind,
+                ipv4.TechnicalMessage);
+        }
+
+        StepExecution dns = plan.ReturnDnsToAutomatic
+            ? InvokeDnsReset(
+                session,
+                new Dictionary<string, object?> { ["DNSServerSearchOrder"] = null })
+            : new StepExecution(NetworkMutationStepResult.NotRequired());
+
+        return new NetworkApplyResult(
+            ipv4.Result,
+            NetworkMutationStepResult.NotAttempted(),
             dns.Result,
             dns.FailureKind,
             dns.TechnicalMessage);

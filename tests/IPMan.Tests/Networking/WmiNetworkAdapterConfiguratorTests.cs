@@ -564,6 +564,88 @@ public sealed class WmiNetworkAdapterConfiguratorTests
     }
 
     [Fact]
+    public async Task ApplyDhcpAsync_WhenMutationRuns_InvokesEnableDhcpWithoutParametersAndResetsDns()
+    {
+        FakeWmiSession session = new(0, 0);
+        FakeDefaultRouteManager routeManager = new();
+
+        NetworkApplyResult result = await CreateConfigurator(session, routeManager).ApplyDhcpAsync(
+            AdapterId,
+            new DhcpMutationPlan(NetworkConfigurationMode.Static, ReturnDnsToAutomatic: true),
+            CancellationToken.None);
+
+        Assert.Equal(2, session.Calls.Count);
+        Assert.Equal("EnableDHCP", session.Calls[0].Method);
+        Assert.Null(session.Calls[0].Parameters);
+        Assert.Equal("SetDNSServerSearchOrder", session.Calls[1].Method);
+        KeyValuePair<string, object?> parameter = Assert.Single(session.Calls[1].Parameters!);
+        Assert.Equal("DNSServerSearchOrder", parameter.Key);
+        Assert.Null(parameter.Value);
+        Assert.Equal(NetworkMutationStepStatus.Succeeded, result.Ipv4Step.Status);
+        Assert.Equal(NetworkMutationStepStatus.NotAttempted, result.GatewayStep.Status);
+        Assert.Equal(NetworkMutationStepStatus.Succeeded, result.DnsStep.Status);
+        Assert.Null(routeManager.LastAdapterId);
+    }
+
+    [Theory]
+    [InlineData(0, NetworkMutationStepStatus.Succeeded)]
+    [InlineData(1, NetworkMutationStepStatus.SucceededRestartRequired)]
+    [InlineData(70, NetworkMutationStepStatus.Failed)]
+    public async Task ApplyDhcpAsync_WhenEnableDhcpReturnsCode_MapsOrdinaryResult(
+        uint code,
+        NetworkMutationStepStatus expectedStatus)
+    {
+        FakeWmiSession session = code is 0 or 1
+            ? new FakeWmiSession(code, 0)
+            : new FakeWmiSession(code);
+
+        NetworkApplyResult result = await CreateConfigurator(session).ApplyDhcpAsync(
+            AdapterId,
+            new DhcpMutationPlan(NetworkConfigurationMode.Static, ReturnDnsToAutomatic: true),
+            CancellationToken.None);
+
+        Assert.Equal(expectedStatus, result.Ipv4Step.Status);
+        Assert.Equal(code, result.Ipv4Step.TechnicalCode);
+        Assert.Equal(code == 1, result.RequiresRestart);
+    }
+
+    [Fact]
+    public async Task ApplyDhcpAsync_WhenEnableDhcpReturns81_TreatsItAsFailure()
+    {
+        FakeWmiSession session = new(81);
+
+        NetworkApplyResult result = await CreateConfigurator(session).ApplyDhcpAsync(
+            AdapterId,
+            new DhcpMutationPlan(NetworkConfigurationMode.Dhcp, ReturnDnsToAutomatic: true),
+            CancellationToken.None);
+
+        Assert.Equal(NetworkMutationStepStatus.Failed, result.Ipv4Step.Status);
+        Assert.Equal((uint)81, result.Ipv4Step.TechnicalCode);
+        Assert.Equal(NetworkMutationFailureKind.OperationalFailure, result.FailureKind);
+        Assert.Equal(NetworkMutationStepStatus.NotAttempted, result.DnsStep.Status);
+        Assert.Single(session.Calls);
+    }
+
+    [Theory]
+    [InlineData(WmiAdapterResolutionStatus.Unavailable, NetworkMutationFailureKind.AdapterUnavailable)]
+    [InlineData(WmiAdapterResolutionStatus.Ambiguous, NetworkMutationFailureKind.AdapterMappingAmbiguous)]
+    internal async Task ApplyDhcpAsync_WhenIdentityCannotResolveUniquely_ReturnsTypedFailure(
+        WmiAdapterResolutionStatus status,
+        NetworkMutationFailureKind expected)
+    {
+        FakeWmiFactory factory = new(new WmiAdapterResolution(status));
+        WmiNetworkAdapterConfigurator configurator = new(factory, new FakeDefaultRouteManager());
+
+        NetworkApplyResult result = await configurator.ApplyDhcpAsync(
+            AdapterId,
+            new DhcpMutationPlan(NetworkConfigurationMode.Static, ReturnDnsToAutomatic: true),
+            CancellationToken.None);
+
+        Assert.Equal(expected, result.FailureKind);
+        Assert.False(result.WasMutationAttempted);
+    }
+
+    [Fact]
     public void BuildExactIdentityQuery_EscapesIdentityAndNeverUsesDisplayMetadata()
     {
         string query = SystemWmiNetworkAdapterSessionFactory.BuildExactIdentityQuery("{A}' OR 1=1");

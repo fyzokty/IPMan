@@ -10,6 +10,13 @@ public sealed class FakeRecoverySnapshotRepository : IRecoverySnapshotRepository
 
     public List<RecoverySnapshot> SavedSnapshots { get; } = new();
 
+    public RecoverySnapshotLoadResult LoadResult { get; set; } =
+        RecoverySnapshotLoadResult.Failed(RecoverySnapshotLoadStatus.NotFound);
+
+    public int LoadCount { get; private set; }
+
+    public NetworkAdapterId? LastLoadedAdapterId { get; private set; }
+
     public Action? OnSave { get; set; }
 
     public Task<RecoveryCaptureResult> SaveAsync(
@@ -20,5 +27,15 @@ public sealed class FakeRecoverySnapshotRepository : IRecoverySnapshotRepository
         SavedSnapshots.Add(snapshot);
         OnSave?.Invoke();
         return Task.FromResult(Result);
+    }
+
+    public Task<RecoverySnapshotLoadResult> LoadLatestAsync(
+        NetworkAdapterId adapterId,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        LoadCount++;
+        LastLoadedAdapterId = adapterId;
+        return Task.FromResult(LoadResult);
     }
 }

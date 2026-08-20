@@ -155,6 +155,8 @@ public partial class App : System.Windows.Application
         services.AddSingleton<INetworkAdapterConfigurator, WmiNetworkAdapterConfigurator>();
         services.AddSingleton(new StaticIpv4ApplyOptions());
         services.AddSingleton<IStaticIpv4ApplyService, StaticIpv4ApplyService>();
+        services.AddSingleton<IDhcpApplyService, DhcpApplyService>();
+        services.AddSingleton<IRecoveryRestoreService, RecoveryRestoreService>();
         services.AddSingleton<INetworkChangeMonitor, NetworkChangeMonitor>();
         services.AddSingleton(new AdapterRefreshCoordinatorOptions());
         services.AddSingleton<IAdapterRefreshCoordinator, AdapterRefreshCoordinator>();
