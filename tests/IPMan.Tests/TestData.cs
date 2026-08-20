@@ -1,6 +1,7 @@
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using IPMan.Domain.Networking;
+using IPMan.Domain.Profiles;
 using IPMan.Infrastructure.Networking;
 
 namespace IPMan.Tests;
@@ -79,6 +80,37 @@ internal static class TestData
             ipv4Addresses ?? DefaultIpv4Addresses(ipv4Address),
             ipv4Gateways ?? Values(gateway),
             ipv4DnsServers ?? Values(primaryDns, secondaryDns));
+
+    public static NetworkProfile Profile(
+        int schemaVersion = NetworkProfile.CurrentSchemaVersion,
+        string profileId = "profile-1",
+        string name = "PLC",
+        string? description = "Factory controller",
+        NetworkConfigurationMode mode = NetworkConfigurationMode.Static,
+        string? ipv4Address = "192.168.1.50",
+        string? subnetMask = "255.255.255.0",
+        string? gateway = "192.168.1.1",
+        string? primaryDns = "1.1.1.1",
+        string? secondaryDns = "8.8.8.8",
+        bool isFavorite = false,
+        string? originAdapterName = "Ethernet",
+        DateTimeOffset? createdAtUtc = null,
+        DateTimeOffset? modifiedAtUtc = null) =>
+        new(
+            schemaVersion,
+            profileId,
+            name,
+            description,
+            mode,
+            ipv4Address,
+            subnetMask,
+            gateway,
+            primaryDns,
+            secondaryDns,
+            isFavorite,
+            originAdapterName,
+            createdAtUtc ?? new DateTimeOffset(2026, 8, 20, 9, 0, 0, TimeSpan.Zero),
+            modifiedAtUtc ?? new DateTimeOffset(2026, 8, 20, 9, 30, 0, TimeSpan.Zero));
 
     private static Ipv4AddressCollection DefaultIpv4Addresses(string? ipv4Address) =>
         ipv4Address is null

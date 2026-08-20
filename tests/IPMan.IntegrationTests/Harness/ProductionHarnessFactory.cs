@@ -27,10 +27,7 @@ public static class ProductionHarnessFactory
         IRecoverySnapshotRepository recovery = new JsonRecoverySnapshotRepository(
             new RecoverySnapshotRepositoryOptions
             {
-                BackupDirectory = Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    "IPMan",
-                    "Backup")
+                BackupDirectory = AppStorageLayout.BackupDirectory
             });
         WmiNetworkAdapterRecoveryReader recoveryReader = new();
         RecordingNetworkAdapterRecoveryReader applyRecoveryReader = new(recoveryReader);

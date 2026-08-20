@@ -1,5 +1,6 @@
 using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
+using IPMan.Infrastructure.Common;
 
 namespace IPMan.Infrastructure.Networking;
 
@@ -29,29 +30,13 @@ public sealed class JsonRecoverySnapshotRepository : IRecoverySnapshotRepository
         cancellationToken.ThrowIfCancellationRequested();
 
         string finalPath = Path.Combine(_backupDirectory, $"recovery-{snapshot.SnapshotId}.json");
-        string temporaryPath = Path.Combine(
-            _backupDirectory,
-            $".{snapshot.SnapshotId}-{Guid.NewGuid():N}.tmp");
-
         try
         {
-            Directory.CreateDirectory(_backupDirectory);
-
-            await using (FileStream stream = new(
-                temporaryPath,
-                FileMode.CreateNew,
-                FileAccess.Write,
-                FileShare.None,
-                bufferSize: 4096,
-                FileOptions.Asynchronous | FileOptions.WriteThrough))
-            {
-                await _codec
-                    .SerializeAsync(stream, snapshot, cancellationToken)
-                    .ConfigureAwait(false);
-                await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
-            }
-
-            File.Move(temporaryPath, finalPath, overwrite: false);
+            await AtomicJsonFileWriter.WriteAsync(
+                finalPath,
+                overwrite: false,
+                (stream, token) => _codec.SerializeAsync(stream, snapshot, token),
+                cancellationToken).ConfigureAwait(false);
             return RecoveryCaptureResult.Success(
                 new RecoverySnapshotReference(snapshot.SnapshotId, finalPath));
         }
@@ -62,26 +47,6 @@ public sealed class JsonRecoverySnapshotRepository : IRecoverySnapshotRepository
         catch (IOException)
         {
             return RecoveryCaptureResult.Failed(RecoveryCaptureFailure.IoFailure);
-        }
-        finally
-        {
-            TryDeleteTemporaryFile(temporaryPath);
-        }
-    }
-
-    private static void TryDeleteTemporaryFile(string path)
-    {
-        try
-        {
-            File.Delete(path);
-        }
-        catch (IOException)
-        {
-            // The final file is never partial; an orphaned temp can be ignored.
-        }
-        catch (UnauthorizedAccessException)
-        {
-            // Preserve the original typed persistence result.
         }
     }
 }

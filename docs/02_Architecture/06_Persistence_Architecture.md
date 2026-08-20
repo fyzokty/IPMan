@@ -1,22 +1,31 @@
 ---
 title: Persistence Architecture
-version: 1.0.0
+version: 1.1.0
 status: Approved
 ---
 
 # Runtime root
 
-Use:
+Storage is split by what the data is for. See
+[ADR-015](../ADR/ADR-015-User-Documents-Storage.md).
+
+User data — the user names it, copies it between machines and may edit it by hand:
+
+`%UserProfile%\Documents\IPMan\`
+
+- `Profiles\*.json`
+- `settings.json`
+
+Operational data — written automatically, never meant to be opened by hand:
 
 `%LocalAppData%\IPMan\`
 
-Logical structure:
-
-- `Config\settings.json`
-- `Profiles\*.json`
 - `Backup\`
 - `Logs\`
 - `Temp\`
+
+If the Documents known folder resolves to an empty path, fall back to
+`%LocalAppData%\IPMan\` rather than the process working directory.
 
 # Settings
 

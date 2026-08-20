@@ -1,4 +1,3 @@
-using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using IPMan.App.Presentation;
@@ -6,8 +5,12 @@ using IPMan.App.ViewModels;
 using IPMan.App.Views;
 using IPMan.Application.Common;
 using IPMan.Application.Networking;
+using IPMan.Application.Profiles;
+using IPMan.Application.Settings;
 using IPMan.Infrastructure.Common;
 using IPMan.Infrastructure.Networking;
+using IPMan.Infrastructure.Profiles;
+using IPMan.Infrastructure.Settings;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -26,6 +29,7 @@ public partial class App : System.Windows.Application
     private WindowsSingleInstanceGuard? _singleInstanceGuard;
     private IActivationChannelServer? _activationChannelServer;
     private MainWindowActivationHandler? _activationHandler;
+    private IProfileCatalog? _profileCatalog;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -78,6 +82,10 @@ public partial class App : System.Windows.Application
         _activationChannelServer.StartListening();
 
         _serviceProvider.GetRequiredService<MainWindowViewModel>().Initialize();
+
+        _profileCatalog = _serviceProvider.GetRequiredService<IProfileCatalog>();
+        _ = InitializeProfileCatalogAsync(_profileCatalog);
+        _profileCatalog.StartWatching();
     }
 
     protected override void OnExit(ExitEventArgs e)
@@ -93,8 +101,10 @@ public partial class App : System.Windows.Application
             _activationChannelServer.StopListening();
         }
 
+        _profileCatalog?.StopWatching();
+
         // Disposes the refresh coordinator and the network change monitor, which
-        // releases the Windows network change subscriptions.
+        // releases the Windows network and profile directory subscriptions.
         _serviceProvider?.Dispose();
 
         _singleInstanceGuard?.Release();
@@ -122,12 +132,22 @@ public partial class App : System.Windows.Application
         services.AddSingleton<INetworkConfigurationPreflightService, NetworkConfigurationPreflightService>();
         services.AddSingleton(new RecoverySnapshotRepositoryOptions
         {
-            BackupDirectory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "IPMan",
-                "Backup")
+            BackupDirectory = AppStorageLayout.BackupDirectory
         });
+        services.AddSingleton(new ProfileRepositoryOptions
+        {
+            ProfilesDirectory = AppStorageLayout.ProfilesDirectory
+        });
+        services.AddSingleton(new AppSettingsRepositoryOptions
+        {
+            SettingsFilePath = AppStorageLayout.SettingsFilePath
+        });
+        services.AddSingleton(new ProfileWatcherOptions());
         services.AddSingleton<IRecoverySnapshotRepository, JsonRecoverySnapshotRepository>();
+        services.AddSingleton<IProfileRepository, JsonProfileRepository>();
+        services.AddSingleton<IAppSettingsRepository, JsonAppSettingsRepository>();
+        services.AddSingleton<IProfileDirectoryWatcher, FileSystemProfileDirectoryWatcher>();
+        services.AddSingleton<IProfileCatalog, ProfileCatalog>();
         services.AddSingleton<INetworkAdapterRecoveryReader, WmiNetworkAdapterRecoveryReader>();
         services.AddSingleton<NetworkMutationCoordinator>();
         services.AddSingleton<INetworkMutationCoordinator, CrossProcessNetworkMutationCoordinator>();
@@ -150,6 +170,19 @@ public partial class App : System.Windows.Application
 
     private static void AllowExistingInstanceToSetForegroundWindow() =>
         _ = NativeMethods.AllowSetForegroundWindow(NativeMethods.AllowSetForegroundWindowAnyProcess);
+
+    private static async Task InitializeProfileCatalogAsync(IProfileCatalog catalog)
+    {
+        try
+        {
+            await catalog.InitializeAsync(CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Startup remains usable if a cancellation or unexpected subscriber
+            // failure escapes the catalog's storage-failure isolation.
+        }
+    }
 
     private static class NativeMethods
     {
