@@ -145,6 +145,15 @@
   <data name="CommandCopy" xml:space="preserve">
     <value>Kopyala</value>
   </data>
+  <data name="CommandApply" xml:space="preserve">
+    <value>Uygula</value>
+  </data>
+  <data name="CommandUseDhcp" xml:space="preserve">
+    <value>Otomatik Al (DHCP)</value>
+  </data>
+  <data name="CommandRestoreLast" xml:space="preserve">
+    <value>Son Yapılandırmayı Geri Yükle</value>
+  </data>
   <data name="CommandCopyFieldTooltip" xml:space="preserve">
     <value>{0} alanını panoya kopyala</value>
   </data>
@@ -157,6 +166,139 @@
   </data>
   <data name="StateError" xml:space="preserve">
     <value>Hata</value>
+  </data>
+  <data name="StateApplying" xml:space="preserve">
+    <value>Uygulanıyor…</value>
+  </data>
+
+  <data name="ApplyValidationFailed" xml:space="preserve">
+    <value>Girilen değerler geçerli değil. İşaretli alanları düzeltin.</value>
+  </data>
+  <data name="ApplyStaticSuccess" xml:space="preserve">
+    <value>Ayarlar uygulandı ve Windows tarafından doğrulandı.</value>
+  </data>
+  <data name="ApplyStaticNoChange" xml:space="preserve">
+    <value>Ayarlar zaten istenen değerlerde; hiçbir değişiklik yapılmadı.</value>
+  </data>
+  <data name="ApplyDhcpSuccess" xml:space="preserve">
+    <value>Adaptör otomatik yapılandırmaya (DHCP) geçirildi.</value>
+  </data>
+  <data name="ApplyDhcpNoChange" xml:space="preserve">
+    <value>Adaptör zaten otomatik yapılandırma kullanıyor.</value>
+  </data>
+  <data name="RestoreSuccess" xml:space="preserve">
+    <value>Son yapılandırma geri yüklendi ve Windows tarafından doğrulandı.</value>
+  </data>
+  <data name="RestoreNoChange" xml:space="preserve">
+    <value>Adaptör zaten kayıtlı yapılandırmada; hiçbir değişiklik yapılmadı.</value>
+  </data>
+  <data name="RestoreNoSnapshotFound" xml:space="preserve">
+    <value>Bu adaptör için geri yüklenebilecek bir kayıt yok.</value>
+  </data>
+  <data name="RestoreSnapshotUnreadable" xml:space="preserve">
+    <value>Geri yükleme kaydı okunamadı. Dosya diskte korundu.</value>
+  </data>
+  <data name="RestoreUnsupportedSnapshot" xml:space="preserve">
+    <value>Kayıt bu sürüm tarafından desteklenmiyor.</value>
+  </data>
+  <data name="RestoreAdapterIdentityChanged" xml:space="preserve">
+    <value>Adaptör kimliği değişti. Yanlış adaptöre yazmamak için işlem durduruldu.</value>
+  </data>
+  <data name="ApplyAdapterUnavailable" xml:space="preserve">
+    <value>Adaptör bulunamadı. Liste yenilendikten sonra yeniden deneyin.</value>
+  </data>
+  <data name="ApplyAdapterReadFailed" xml:space="preserve">
+    <value>Adaptör durumu güvenilir şekilde okunamadı. Hiçbir değişiklik yapılmadı.</value>
+  </data>
+  <data name="ApplyCancelled" xml:space="preserve">
+    <value>İşlem, ağ ayarları değiştirilmeden önce iptal edildi.</value>
+  </data>
+  <data name="ApplyRecoveryCaptureFailed" xml:space="preserve">
+    <value>Geri yükleme kaydı diske yazılamadı. Güvenlik gereği hiçbir değişiklik yapılmadı.</value>
+  </data>
+  <data name="ApplyRecoveryStateUnavailable" xml:space="preserve">
+    <value>Adaptörün mevcut durumu güvenilir bir geri yükleme kaydı için yeterli değil. Hiçbir değişiklik yapılmadı.</value>
+  </data>
+  <data name="ApplyMutationFailed" xml:space="preserve">
+    <value>Windows ayarları kabul etmedi. Yapılandırma değişmedi.</value>
+  </data>
+  <data name="ApplyPartialFailure" xml:space="preserve">
+    <value>İşlem yarıda kaldı. Adaptör karma durumda olabilir; "Son Yapılandırmayı Geri Yükle" ile eski duruma dönebilirsiniz.</value>
+  </data>
+  <data name="ApplyVerificationFailed" xml:space="preserve">
+    <value>Değişiklik gönderildi ancak Windows doğrulaması beklenen sonucu vermedi.</value>
+  </data>
+  <data name="ApplyAdapterUnavailableDuringVerification" xml:space="preserve">
+    <value>Adaptör işlemden sonra kayboldu; sonuç doğrulanamadı.</value>
+  </data>
+  <data name="ActionDeclined" xml:space="preserve">
+    <value>İşlem iptal edildi. Ağ ayarları değişmedi.</value>
+  </data>
+  <data name="ApplyConflictUnconfirmed" xml:space="preserve">
+    <value>Adres çakışması onayı alınamadığı için ayarlar uygulanmadı.</value>
+  </data>
+  <data name="ApplyProbeIndeterminateUnconfirmed" xml:space="preserve">
+    <value>Çakışma denetimi sonuçsuz kaldığı için ayarlar uygulanmadı.</value>
+  </data>
+
+  <data name="SafetyMultipleIpv4Addresses" xml:space="preserve">
+    <value>Bu adaptörde birden fazla IPv4 adresi var. IPMan bu durumu değiştirmeyi güvenli bulmuyor.</value>
+  </data>
+  <data name="SafetyMultipleIpv4Gateways" xml:space="preserve">
+    <value>Bu adaptörde birden fazla ağ geçidi var. IPMan bu durumu değiştirmeyi güvenli bulmuyor.</value>
+  </data>
+  <data name="SafetyTooManyIpv4DnsServers" xml:space="preserve">
+    <value>Bu adaptörde IPMan'in yönetebileceğinden fazla DNS sunucusu var.</value>
+  </data>
+  <data name="SafetyNotElevated" xml:space="preserve">
+    <value>Ağ ayarlarını değiştirmek için IPMan'in yönetici olarak çalışması gerekiyor.</value>
+  </data>
+
+  <data name="ConfirmConflictTitle" xml:space="preserve">
+    <value>Adres çakışması olabilir</value>
+  </data>
+  <data name="ConfirmConflictMessage" xml:space="preserve">
+    <value>{0} adresi ağda başka bir cihaz tarafından kullanılıyor olabilir. Yine de uygulanmasını istiyor musunuz?</value>
+  </data>
+  <data name="ConfirmProbeIndeterminateTitle" xml:space="preserve">
+    <value>Çakışma denetimi sonuçsuz</value>
+  </data>
+  <data name="ConfirmProbeIndeterminateMessage" xml:space="preserve">
+    <value>Adres çakışması denetimi sonuç vermedi. Yine de devam etmek istiyor musunuz?</value>
+  </data>
+  <data name="ConfirmRestoreTitle" xml:space="preserve">
+    <value>Son yapılandırmaya dönülsün mü?</value>
+  </data>
+  <data name="ConfirmRestoreMessage" xml:space="preserve">
+    <value>{0} adaptörü, IPMan'in kaydettiği son yapılandırmaya döndürülecek. Devam etmek istiyor musunuz?</value>
+  </data>
+
+  <data name="ValidationRequired" xml:space="preserve">
+    <value>{0} zorunludur.</value>
+  </data>
+  <data name="ValidationInvalidIpv4" xml:space="preserve">
+    <value>{0} geçerli bir IPv4 adresi değil.</value>
+  </data>
+  <data name="ValidationAddressNotAllowed" xml:space="preserve">
+    <value>{0} bu alanda kullanılamaz.</value>
+  </data>
+  <data name="ValidationNonContiguousSubnetMask" xml:space="preserve">
+    <value>Alt ağ maskesi geçerli değil; bitler bitişik olmalı.</value>
+  </data>
+  <data name="ValidationNetworkAddressNotAllowed" xml:space="preserve">
+    <value>Ağ adresi bir cihaz adresi olarak kullanılamaz.</value>
+  </data>
+  <data name="ValidationBroadcastAddressNotAllowed" xml:space="preserve">
+    <value>Yayın (broadcast) adresi bir cihaz adresi olarak kullanılamaz.</value>
+  </data>
+  <data name="ValidationGatewayOutsideSubnet" xml:space="preserve">
+    <value>Ağ geçidi, IPv4 adresiyle aynı alt ağda değil.</value>
+  </data>
+  <data name="ValidationPrimaryDnsRequired" xml:space="preserve">
+    <value>İkincil DNS girildiğinde birincil DNS de zorunludur.</value>
+  </data>
+  <data name="ValidationGatewayMatchesHostAddress" xml:space="preserve">
+    <value>Ağ geçidi, IPv4 adresiyle aynı olamaz.</value>
   </data>
   <data name="LoadingAdapters" xml:space="preserve">
     <value>Ağ bağdaştırıcıları okunuyor...</value>

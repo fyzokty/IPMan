@@ -14,6 +14,9 @@ public static class NetworkChangeReason
 
     public const string ManualRefresh = "ManualRefresh";
 
+    /// <summary>A refresh requested by IPMan immediately after it changed configuration.</summary>
+    public const string ConfigurationApplied = "ConfigurationApplied";
+
     /// <summary>Low-frequency fallback pass, not a Windows-reported change.</summary>
     public const string ScheduledReconciliation = "ScheduledReconciliation";
 }

@@ -7,6 +7,8 @@ public sealed class FakeStaticIpv4ApplyService : IStaticIpv4ApplyService
     public StaticIpv4ApplyResult Result { get; set; } =
         new(StaticIpv4ApplyStatus.VerifiedSuccess);
 
+    public Queue<StaticIpv4ApplyResult> QueuedResults { get; } = new();
+
     public List<StaticIpv4ApplyRequest> Requests { get; } = new();
 
     public Task<StaticIpv4ApplyResult> ApplyAsync(
@@ -15,6 +17,6 @@ public sealed class FakeStaticIpv4ApplyService : IStaticIpv4ApplyService
     {
         cancellationToken.ThrowIfCancellationRequested();
         Requests.Add(request);
-        return Task.FromResult(Result);
+        return Task.FromResult(QueuedResults.Count > 0 ? QueuedResults.Dequeue() : Result);
     }
 }

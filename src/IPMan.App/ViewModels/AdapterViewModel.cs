@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using IPMan.App.Presentation;
+using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
 
 namespace IPMan.App.ViewModels;
@@ -30,14 +31,19 @@ public sealed partial class AdapterViewModel : ObservableObject
     [ObservableProperty]
     private string _accessibleDescription = string.Empty;
 
-    public AdapterViewModel(NetworkAdapterSnapshot snapshot, IClipboardService clipboardService)
+    /// <summary>Creates a tab ViewModel for one adapter snapshot.</summary>
+    public AdapterViewModel(
+        NetworkAdapterSnapshot snapshot,
+        IClipboardService clipboardService,
+        IStaticIpv4ConfigurationValidator validator)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
         ArgumentNullException.ThrowIfNull(clipboardService);
+        ArgumentNullException.ThrowIfNull(validator);
 
         Id = snapshot.Id;
         Details = new AdapterDetailsViewModel();
-        Draft = new AdapterDraftViewModel(clipboardService);
+        Draft = new AdapterDraftViewModel(clipboardService, validator);
 
         Update(snapshot);
     }

@@ -1,4 +1,5 @@
 using IPMan.App.ViewModels;
+using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
 using IPMan.Tests.Fakes;
 using Xunit;
@@ -84,6 +85,23 @@ public sealed class AdapterDraftViewModelTests
 
         Assert.Equal("10.0.0.9", draft.Ipv4Address);
         Assert.True(draft.IsDirty);
+    }
+
+    [Fact]
+    public void CurrentStateRefresh_RetainsVisibleFieldErrorOnDirtyDraft()
+    {
+        AdapterDraftViewModel draft = CreateDraft(out _);
+        draft.UpdateCurrentValues(TestData.Snapshot(ipv4Address: "10.0.0.5"));
+        draft.Ipv4Address = "invalid";
+        string visibleError = draft.Ipv4AddressError;
+
+        draft.UpdateCurrentValues(TestData.Snapshot(ipv4Address: "10.0.0.77"));
+
+        Assert.True(draft.IsDirty);
+        Assert.Equal("invalid", draft.Ipv4Address);
+        Assert.NotEmpty(visibleError);
+        Assert.Equal(visibleError, draft.Ipv4AddressError);
+        Assert.True(draft.HasErrors);
     }
 
     [Fact]
@@ -176,9 +194,77 @@ public sealed class AdapterDraftViewModelTests
         Assert.Equal("10.0.0.5", snapshot.Ipv4Address);
     }
 
+    [Fact]
+    public void UntouchedEmptyDraft_IsInvalidWithoutVisibleErrors()
+    {
+        AdapterDraftViewModel draft = CreateDraft(out _);
+
+        Assert.False(draft.IsValid);
+        Assert.False(draft.HasErrors);
+        Assert.Empty(draft.Ipv4AddressError);
+        Assert.Empty(draft.SubnetMaskError);
+    }
+
+    [Fact]
+    public void InvalidIpv4Edit_ShowsOnlyTheIpv4AddressError()
+    {
+        AdapterDraftViewModel draft = CreateDraft(out _);
+
+        draft.Ipv4Address = "invalid";
+
+        Assert.NotEmpty(draft.Ipv4AddressError);
+        Assert.Empty(draft.SubnetMaskError);
+        Assert.Empty(draft.GatewayError);
+        Assert.Empty(draft.PrimaryDnsError);
+        Assert.Empty(draft.SecondaryDnsError);
+    }
+
+    [Fact]
+    public void MarkAllFieldsTouched_ShowsRequiredFieldErrors()
+    {
+        AdapterDraftViewModel draft = CreateDraft(out _);
+
+        draft.MarkAllFieldsTouched();
+
+        Assert.True(draft.HasErrors);
+        Assert.NotEmpty(draft.Ipv4AddressError);
+        Assert.NotEmpty(draft.SubnetMaskError);
+    }
+
+    [Fact]
+    public void ValidValues_ExposeNormalizedConfiguration()
+    {
+        AdapterDraftViewModel draft = CreateDraft(out _);
+
+        draft.Ipv4Address = " 192.168.20.25 ";
+        draft.SubnetMask = " 255.255.255.0 ";
+        draft.Gateway = " 192.168.20.1 ";
+
+        Assert.True(draft.IsValid);
+        Assert.NotNull(draft.ValidatedConfiguration);
+        Assert.Equal("192.168.20.25", draft.ValidatedConfiguration.Ipv4Address);
+        Assert.Equal("255.255.255.0", draft.ValidatedConfiguration.SubnetMask);
+        Assert.Equal("192.168.20.1", draft.ValidatedConfiguration.Gateway);
+    }
+
+    [Fact]
+    public void MarkApplied_ClearsDirtyStateAndAllowsTheNextRefreshToSynchronize()
+    {
+        AdapterDraftViewModel draft = CreateDraft(out _);
+        draft.UpdateCurrentValues(TestData.Snapshot(ipv4Address: "192.168.1.50"));
+        draft.Ipv4Address = "192.168.1.60";
+
+        draft.MarkApplied();
+        draft.UpdateCurrentValues(TestData.Snapshot(ipv4Address: "192.168.1.61"));
+
+        Assert.False(draft.IsDirty);
+        Assert.Equal("192.168.1.61", draft.Ipv4Address);
+        Assert.False(draft.HasErrors);
+    }
+
     private static AdapterDraftViewModel CreateDraft(out FakeClipboardService clipboard)
     {
         clipboard = new FakeClipboardService();
-        return new AdapterDraftViewModel(clipboard);
+        return new AdapterDraftViewModel(clipboard, new StaticIpv4ConfigurationValidator());
     }
 }

@@ -185,6 +185,18 @@
                                        TextWrapping="Wrap" />
 
                             <Grid>
+                                <Grid.Style>
+                                    <Style TargetType="Grid">
+                                        <Setter Property="IsEnabled" Value="True" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DataContext.Actions.IsBusy,
+                                                                         RelativeSource={RelativeSource AncestorType=Window}}"
+                                                         Value="True">
+                                                <Setter Property="IsEnabled" Value="False" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Grid.Style>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" MinWidth="130" />
                                     <ColumnDefinition Width="*" />
@@ -201,11 +213,15 @@
                                 <TextBlock Grid.Row="0" Grid.Column="0"
                                            Style="{StaticResource FieldLabelStyle}"
                                            Text="{x:Static res:Strings.FieldIpv4Address}" />
-                                <TextBox x:Name="Ipv4AddressBox"
-                                         Grid.Row="0" Grid.Column="1"
-                                         Style="{StaticResource DraftTextBoxStyle}"
-                                         AutomationProperties.Name="{x:Static res:Strings.FieldIpv4Address}"
-                                         Text="{Binding Ipv4Address, UpdateSourceTrigger=PropertyChanged}" />
+                                <StackPanel Grid.Row="0" Grid.Column="1">
+                                    <TextBox x:Name="Ipv4AddressBox"
+                                             Style="{StaticResource DraftTextBoxStyle}"
+                                             AutomationProperties.Name="{x:Static res:Strings.FieldIpv4Address}"
+                                             Text="{Binding Ipv4Address, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Style="{StaticResource FieldErrorTextStyle}"
+                                               AutomationProperties.LiveSetting="Polite"
+                                               Text="{Binding Ipv4AddressError}" />
+                                </StackPanel>
                                 <Button Grid.Row="0" Grid.Column="2"
                                         Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding CopyFieldCommand}"
@@ -216,10 +232,14 @@
                                 <TextBlock Grid.Row="1" Grid.Column="0"
                                            Style="{StaticResource FieldLabelStyle}"
                                            Text="{x:Static res:Strings.FieldSubnetMask}" />
-                                <TextBox Grid.Row="1" Grid.Column="1"
-                                         Style="{StaticResource DraftTextBoxStyle}"
-                                         AutomationProperties.Name="{x:Static res:Strings.FieldSubnetMask}"
-                                         Text="{Binding SubnetMask, UpdateSourceTrigger=PropertyChanged}" />
+                                <StackPanel Grid.Row="1" Grid.Column="1">
+                                    <TextBox Style="{StaticResource DraftTextBoxStyle}"
+                                             AutomationProperties.Name="{x:Static res:Strings.FieldSubnetMask}"
+                                             Text="{Binding SubnetMask, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Style="{StaticResource FieldErrorTextStyle}"
+                                               AutomationProperties.LiveSetting="Polite"
+                                               Text="{Binding SubnetMaskError}" />
+                                </StackPanel>
                                 <Button Grid.Row="1" Grid.Column="2"
                                         Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding CopyFieldCommand}"
@@ -230,10 +250,14 @@
                                 <TextBlock Grid.Row="2" Grid.Column="0"
                                            Style="{StaticResource FieldLabelStyle}"
                                            Text="{x:Static res:Strings.FieldGateway}" />
-                                <TextBox Grid.Row="2" Grid.Column="1"
-                                         Style="{StaticResource DraftTextBoxStyle}"
-                                         AutomationProperties.Name="{x:Static res:Strings.FieldGateway}"
-                                         Text="{Binding Gateway, UpdateSourceTrigger=PropertyChanged}" />
+                                <StackPanel Grid.Row="2" Grid.Column="1">
+                                    <TextBox Style="{StaticResource DraftTextBoxStyle}"
+                                             AutomationProperties.Name="{x:Static res:Strings.FieldGateway}"
+                                             Text="{Binding Gateway, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Style="{StaticResource FieldErrorTextStyle}"
+                                               AutomationProperties.LiveSetting="Polite"
+                                               Text="{Binding GatewayError}" />
+                                </StackPanel>
                                 <Button Grid.Row="2" Grid.Column="2"
                                         Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding CopyFieldCommand}"
@@ -244,10 +268,14 @@
                                 <TextBlock Grid.Row="3" Grid.Column="0"
                                            Style="{StaticResource FieldLabelStyle}"
                                            Text="{x:Static res:Strings.FieldPrimaryDns}" />
-                                <TextBox Grid.Row="3" Grid.Column="1"
-                                         Style="{StaticResource DraftTextBoxStyle}"
-                                         AutomationProperties.Name="{x:Static res:Strings.FieldPrimaryDns}"
-                                         Text="{Binding PrimaryDns, UpdateSourceTrigger=PropertyChanged}" />
+                                <StackPanel Grid.Row="3" Grid.Column="1">
+                                    <TextBox Style="{StaticResource DraftTextBoxStyle}"
+                                             AutomationProperties.Name="{x:Static res:Strings.FieldPrimaryDns}"
+                                             Text="{Binding PrimaryDns, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Style="{StaticResource FieldErrorTextStyle}"
+                                               AutomationProperties.LiveSetting="Polite"
+                                               Text="{Binding PrimaryDnsError}" />
+                                </StackPanel>
                                 <Button Grid.Row="3" Grid.Column="2"
                                         Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding CopyFieldCommand}"
@@ -258,10 +286,14 @@
                                 <TextBlock Grid.Row="4" Grid.Column="0"
                                            Style="{StaticResource FieldLabelStyle}"
                                            Text="{x:Static res:Strings.FieldSecondaryDns}" />
-                                <TextBox Grid.Row="4" Grid.Column="1"
-                                         Style="{StaticResource DraftTextBoxStyle}"
-                                         AutomationProperties.Name="{x:Static res:Strings.FieldSecondaryDns}"
-                                         Text="{Binding SecondaryDns, UpdateSourceTrigger=PropertyChanged}" />
+                                <StackPanel Grid.Row="4" Grid.Column="1">
+                                    <TextBox Style="{StaticResource DraftTextBoxStyle}"
+                                             AutomationProperties.Name="{x:Static res:Strings.FieldSecondaryDns}"
+                                             Text="{Binding SecondaryDns, UpdateSourceTrigger=PropertyChanged}" />
+                                    <TextBlock Style="{StaticResource FieldErrorTextStyle}"
+                                               AutomationProperties.LiveSetting="Polite"
+                                               Text="{Binding SecondaryDnsError}" />
+                                </StackPanel>
                                 <Button Grid.Row="4" Grid.Column="2"
                                         Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding CopyFieldCommand}"
@@ -270,11 +302,88 @@
                                         AutomationProperties.Name="{x:Static res:Strings.FieldSecondaryDns}" />
                             </Grid>
 
-                            <Button Margin="0,6,0,0"
-                                    Padding="14,6"
-                                    HorizontalAlignment="Left"
-                                    Command="{Binding GetCurrentValuesCommand}"
-                                    Content="{x:Static res:Strings.CommandGetCurrentValues}" />
+                            <WrapPanel Margin="0,6,0,0">
+                                <Button Style="{StaticResource PrimaryActionButtonStyle}"
+                                        Command="{Binding DataContext.Actions.ApplyStaticCommand,
+                                                          RelativeSource={RelativeSource AncestorType=Window}}"
+                                        Content="{x:Static res:Strings.CommandApply}" />
+                                <Button Style="{StaticResource SecondaryActionButtonStyle}"
+                                        Command="{Binding DataContext.Actions.ApplyDhcpCommand,
+                                                          RelativeSource={RelativeSource AncestorType=Window}}"
+                                        Content="{x:Static res:Strings.CommandUseDhcp}" />
+                                <Button Style="{StaticResource SecondaryActionButtonStyle}"
+                                        Command="{Binding DataContext.Actions.RestoreLastCommand,
+                                                          RelativeSource={RelativeSource AncestorType=Window}}"
+                                        Content="{x:Static res:Strings.CommandRestoreLast}" />
+                                <Button Command="{Binding GetCurrentValuesCommand}"
+                                        Content="{x:Static res:Strings.CommandGetCurrentValues}">
+                                    <Button.Style>
+                                        <Style TargetType="Button"
+                                               BasedOn="{StaticResource SecondaryActionButtonStyle}">
+                                            <Setter Property="IsEnabled" Value="True" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding DataContext.Actions.IsBusy,
+                                                                             RelativeSource={RelativeSource AncestorType=Window}}"
+                                                             Value="True">
+                                                    <Setter Property="IsEnabled" Value="False" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Button.Style>
+                                </Button>
+                            </WrapPanel>
+
+                            <ProgressBar Height="3"
+                                         Margin="0,4,0,8"
+                                         IsIndeterminate="True"
+                                         Visibility="{Binding DataContext.Actions.IsBusy,
+                                                              RelativeSource={RelativeSource AncestorType=Window},
+                                                              Converter={StaticResource BooleanToVisibility}}" />
+
+                            <Border Padding="12,8"
+                                    BorderThickness="1"
+                                    CornerRadius="4"
+                                    AutomationProperties.LiveSetting="Assertive"
+                                    Visibility="{Binding DataContext.Actions.HasStatusMessage,
+                                                         RelativeSource={RelativeSource AncestorType=Window},
+                                                         Converter={StaticResource BooleanToVisibility}}">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
+                                        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding DataContext.Actions.StatusSeverity,
+                                                                         RelativeSource={RelativeSource AncestorType=Window}}"
+                                                         Value="{x:Static vm:ApplyStatusSeverity.Success}">
+                                                <Setter Property="Background" Value="{StaticResource SuccessBackgroundBrush}" />
+                                                <Setter Property="BorderBrush" Value="{StaticResource SuccessBorderBrush}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DataContext.Actions.StatusSeverity,
+                                                                         RelativeSource={RelativeSource AncestorType=Window}}"
+                                                         Value="{x:Static vm:ApplyStatusSeverity.Information}">
+                                                <Setter Property="Background" Value="{StaticResource InfoBackgroundBrush}" />
+                                                <Setter Property="BorderBrush" Value="{StaticResource InfoBorderBrush}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DataContext.Actions.StatusSeverity,
+                                                                         RelativeSource={RelativeSource AncestorType=Window}}"
+                                                         Value="{x:Static vm:ApplyStatusSeverity.Warning}">
+                                                <Setter Property="Background" Value="{StaticResource WarningBackgroundBrush}" />
+                                                <Setter Property="BorderBrush" Value="{StaticResource WarningBorderBrush}" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding DataContext.Actions.StatusSeverity,
+                                                                         RelativeSource={RelativeSource AncestorType=Window}}"
+                                                         Value="{x:Static vm:ApplyStatusSeverity.Error}">
+                                                <Setter Property="Background" Value="{StaticResource ErrorBackgroundBrush}" />
+                                                <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <TextBlock Foreground="{StaticResource PrimaryTextBrush}"
+                                           Text="{Binding DataContext.Actions.StatusMessage,
+                                                          RelativeSource={RelativeSource AncestorType=Window}}"
+                                           TextWrapping="Wrap" />
+                            </Border>
                         </StackPanel>
                     </Border>
                 </Grid>

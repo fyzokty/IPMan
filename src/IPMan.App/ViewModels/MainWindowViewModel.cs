@@ -1,4 +1,5 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
 using IPMan.App.Presentation;
@@ -24,6 +25,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly IUiDispatcher _uiDispatcher;
     private readonly IClipboardService _clipboardService;
     private readonly IClock _clock;
+    private readonly IStaticIpv4ConfigurationValidator _validator;
 
     private DateTimeOffset? _lastSuccessfulRefreshUtc;
     private bool _isInitialized;
@@ -49,7 +51,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         IClipboardService clipboardService,
         IClock clock,
         IElevationStateProvider elevationStateProvider,
-        IApplicationVersionProvider versionProvider)
+        IApplicationVersionProvider versionProvider,
+        AdapterActionsViewModel actions,
+        IStaticIpv4ConfigurationValidator validator)
     {
         ArgumentNullException.ThrowIfNull(refreshCoordinator);
         ArgumentNullException.ThrowIfNull(uiDispatcher);
@@ -57,11 +61,17 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(elevationStateProvider);
         ArgumentNullException.ThrowIfNull(versionProvider);
+        ArgumentNullException.ThrowIfNull(actions);
+        ArgumentNullException.ThrowIfNull(validator);
 
         _refreshCoordinator = refreshCoordinator;
         _uiDispatcher = uiDispatcher;
         _clipboardService = clipboardService;
         _clock = clock;
+        _validator = validator;
+
+        Actions = actions;
+        Actions.PropertyChanged += OnActionsPropertyChanged;
 
         StatusBar = new StatusBarViewModel
         {
@@ -84,6 +94,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     public ObservableCollection<AdapterViewModel> Adapters { get; } = new();
 
     public StatusBarViewModel StatusBar { get; }
+
+    /// <summary>The shared action state for the currently selected adapter.</summary>
+    public AdapterActionsViewModel Actions { get; }
 
     /// <summary>Shown when discovery has completed and Windows reported no adapters.</summary>
     public bool IsEmptyStateVisible => !IsLoading && Adapters.Count == 0;
@@ -116,9 +129,15 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
         _refreshCoordinator.Refreshed -= OnAdaptersRefreshed;
         _refreshCoordinator.RefreshFailed -= OnAdapterRefreshFailed;
+        Actions.PropertyChanged -= OnActionsPropertyChanged;
+        Actions.Dispose();
     }
 
-    partial void OnSelectedAdapterChanged(AdapterViewModel? value) => UpdateSelectedAdapterStatus();
+    partial void OnSelectedAdapterChanged(AdapterViewModel? value)
+    {
+        UpdateSelectedAdapterStatus();
+        Actions.Attach(value);
+    }
 
     private void OnAdaptersRefreshed(object? sender, AdapterRefreshedEventArgs e) =>
         _uiDispatcher.Post(() => ApplyRefresh(e.Adapters));
@@ -172,7 +191,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
             if (existingIndex < 0)
             {
-                Adapters.Insert(targetIndex, new AdapterViewModel(snapshot, _clipboardService));
+                Adapters.Insert(targetIndex, new AdapterViewModel(snapshot, _clipboardService, _validator));
                 continue;
             }
 
@@ -235,6 +254,18 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             : Strings.FormatSelectedAdapter(
                 SelectedAdapter.DisplayName,
                 SelectedAdapter.ConnectionState);
+
+    private void OnActionsPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(AdapterActionsViewModel.IsBusy))
+        {
+            StatusBar.ApplicationState = Actions.IsBusy
+                ? Strings.StateApplying
+                : HasRefreshError
+                    ? Strings.StateError
+                    : Strings.StateReady;
+        }
+    }
 
     private void NotifyStateVisibilityChanged()
     {

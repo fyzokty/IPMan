@@ -166,6 +166,8 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IClipboardService, WpfClipboardService>();
         services.AddSingleton<IApplicationVersionProvider, AssemblyApplicationVersionProvider>();
 
+        services.AddSingleton<IUserConfirmationService, WpfUserConfirmationService>();
+        services.AddSingleton<AdapterActionsViewModel>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<MainWindow>();
     }

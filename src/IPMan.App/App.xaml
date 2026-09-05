@@ -16,6 +16,13 @@
         <SolidColorBrush x:Key="DisconnectedBrush" Color="#8A8886" />
         <SolidColorBrush x:Key="WarningBackgroundBrush" Color="#FFF4CE" />
         <SolidColorBrush x:Key="WarningBorderBrush" Color="#E9C46A" />
+        <SolidColorBrush x:Key="ErrorTextBrush" Color="#A80000" />
+        <SolidColorBrush x:Key="SuccessBackgroundBrush" Color="#DFF6DD" />
+        <SolidColorBrush x:Key="SuccessBorderBrush" Color="#107C10" />
+        <SolidColorBrush x:Key="InfoBackgroundBrush" Color="#EFF6FC" />
+        <SolidColorBrush x:Key="InfoBorderBrush" Color="#0F6CBD" />
+        <SolidColorBrush x:Key="ErrorBackgroundBrush" Color="#FDE7E9" />
+        <SolidColorBrush x:Key="ErrorBorderBrush" Color="#A80000" />
 
         <Style x:Key="CardStyle" TargetType="Border">
             <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
@@ -59,6 +66,32 @@
             <Setter Property="Padding" Value="10,4" />
             <Setter Property="Margin" Value="0,0,0,8" />
             <Setter Property="VerticalAlignment" Value="Top" />
+        </Style>
+
+        <Style x:Key="FieldErrorTextStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="{StaticResource ErrorTextBrush}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="TextWrapping" Value="Wrap" />
+            <Setter Property="MaxWidth" Value="{StaticResource FieldMaxWidth}" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+            <Setter Property="Margin" Value="0,-4,8,8" />
+            <Setter Property="Visibility" Value="Visible" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource Self}}" Value="">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="PrimaryActionButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="18,6" />
+            <Setter Property="Margin" Value="0,0,8,8" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+        </Style>
+
+        <Style x:Key="SecondaryActionButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="14,6" />
+            <Setter Property="Margin" Value="0,0,8,8" />
         </Style>
 
         <Style x:Key="StatusBarTextStyle" TargetType="TextBlock">

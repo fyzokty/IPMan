@@ -1,5 +1,6 @@
 using IPMan.App.Resources;
 using IPMan.App.ViewModels;
+using IPMan.Application.Networking;
 using IPMan.Tests.Fakes;
 using Xunit;
 
@@ -342,17 +343,66 @@ public sealed class MainWindowViewModelTests
         Assert.Single(harness.ViewModel.Adapters);
     }
 
+    [Fact]
+    public void SelectionChange_AttachesActionsToTheSelectedAdapter()
+    {
+        using MainWindowHarness harness = MainWindowHarness.Create();
+        harness.ViewModel.Initialize();
+        harness.Coordinator.PublishRefresh(
+            TestData.Snapshot(id: "{A}"),
+            TestData.Snapshot(id: "{B}"));
+
+        harness.ViewModel.SelectedAdapter = harness.ViewModel.Adapters[1];
+
+        Assert.Same(harness.ViewModel.SelectedAdapter, harness.Actions.CurrentAdapter);
+    }
+
+    [Fact]
+    public void BusyActions_SetApplyingThenReadyApplicationState()
+    {
+        using MainWindowHarness harness = MainWindowHarness.Create();
+
+        harness.Actions.IsBusy = true;
+        Assert.Equal(Strings.StateApplying, harness.ViewModel.StatusBar.ApplicationState);
+
+        harness.Actions.IsBusy = false;
+        Assert.Equal(Strings.StateReady, harness.ViewModel.StatusBar.ApplicationState);
+    }
+
+    [Fact]
+    public void BusyActions_WhenRefreshHasFailed_ReturnToErrorApplicationState()
+    {
+        using MainWindowHarness harness = MainWindowHarness.Create();
+        harness.ViewModel.Initialize();
+        harness.Coordinator.PublishFailure();
+
+        harness.Actions.IsBusy = true;
+        harness.Actions.IsBusy = false;
+
+        Assert.Equal(Strings.StateError, harness.ViewModel.StatusBar.ApplicationState);
+    }
+
     private sealed class MainWindowHarness : IDisposable
     {
         private MainWindowHarness(
             FakeAdapterRefreshCoordinator coordinator,
             FakeUiDispatcher dispatcher,
             FakeClipboardService clipboard,
+            FakeStaticIpv4ApplyService staticApply,
+            FakeDhcpApplyService dhcpApply,
+            FakeRecoveryRestoreService recoveryRestore,
+            FakeUserConfirmationService confirmation,
+            AdapterActionsViewModel actions,
             MainWindowViewModel viewModel)
         {
             Coordinator = coordinator;
             Dispatcher = dispatcher;
             Clipboard = clipboard;
+            StaticApply = staticApply;
+            DhcpApply = dhcpApply;
+            RecoveryRestore = recoveryRestore;
+            Confirmation = confirmation;
+            Actions = actions;
             ViewModel = viewModel;
         }
 
@@ -362,6 +412,16 @@ public sealed class MainWindowViewModelTests
 
         public FakeClipboardService Clipboard { get; }
 
+        public FakeStaticIpv4ApplyService StaticApply { get; }
+
+        public FakeDhcpApplyService DhcpApply { get; }
+
+        public FakeRecoveryRestoreService RecoveryRestore { get; }
+
+        public FakeUserConfirmationService Confirmation { get; }
+
+        public AdapterActionsViewModel Actions { get; }
+
         public MainWindowViewModel ViewModel { get; }
 
         public static MainWindowHarness Create(bool isElevated = true, string version = "1.0.0")
@@ -369,6 +429,17 @@ public sealed class MainWindowViewModelTests
             FakeAdapterRefreshCoordinator coordinator = new();
             FakeUiDispatcher dispatcher = new();
             FakeClipboardService clipboard = new();
+            FakeStaticIpv4ApplyService staticApply = new();
+            FakeDhcpApplyService dhcpApply = new();
+            FakeRecoveryRestoreService recoveryRestore = new();
+            FakeUserConfirmationService confirmation = new();
+            AdapterActionsViewModel actions = new(
+                staticApply,
+                dhcpApply,
+                recoveryRestore,
+                confirmation,
+                coordinator);
+            StaticIpv4ConfigurationValidator validator = new();
 
             MainWindowViewModel viewModel = new(
                 coordinator,
@@ -376,9 +447,20 @@ public sealed class MainWindowViewModelTests
                 clipboard,
                 new FakeClock(RefreshedAt),
                 new FakeElevationStateProvider(isElevated),
-                new FakeApplicationVersionProvider(version));
+                new FakeApplicationVersionProvider(version),
+                actions,
+                validator);
 
-            return new MainWindowHarness(coordinator, dispatcher, clipboard, viewModel);
+            return new MainWindowHarness(
+                coordinator,
+                dispatcher,
+                clipboard,
+                staticApply,
+                dhcpApply,
+                recoveryRestore,
+                confirmation,
+                actions,
+                viewModel);
         }
 
         public void Dispose() => ViewModel.Dispose();
