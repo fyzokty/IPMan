@@ -1,0 +1,32 @@
+{
+  "format": {
+    "command": "",
+    "required_for": []
+  },
+  "analyze": {
+    "command": "dotnet build IPMan.sln --configuration Release",
+    "required_for": [
+      "TRIVIAL",
+      "SMALL",
+      "NORMAL",
+      "COMPLEX",
+      "CRITICAL"
+    ]
+  },
+  "test": {
+    "command": "dotnet test IPMan.sln --configuration Release",
+    "required_for": [
+      "SMALL",
+      "NORMAL",
+      "COMPLEX",
+      "CRITICAL"
+    ]
+  },
+  "build": {
+    "command": "dotnet build IPMan.sln --configuration Release",
+    "required_for": [
+      "COMPLEX",
+      "CRITICAL"
+    ]
+  }
+}

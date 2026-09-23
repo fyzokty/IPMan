@@ -1,0 +1,111 @@
+{
+  "roles": {
+    "context": {
+      "chain": [
+        "flash-medium",
+        "luna"
+      ],
+      "permission": "read-only"
+    },
+    "implement": {
+      "chain": [
+        "terra"
+      ],
+      "permission": "workspace-write"
+    },
+    "analyze": {
+      "chain": [
+        "luna"
+      ],
+      "permission": "read-only"
+    },
+    "test_gap": {
+      "chain": [
+        "luna"
+      ],
+      "permission": "read-only"
+    },
+    "review": {
+      "chain": [
+        "flash-high",
+        "luna"
+      ],
+      "permission": "read-only"
+    }
+  },
+  "levels": {},
+  "permissions": {
+    "read-only": {
+      "allow_commands": [
+        "dotnet --info",
+        "dotnet --list-sdks",
+        "dotnet list package",
+        "dotnet sln list"
+      ],
+      "deny_commands": [
+        "dotnet restore",
+        "dotnet add",
+        "dotnet remove",
+        "dotnet nuget",
+        "dotnet tool",
+        "dotnet publish",
+        "dotnet pack",
+        "netsh",
+        "ipconfig /release",
+        "ipconfig /renew",
+        "route",
+        "New-NetIPAddress",
+        "Set-NetIPAddress",
+        "Remove-NetIPAddress",
+        "Set-NetIPInterface",
+        "New-NetRoute",
+        "Remove-NetRoute",
+        "Set-DnsClientServerAddress",
+        "tools/host-lab",
+        "Invoke-IPManHostLab"
+      ]
+    },
+    "workspace-write": {
+      "allow_commands": [
+        "mkdir",
+        "touch",
+        "mv",
+        "cp",
+        "sed",
+        "awk",
+        "tee",
+        "git add",
+        "git stash",
+        "dotnet --info",
+        "dotnet --list-sdks",
+        "dotnet list package",
+        "dotnet sln list",
+        "dotnet build",
+        "dotnet test tests/IPMan.Tests/IPMan.Tests.csproj"
+      ],
+      "deny_commands": [
+        "dotnet restore",
+        "dotnet add",
+        "dotnet remove",
+        "dotnet nuget",
+        "dotnet tool",
+        "dotnet publish",
+        "dotnet pack",
+        "dotnet run",
+        "netsh",
+        "ipconfig /release",
+        "ipconfig /renew",
+        "route",
+        "New-NetIPAddress",
+        "Set-NetIPAddress",
+        "Remove-NetIPAddress",
+        "Set-NetIPInterface",
+        "New-NetRoute",
+        "Remove-NetRoute",
+        "Set-DnsClientServerAddress",
+        "tools/host-lab",
+        "Invoke-IPManHostLab"
+      ]
+    }
+  }
+}
