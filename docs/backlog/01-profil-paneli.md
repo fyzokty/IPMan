@@ -1,6 +1,6 @@
 # 01 — Profil paneli
 
-- **Durum:** devam ediyor
+- **Durum:** tamamlandı
 - **Bağımlılık:** yok
 - **Gereksinimler:** PR-009..PR-017 · AC-009, AC-011..AC-015
 
