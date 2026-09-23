@@ -1,6 +1,10 @@
+using System.IO;
+using IPMan.App.Presentation;
 using IPMan.App.Resources;
 using IPMan.App.ViewModels;
 using IPMan.Application.Networking;
+using IPMan.Application.Profiles;
+using IPMan.Domain.Profiles;
 using IPMan.Tests.Fakes;
 using Xunit;
 
@@ -382,6 +386,80 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(Strings.StateError, harness.ViewModel.StatusBar.ApplicationState);
     }
 
+    [Fact]
+    public void ProfileSelection_WhenAdapterIsSelected_LoadsThatAdaptersDraft()
+    {
+        TestProfileCatalog catalog = new()
+        {
+            Profiles = [TestData.Profile(ipv4Address: "10.0.0.60")]
+        };
+        using ProfilePanelViewModel panel = CreateProfilePanel(catalog);
+        using MainWindowHarness harness = MainWindowHarness.Create(panel);
+        harness.ViewModel.Initialize();
+        harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}", ipv4Address: "10.0.0.5"));
+
+        harness.ViewModel.ProfilePanel!.SelectedProfile = harness.ViewModel.ProfilePanel.Groups[0].Profiles[0];
+
+        Assert.Equal("10.0.0.60", harness.ViewModel.SelectedAdapter!.Draft.Ipv4Address);
+    }
+
+    [Fact]
+    public void ProfileSelection_WhenDirtyDraftLoadIsDeclined_PreservesDraftAndPreviousSelection()
+    {
+        TestProfileCatalog catalog = new()
+        {
+            Profiles =
+            [
+                TestData.Profile(profileId: "first", name: "First", ipv4Address: "10.0.0.10"),
+                TestData.Profile(profileId: "second", name: "Second", ipv4Address: "10.0.0.20")
+            ]
+        };
+        FakeUserConfirmationService confirmation = new() { Answer = true };
+        using ProfilePanelViewModel panel = CreateProfilePanel(catalog, confirmation);
+        using MainWindowHarness harness = MainWindowHarness.Create(panel);
+        harness.ViewModel.Initialize();
+        harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}"));
+        ProfileListItemViewModel first = panel.Groups[0].Profiles[0];
+
+        panel.SelectedProfile = first;
+        harness.ViewModel.SelectedAdapter!.Draft.Ipv4Address = "10.0.0.99";
+        confirmation.Answer = false;
+        panel.SelectedProfile = panel.Groups[0].Profiles[1];
+
+        Assert.Same(first, panel.SelectedProfile);
+        Assert.Equal("10.0.0.99", harness.ViewModel.SelectedAdapter.Draft.Ipv4Address);
+    }
+
+    [Fact]
+    public void ProfilePanel_WhenNoAdapterIsSelected_DisablesSaveUntilAnAdapterIsAvailable()
+    {
+        TestProfileCatalog catalog = new();
+        using ProfilePanelViewModel panel = CreateProfilePanel(catalog);
+        using MainWindowHarness harness = MainWindowHarness.Create(panel);
+
+        panel.NewProfileName = "PLC";
+
+        Assert.False(panel.SaveCommand.CanExecute(null));
+
+        harness.ViewModel.Initialize();
+        harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}"));
+
+        Assert.True(panel.SaveCommand.CanExecute(null));
+
+        harness.Coordinator.PublishRefresh();
+
+        Assert.False(panel.SaveCommand.CanExecute(null));
+    }
+
+    private static ProfilePanelViewModel CreateProfilePanel(
+        TestProfileCatalog catalog,
+        FakeUserConfirmationService? confirmation = null) => new(
+            catalog,
+            new TestProfileFileDialogService(),
+            new TestUserTextInputService(),
+            confirmation ?? new FakeUserConfirmationService(),
+            new FakeUiDispatcher());
+
     private sealed class MainWindowHarness : IDisposable
     {
         private MainWindowHarness(
@@ -424,7 +502,10 @@ public sealed class MainWindowViewModelTests
 
         public MainWindowViewModel ViewModel { get; }
 
-        public static MainWindowHarness Create(bool isElevated = true, string version = "1.0.0")
+        public static MainWindowHarness Create(
+            ProfilePanelViewModel? profilePanel = null,
+            bool isElevated = true,
+            string version = "1.0.0")
         {
             FakeAdapterRefreshCoordinator coordinator = new();
             FakeUiDispatcher dispatcher = new();
@@ -449,7 +530,8 @@ public sealed class MainWindowViewModelTests
                 new FakeElevationStateProvider(isElevated),
                 new FakeApplicationVersionProvider(version),
                 actions,
-                validator);
+                validator,
+                profilePanel);
 
             return new MainWindowHarness(
                 coordinator,
@@ -464,5 +546,56 @@ public sealed class MainWindowViewModelTests
         }
 
         public void Dispose() => ViewModel.Dispose();
+    }
+
+    private sealed class TestProfileCatalog : IProfileCatalog
+    {
+        public IReadOnlyList<NetworkProfile> Profiles { get; set; } = [];
+
+        public IReadOnlyList<NetworkProfileProblem> Problems { get; set; } = [];
+
+        public event EventHandler? Changed;
+
+        public Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+        public void StartWatching()
+        {
+        }
+
+        public void StopWatching()
+        {
+        }
+
+        public Task<ProfileSaveResult> SaveAsync(NetworkProfile profile, CancellationToken cancellationToken) =>
+            Task.FromResult(ProfileSaveResult.Success(profile));
+
+        public Task<ProfileDeleteResult> DeleteAsync(string profileId, CancellationToken cancellationToken) =>
+            Task.FromResult(ProfileDeleteResult.Success());
+
+        public Task<ProfileImportResult> ImportAsync(Stream source, CancellationToken cancellationToken) =>
+            Task.FromResult(ProfileImportResult.Failed(ProfileImportStatus.InvalidContent));
+
+        public Task<ProfileExportResult> ExportAsync(
+            string profileId,
+            Stream destination,
+            CancellationToken cancellationToken) => Task.FromResult(ProfileExportResult.Success());
+
+        public void RaiseChanged() => Changed?.Invoke(this, EventArgs.Empty);
+
+        public void Dispose()
+        {
+        }
+    }
+
+    private sealed class TestProfileFileDialogService : IProfileFileDialogService
+    {
+        public Stream? OpenProfile() => null;
+
+        public Stream? CreateProfile(string suggestedFileName) => null;
+    }
+
+    private sealed class TestUserTextInputService : IUserTextInputService
+    {
+        public string? Request(string title, string label, string initialValue) => null;
     }
 }

@@ -1,5 +1,6 @@
 using System.IO;
 using IPMan.App.Presentation;
+using IPMan.App.Resources;
 using IPMan.App.ViewModels;
 using IPMan.Application.Networking;
 using IPMan.Application.Profiles;
@@ -126,6 +127,223 @@ public sealed class ProfilePanelViewModelTests
     }
 
     [Fact]
+    public async Task SaveCommand_WhenDraftAndNameAreAvailable_SavesDraftProfileAndSelectsResult()
+    {
+        FakeProfileCatalog catalog = new();
+        using ProfilePanelViewModel viewModel = Create(catalog);
+        AdapterDraftViewModel draft = new(new FakeClipboardService(), new StaticIpv4ConfigurationValidator());
+        draft.UpdateCurrentValues(TestData.Snapshot(
+            ipv4Address: "10.0.0.5",
+            subnetMask: "255.255.255.0",
+            gateway: "10.0.0.1"));
+        viewModel.SetDraft(draft);
+        viewModel.NewProfileName = "PLC";
+        viewModel.NewProfileDescription = "Hat 1";
+
+        await viewModel.SaveCommand.ExecuteAsync(null);
+
+        NetworkProfile saved = Assert.Single(catalog.SavedProfiles);
+        Assert.Equal("PLC", saved.Name);
+        Assert.Equal("Hat 1", saved.Description);
+        Assert.Equal("10.0.0.5", saved.Ipv4Address);
+        Assert.Equal(Strings.ProfileSaveSuccess, viewModel.StatusMessage);
+        Assert.Equal(saved.ProfileId, viewModel.SelectedProfile!.Id);
+    }
+
+    [Fact]
+    public async Task DuplicateCommand_WhenCatalogResolvesNameCollision_UsesNewIdWithoutPromptAndSelectsResolvedName()
+    {
+        NetworkProfile original = TestData.Profile(profileId: "original", name: "PLC");
+        NetworkProfile duplicate = original with { ProfileId = "duplicate", Name = "PLC (1)" };
+        FakeProfileCatalog catalog = new()
+        {
+            Profiles = [original],
+            SaveResult = ProfileSaveResult.Success(duplicate)
+        };
+        FakeUserTextInputService input = new();
+        using ProfilePanelViewModel viewModel = Create(catalog, textInput: input);
+
+        await viewModel.DuplicateCommand.ExecuteAsync(viewModel.Groups[0].Profiles[0]);
+
+        NetworkProfile saved = Assert.Single(catalog.SavedProfiles);
+        Assert.NotEqual(original.ProfileId, saved.ProfileId);
+        Assert.Equal("PLC", saved.Name);
+        Assert.Empty(input.Requests);
+        Assert.Equal("duplicate", viewModel.SelectedProfile!.Id);
+    }
+
+    [Fact]
+    public async Task RenameCommand_WhenInputIsCancelled_DoesNotSave()
+    {
+        FakeProfileCatalog catalog = new()
+        {
+            Profiles = [TestData.Profile()]
+        };
+        FakeUserTextInputService input = new() { Response = null };
+        using ProfilePanelViewModel viewModel = Create(catalog, textInput: input);
+
+        await viewModel.RenameCommand.ExecuteAsync(viewModel.Groups[0].Profiles[0]);
+
+        Assert.Empty(catalog.SavedProfiles);
+        Assert.Single(input.Requests);
+    }
+
+    [Fact]
+    public async Task RenameCommand_WhenInputIsProvided_SavesRenamedProfile()
+    {
+        NetworkProfile profile = TestData.Profile(profileId: "rename-me", name: "Eski ad");
+        FakeProfileCatalog catalog = new()
+        {
+            Profiles = [profile]
+        };
+        FakeUserTextInputService input = new() { Response = "Yeni ad" };
+        using ProfilePanelViewModel viewModel = Create(catalog, textInput: input);
+
+        await viewModel.RenameCommand.ExecuteAsync(viewModel.Groups[0].Profiles[0]);
+
+        NetworkProfile saved = Assert.Single(catalog.SavedProfiles);
+        Assert.Equal("rename-me", saved.ProfileId);
+        Assert.Equal("Yeni ad", saved.Name);
+        Assert.Equal("Eski ad", Assert.Single(input.Requests).InitialValue);
+        Assert.Equal("rename-me", viewModel.SelectedProfile!.Id);
+    }
+
+    [Fact]
+    public async Task ToggleFavoriteCommand_WhenProfileIsSelected_SavesOppositeFavoriteState()
+    {
+        FakeProfileCatalog catalog = new()
+        {
+            Profiles = [TestData.Profile(isFavorite: false)]
+        };
+        using ProfilePanelViewModel viewModel = Create(catalog);
+
+        await viewModel.ToggleFavoriteCommand.ExecuteAsync(viewModel.Groups[0].Profiles[0]);
+
+        Assert.True(Assert.Single(catalog.SavedProfiles).IsFavorite);
+    }
+
+    [Fact]
+    public async Task DeleteCommand_WhenConfirmationIsDeclined_DoesNotDelete()
+    {
+        FakeProfileCatalog catalog = new()
+        {
+            Profiles = [TestData.Profile()]
+        };
+        FakeUserConfirmationService confirmation = new() { Answer = false };
+        using ProfilePanelViewModel viewModel = Create(catalog, confirmation);
+
+        await viewModel.DeleteCommand.ExecuteAsync(viewModel.Groups[0].Profiles[0]);
+
+        Assert.Empty(catalog.DeletedProfileIds);
+        Assert.Single(confirmation.Requests);
+    }
+
+    [Fact]
+    public async Task DeleteCommand_WhenConfirmationIsAccepted_DeletesSelectedProfile()
+    {
+        NetworkProfile profile = TestData.Profile(profileId: "delete-me");
+        FakeProfileCatalog catalog = new()
+        {
+            Profiles = [profile]
+        };
+        using ProfilePanelViewModel viewModel = Create(catalog, new FakeUserConfirmationService { Answer = true });
+
+        await viewModel.DeleteCommand.ExecuteAsync(viewModel.Groups[0].Profiles[0]);
+
+        Assert.Equal("delete-me", Assert.Single(catalog.DeletedProfileIds));
+        Assert.Equal(Strings.ProfileDeleteSuccess, viewModel.StatusMessage);
+    }
+
+    [Fact]
+    public async Task ImportCommand_WhenDialogIsCancelled_DoesNotCallCatalog()
+    {
+        FakeProfileCatalog catalog = new();
+        using ProfilePanelViewModel viewModel = Create(catalog);
+
+        await viewModel.ImportCommand.ExecuteAsync(null);
+
+        Assert.Empty(catalog.ImportedSources);
+        Assert.Empty(viewModel.StatusMessage);
+    }
+
+    [Fact]
+    public async Task ImportCommand_WhenContentIsInvalid_DisposesSourceAndShowsMappedStatus()
+    {
+        TrackingMemoryStream source = new([1, 2, 3]);
+        FakeProfileCatalog catalog = new()
+        {
+            ImportResult = ProfileImportResult.Failed(ProfileImportStatus.InvalidContent)
+        };
+        using ProfilePanelViewModel viewModel = Create(
+            catalog,
+            fileDialog: new FakeProfileFileDialogService { Source = source });
+
+        await viewModel.ImportCommand.ExecuteAsync(null);
+
+        Assert.Same(source, Assert.Single(catalog.ImportedSources));
+        Assert.True(source.IsDisposed);
+        Assert.Equal(Strings.ProfileInvalidContent, viewModel.StatusMessage);
+        Assert.Null(viewModel.SelectedProfile);
+    }
+
+    [Fact]
+    public async Task ImportCommand_WhenCatalogImportsResolvedName_DisposesSourceAndNamesImportedProfile()
+    {
+        NetworkProfile imported = TestData.Profile(profileId: "imported", name: "PLC (1)");
+        TrackingMemoryStream source = new([1, 2, 3]);
+        FakeProfileCatalog catalog = new()
+        {
+            ImportResult = ProfileImportResult.Success(imported)
+        };
+        using ProfilePanelViewModel viewModel = Create(
+            catalog,
+            fileDialog: new FakeProfileFileDialogService { Source = source });
+        viewModel.SearchText = "does-not-match";
+
+        await viewModel.ImportCommand.ExecuteAsync(null);
+
+        Assert.True(source.IsDisposed);
+        Assert.Empty(viewModel.SearchText);
+        Assert.Equal("imported", viewModel.SelectedProfile!.Id);
+        Assert.Equal(Strings.FormatProfileImportSuccess("PLC (1)"), viewModel.StatusMessage);
+    }
+
+    [Fact]
+    public async Task ExportCommand_WhenDialogIsCancelled_DoesNotCallCatalog()
+    {
+        FakeProfileCatalog catalog = new()
+        {
+            Profiles = [TestData.Profile()]
+        };
+        using ProfilePanelViewModel viewModel = Create(catalog);
+
+        await viewModel.ExportCommand.ExecuteAsync(viewModel.Groups[0].Profiles[0]);
+
+        Assert.Empty(catalog.ExportedProfiles);
+    }
+
+    [Fact]
+    public async Task ExportCommand_WhenDestinationChosen_DelegatesAndDisposesDestination()
+    {
+        TrackingMemoryStream destination = new();
+        FakeProfileCatalog catalog = new()
+        {
+            Profiles = [TestData.Profile(profileId: "export-me", name: "PLC")]
+        };
+        FakeProfileFileDialogService dialog = new() { Destination = destination };
+        using ProfilePanelViewModel viewModel = Create(catalog, fileDialog: dialog);
+
+        await viewModel.ExportCommand.ExecuteAsync(viewModel.Groups[0].Profiles[0]);
+
+        (string profileId, Stream stream) = Assert.Single(catalog.ExportedProfiles);
+        Assert.Equal("export-me", profileId);
+        Assert.Same(destination, stream);
+        Assert.Equal("PLC.json", dialog.SuggestedFileName);
+        Assert.True(destination.IsDisposed);
+        Assert.Equal(Strings.ProfileExportSuccess, viewModel.StatusMessage);
+    }
+
+    [Fact]
     public void ProfileResultMessageFormatter_WhenGivenEveryStatus_ReturnsLocalizedText()
     {
         Assert.All(Enum.GetValues<ProfileSaveStatus>(), status =>
@@ -140,12 +358,39 @@ public sealed class ProfilePanelViewModelTests
             Assert.False(string.IsNullOrWhiteSpace(ProfileResultMessageFormatter.Describe(status))));
     }
 
+    [Fact]
+    public void ProfileResultMessageFormatter_WhenGivenStatuses_UsesExpectedTurkishResources()
+    {
+        Assert.Equal(Strings.ProfileSaveSuccess, ProfileResultMessageFormatter.Describe(ProfileSaveStatus.Success));
+        Assert.Equal(Strings.ProfileInvalidContent, ProfileResultMessageFormatter.Describe(ProfileSaveStatus.InvalidContent));
+        Assert.Equal(Strings.ProfileAccessDenied, ProfileResultMessageFormatter.Describe(ProfileSaveStatus.AccessDenied));
+        Assert.Equal(Strings.ProfileIoFailure, ProfileResultMessageFormatter.Describe(ProfileSaveStatus.IoFailure));
+        Assert.Equal(Strings.ProfileDeleteSuccess, ProfileResultMessageFormatter.Describe(ProfileDeleteStatus.Success));
+        Assert.Equal(Strings.ProfileNotFound, ProfileResultMessageFormatter.Describe(ProfileDeleteStatus.NotFound));
+        Assert.Equal(Strings.ProfileAccessDenied, ProfileResultMessageFormatter.Describe(ProfileDeleteStatus.AccessDenied));
+        Assert.Equal(Strings.ProfileIoFailure, ProfileResultMessageFormatter.Describe(ProfileDeleteStatus.IoFailure));
+        Assert.Equal(Strings.ProfileImportSuccess, ProfileResultMessageFormatter.Describe(ProfileImportStatus.Success));
+        Assert.Equal(Strings.ProfileInvalidContent, ProfileResultMessageFormatter.Describe(ProfileImportStatus.InvalidContent));
+        Assert.Equal(Strings.ProfileAccessDenied, ProfileResultMessageFormatter.Describe(ProfileImportStatus.AccessDenied));
+        Assert.Equal(Strings.ProfileIoFailure, ProfileResultMessageFormatter.Describe(ProfileImportStatus.IoFailure));
+        Assert.Equal(Strings.ProfileExportSuccess, ProfileResultMessageFormatter.Describe(ProfileExportStatus.Success));
+        Assert.Equal(Strings.ProfileNotFound, ProfileResultMessageFormatter.Describe(ProfileExportStatus.NotFound));
+        Assert.Equal(Strings.ProfileAccessDenied, ProfileResultMessageFormatter.Describe(ProfileExportStatus.AccessDenied));
+        Assert.Equal(Strings.ProfileIoFailure, ProfileResultMessageFormatter.Describe(ProfileExportStatus.IoFailure));
+        Assert.Equal(Strings.ProfileProblemMalformedJson, ProfileResultMessageFormatter.Describe(ProfileLoadFailureKind.MalformedJson));
+        Assert.Equal(Strings.ProfileProblemUnsupportedSchema, ProfileResultMessageFormatter.Describe(ProfileLoadFailureKind.UnsupportedSchemaVersion));
+        Assert.Equal(Strings.ProfileProblemInvalidContent, ProfileResultMessageFormatter.Describe(ProfileLoadFailureKind.InvalidContent));
+        Assert.Equal(Strings.ProfileProblemReadFailure, ProfileResultMessageFormatter.Describe(ProfileLoadFailureKind.ReadFailure));
+    }
+
     private static ProfilePanelViewModel Create(
         FakeProfileCatalog catalog,
-        FakeUserConfirmationService? confirmation = null) => new(
+        FakeUserConfirmationService? confirmation = null,
+        FakeProfileFileDialogService? fileDialog = null,
+        FakeUserTextInputService? textInput = null) => new(
             catalog,
-            new FakeProfileFileDialogService(),
-            new FakeUserTextInputService(),
+            fileDialog ?? new FakeProfileFileDialogService(),
+            textInput ?? new FakeUserTextInputService(),
             confirmation ?? new FakeUserConfirmationService(),
             new FakeUiDispatcher());
 
@@ -154,6 +399,23 @@ public sealed class ProfilePanelViewModelTests
         public IReadOnlyList<NetworkProfile> Profiles { get; set; } = [];
 
         public IReadOnlyList<NetworkProfileProblem> Problems { get; set; } = [];
+
+        public ProfileSaveResult? SaveResult { get; set; }
+
+        public ProfileDeleteResult DeleteResult { get; set; } = ProfileDeleteResult.Success();
+
+        public ProfileImportResult ImportResult { get; set; } =
+            ProfileImportResult.Failed(ProfileImportStatus.InvalidContent);
+
+        public ProfileExportResult ExportResult { get; set; } = ProfileExportResult.Success();
+
+        public List<NetworkProfile> SavedProfiles { get; } = new();
+
+        public List<string> DeletedProfileIds { get; } = new();
+
+        public List<Stream> ImportedSources { get; } = new();
+
+        public List<(string ProfileId, Stream Stream)> ExportedProfiles { get; } = new();
 
         public event EventHandler? Changed;
 
@@ -167,19 +429,54 @@ public sealed class ProfilePanelViewModelTests
         {
         }
 
-        public Task<ProfileSaveResult> SaveAsync(NetworkProfile profile, CancellationToken cancellationToken) =>
-            Task.FromResult(ProfileSaveResult.Success(profile));
+        public Task<ProfileSaveResult> SaveAsync(NetworkProfile profile, CancellationToken cancellationToken)
+        {
+            SavedProfiles.Add(profile);
+            ProfileSaveResult result = SaveResult ?? ProfileSaveResult.Success(profile);
+            if (result.IsSuccess && result.Profile is not null)
+            {
+                Profiles = Profiles
+                    .Where(existing => existing.ProfileId != result.Profile.ProfileId)
+                    .Append(result.Profile)
+                    .ToArray();
+                RaiseChanged();
+            }
 
-        public Task<ProfileDeleteResult> DeleteAsync(string profileId, CancellationToken cancellationToken) =>
-            Task.FromResult(ProfileDeleteResult.Success());
+            return Task.FromResult(result);
+        }
 
-        public Task<ProfileImportResult> ImportAsync(Stream source, CancellationToken cancellationToken) =>
-            Task.FromResult(ProfileImportResult.Failed(ProfileImportStatus.InvalidContent));
+        public Task<ProfileDeleteResult> DeleteAsync(string profileId, CancellationToken cancellationToken)
+        {
+            DeletedProfileIds.Add(profileId);
+            if (DeleteResult.IsSuccess)
+            {
+                Profiles = Profiles.Where(profile => profile.ProfileId != profileId).ToArray();
+                RaiseChanged();
+            }
+
+            return Task.FromResult(DeleteResult);
+        }
+
+        public Task<ProfileImportResult> ImportAsync(Stream source, CancellationToken cancellationToken)
+        {
+            ImportedSources.Add(source);
+            if (ImportResult.IsSuccess && ImportResult.Profile is not null)
+            {
+                Profiles = Profiles.Append(ImportResult.Profile).ToArray();
+                RaiseChanged();
+            }
+
+            return Task.FromResult(ImportResult);
+        }
 
         public Task<ProfileExportResult> ExportAsync(
             string profileId,
             Stream destination,
-            CancellationToken cancellationToken) => Task.FromResult(ProfileExportResult.Success());
+            CancellationToken cancellationToken)
+        {
+            ExportedProfiles.Add((profileId, destination));
+            return Task.FromResult(ExportResult);
+        }
 
         public void RaiseChanged() => Changed?.Invoke(this, EventArgs.Empty);
 
@@ -190,13 +487,51 @@ public sealed class ProfilePanelViewModelTests
 
     private sealed class FakeProfileFileDialogService : IProfileFileDialogService
     {
-        public Stream? OpenProfile() => null;
+        public Stream? Source { get; set; }
 
-        public Stream? CreateProfile(string suggestedFileName) => null;
+        public Stream? Destination { get; set; }
+
+        public string? SuggestedFileName { get; private set; }
+
+        public Stream? OpenProfile() => Source;
+
+        public Stream? CreateProfile(string suggestedFileName)
+        {
+            SuggestedFileName = suggestedFileName;
+            return Destination;
+        }
     }
 
     private sealed class FakeUserTextInputService : IUserTextInputService
     {
-        public string? Request(string title, string label, string initialValue) => null;
+        public List<(string Title, string Label, string InitialValue)> Requests { get; } = new();
+
+        public string? Response { get; set; }
+
+        public string? Request(string title, string label, string initialValue)
+        {
+            Requests.Add((title, label, initialValue));
+            return Response;
+        }
+    }
+
+    private sealed class TrackingMemoryStream : MemoryStream
+    {
+        public TrackingMemoryStream()
+        {
+        }
+
+        public TrackingMemoryStream(byte[] buffer)
+            : base(buffer)
+        {
+        }
+
+        public bool IsDisposed { get; private set; }
+
+        protected override void Dispose(bool disposing)
+        {
+            IsDisposed = true;
+            base.Dispose(disposing);
+        }
     }
 }
