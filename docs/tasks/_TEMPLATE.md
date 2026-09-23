@@ -1,6 +1,5 @@
 # TASK-000: <title>
 
-- **Owner agent:** codex-coder
 - **Status:** todo | in-progress | review | done
 - **Depends on:** TASK-nnn, or none
 

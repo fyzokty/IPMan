@@ -4,11 +4,10 @@ IPMan follows a documentation-first workflow.
 
 ## Before changing code
 
-1. Read `.claude/CLAUDE.md`.
-2. Read the relevant requirement documents.
-3. Read applicable ADRs.
-4. Do not change established architecture implicitly.
-5. If a requirement is ambiguous, record the ambiguity instead of inventing
+1. Read the relevant requirement documents.
+2. Read applicable ADRs.
+3. Do not change established architecture implicitly.
+4. If a requirement is ambiguous, record the ambiguity instead of inventing
    product behavior.
 
 ## Change discipline
