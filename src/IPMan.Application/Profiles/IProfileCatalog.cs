@@ -32,4 +32,15 @@ public interface IProfileCatalog : IDisposable
     Task<ProfileDeleteResult> DeleteAsync(
         string profileId,
         CancellationToken cancellationToken);
+
+    /// <summary>Imports one profile and refreshes the catalog afterward.</summary>
+    Task<ProfileImportResult> ImportAsync(
+        Stream source,
+        CancellationToken cancellationToken);
+
+    /// <summary>Exports one profile from the current catalog.</summary>
+    Task<ProfileExportResult> ExportAsync(
+        string profileId,
+        Stream destination,
+        CancellationToken cancellationToken);
 }

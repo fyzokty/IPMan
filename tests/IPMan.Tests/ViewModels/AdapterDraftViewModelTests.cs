@@ -1,6 +1,7 @@
 using IPMan.App.ViewModels;
 using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
+using IPMan.Domain.Profiles;
 using IPMan.Tests.Fakes;
 using Xunit;
 
@@ -260,6 +261,64 @@ public sealed class AdapterDraftViewModelTests
         Assert.False(draft.IsDirty);
         Assert.Equal("192.168.1.61", draft.Ipv4Address);
         Assert.False(draft.HasErrors);
+    }
+
+    [Fact]
+    public void LoadProfile_WhenStaticProfileSelected_PopulatesDraftAndMarksOnlyDifferentFields()
+    {
+        AdapterDraftViewModel draft = CreateDraft(out _);
+        draft.UpdateCurrentValues(TestData.Snapshot(
+            ipv4Address: "192.168.1.50",
+            subnetMask: "255.255.255.0",
+            gateway: "192.168.1.1",
+            primaryDns: "1.1.1.1",
+            secondaryDns: "8.8.8.8"));
+        NetworkProfile profile = TestData.Profile(
+            ipv4Address: "192.168.1.60",
+            subnetMask: "255.255.255.0",
+            gateway: "192.168.1.254",
+            primaryDns: "9.9.9.9",
+            secondaryDns: "8.8.8.8");
+
+        draft.LoadProfile(profile);
+
+        Assert.Equal("192.168.1.60", draft.Ipv4Address);
+        Assert.Equal("255.255.255.0", draft.SubnetMask);
+        Assert.Equal("192.168.1.254", draft.Gateway);
+        Assert.Equal("9.9.9.9", draft.PrimaryDns);
+        Assert.Equal("8.8.8.8", draft.SecondaryDns);
+        Assert.True(draft.IsIpv4AddressDifferentFromWindows);
+        Assert.False(draft.IsSubnetMaskDifferentFromWindows);
+        Assert.True(draft.IsGatewayDifferentFromWindows);
+        Assert.True(draft.IsPrimaryDnsDifferentFromWindows);
+        Assert.False(draft.IsSecondaryDnsDifferentFromWindows);
+        Assert.False(draft.IsDirty);
+        Assert.Empty(draft.ProfileGuidance);
+    }
+
+    [Fact]
+    public void LoadProfile_WhenDhcpProfileSelected_ClearsStaticValuesWithoutInventingValues()
+    {
+        AdapterDraftViewModel draft = CreateDraft(out _);
+        draft.UpdateCurrentValues(TestData.Snapshot(
+            mode: NetworkConfigurationMode.Static,
+            ipv4Address: "192.168.1.50",
+            gateway: "192.168.1.1"));
+
+        draft.LoadProfile(TestData.Profile(
+            mode: NetworkConfigurationMode.Dhcp,
+            ipv4Address: "192.168.1.60",
+            gateway: "192.168.1.254"));
+
+        Assert.Empty(draft.Ipv4Address);
+        Assert.Empty(draft.SubnetMask);
+        Assert.Empty(draft.Gateway);
+        Assert.Empty(draft.PrimaryDns);
+        Assert.Empty(draft.SecondaryDns);
+        Assert.NotEmpty(draft.ProfileGuidance);
+        Assert.True(draft.IsIpv4AddressDifferentFromWindows);
+        Assert.True(draft.IsGatewayDifferentFromWindows);
+        Assert.False(draft.IsDirty);
     }
 
     private static AdapterDraftViewModel CreateDraft(out FakeClipboardService clipboard)

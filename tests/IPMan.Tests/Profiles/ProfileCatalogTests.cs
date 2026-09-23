@@ -132,6 +132,124 @@ public sealed class ProfileCatalogTests
     }
 
     [Fact]
+    public async Task ImportAsync_WhenRepositoryCompletes_DelegatesAndRefreshes()
+    {
+        NetworkProfile imported = TestData.Profile(profileId: "imported", name: "PLC (1)");
+        FakeProfileRepository repository = new()
+        {
+            ImportResult = ProfileImportResult.Success(imported),
+            LoadResult = new ProfileLoadResult([imported], [])
+        };
+        using ProfileCatalog catalog = new(repository, new FakeProfileDirectoryWatcher());
+        using MemoryStream source = new([1, 2, 3]);
+
+        ProfileImportResult result = await catalog.ImportAsync(source, CancellationToken.None);
+
+        Assert.Same(source, Assert.Single(repository.ImportedSources));
+        Assert.Same(repository.ImportResult, result);
+        Assert.Same(imported, Assert.Single(catalog.Profiles));
+        Assert.Single(repository.LoadCalls);
+        Assert.True(source.CanRead);
+    }
+
+    [Theory]
+    [InlineData(ProfileImportStatus.InvalidContent)]
+    [InlineData(ProfileImportStatus.AccessDenied)]
+    [InlineData(ProfileImportStatus.IoFailure)]
+    public async Task ImportAsync_WhenRepositoryFails_DoesNotReloadCatalog(ProfileImportStatus status)
+    {
+        NetworkProfile existing = TestData.Profile(profileId: "existing", name: "Existing");
+        FakeProfileRepository repository = new()
+        {
+            ImportResult = ProfileImportResult.Failed(status),
+            LoadResult = new ProfileLoadResult([existing], [])
+        };
+        using ProfileCatalog catalog = new(repository, new FakeProfileDirectoryWatcher());
+        await catalog.InitializeAsync(CancellationToken.None);
+        using MemoryStream source = new([1, 2, 3]);
+
+        ProfileImportResult result = await catalog.ImportAsync(source, CancellationToken.None);
+
+        Assert.Equal(status, result.Status);
+        Assert.Single(repository.LoadCalls);
+        Assert.Same(existing, Assert.Single(catalog.Profiles));
+        Assert.True(source.CanRead);
+    }
+
+    [Fact]
+    public async Task ExportAsync_WhenRepositoryCompletes_DelegatesWithoutReloading()
+    {
+        FakeProfileRepository repository = new();
+        using ProfileCatalog catalog = new(repository, new FakeProfileDirectoryWatcher());
+        using MemoryStream destination = new();
+
+        ProfileExportResult result = await catalog.ExportAsync(
+            "profile-1",
+            destination,
+            CancellationToken.None);
+
+        Assert.Same(repository.ExportResult, result);
+        (string profileId, Stream stream) = Assert.Single(repository.ExportedProfiles);
+        Assert.Equal("profile-1", profileId);
+        Assert.Same(destination, stream);
+        Assert.Empty(repository.LoadCalls);
+        Assert.True(destination.CanWrite);
+    }
+
+    [Fact]
+    public async Task ExportAsync_WhenProfileIsNotFound_DelegatesWithoutReloading()
+    {
+        FakeProfileRepository repository = new()
+        {
+            ExportResult = ProfileExportResult.Failed(ProfileExportStatus.NotFound)
+        };
+        using ProfileCatalog catalog = new(repository, new FakeProfileDirectoryWatcher());
+        using MemoryStream destination = new();
+
+        ProfileExportResult result = await catalog.ExportAsync(
+            "missing",
+            destination,
+            CancellationToken.None);
+
+        Assert.Equal(ProfileExportStatus.NotFound, result.Status);
+        Assert.Equal("missing", Assert.Single(repository.ExportedProfiles).ProfileId);
+        Assert.Empty(repository.LoadCalls);
+    }
+
+    [Fact]
+    public async Task ImportAsync_WhenCancellationIsRequested_DoesNotDelegateOrReload()
+    {
+        FakeProfileRepository repository = new();
+        using ProfileCatalog catalog = new(repository, new FakeProfileDirectoryWatcher());
+        using MemoryStream source = new([1, 2, 3]);
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            catalog.ImportAsync(source, cancellation.Token));
+
+        Assert.Empty(repository.ImportedSources);
+        Assert.Empty(repository.LoadCalls);
+        Assert.True(source.CanRead);
+    }
+
+    [Fact]
+    public async Task ExportAsync_WhenCancellationIsRequested_DoesNotDelegate()
+    {
+        FakeProfileRepository repository = new();
+        using ProfileCatalog catalog = new(repository, new FakeProfileDirectoryWatcher());
+        using MemoryStream destination = new();
+        using CancellationTokenSource cancellation = new();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            catalog.ExportAsync("profile-1", destination, cancellation.Token));
+
+        Assert.Empty(repository.ExportedProfiles);
+        Assert.True(destination.CanWrite);
+    }
+
+    [Fact]
     public void WatcherChanged_AfterStopWatching_DoesNotReload()
     {
         FakeProfileRepository repository = new();

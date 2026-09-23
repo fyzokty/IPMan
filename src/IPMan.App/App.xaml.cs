@@ -167,7 +167,10 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IApplicationVersionProvider, AssemblyApplicationVersionProvider>();
 
         services.AddSingleton<IUserConfirmationService, WpfUserConfirmationService>();
+        services.AddSingleton<IUserTextInputService, WpfUserTextInputService>();
+        services.AddSingleton<IProfileFileDialogService, WpfProfileFileDialogService>();
         services.AddSingleton<AdapterActionsViewModel>();
+        services.AddSingleton<ProfilePanelViewModel>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<MainWindow>();
     }

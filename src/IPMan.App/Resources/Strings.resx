@@ -337,4 +337,46 @@
   <data name="StatusVersion" xml:space="preserve">
     <value>Sürüm {0}</value>
   </data>
+  <data name="ProfilePanelHeader" xml:space="preserve"><value>Profiller</value></data>
+  <data name="ProfileSearchPlaceholder" xml:space="preserve"><value>Profil ara</value></data>
+  <data name="ProfileGroupFavorites" xml:space="preserve"><value>Favoriler</value></data>
+  <data name="ProfileGroupOthers" xml:space="preserve"><value>Diğer profiller</value></data>
+  <data name="ProfileNameLabel" xml:space="preserve"><value>Ad</value></data>
+  <data name="ProfileDescriptionLabel" xml:space="preserve"><value>Açıklama</value></data>
+  <data name="ProfileUseDhcpLabel" xml:space="preserve"><value>DHCP kullan</value></data>
+  <data name="ProfileProblemsHeader" xml:space="preserve"><value>Okunamayan profil dosyaları ({0})</value></data>
+  <data name="ProfileProblemSeparator" xml:space="preserve"><value> — </value></data>
+  <data name="CommandSaveProfile" xml:space="preserve"><value>Profili kaydet</value></data>
+  <data name="CommandImportProfile" xml:space="preserve"><value>İçe aktar</value></data>
+  <data name="CommandExportProfile" xml:space="preserve"><value>Dışa aktar</value></data>
+  <data name="CommandRenameProfile" xml:space="preserve"><value>Yeniden adlandır</value></data>
+  <data name="CommandDuplicateProfile" xml:space="preserve"><value>Çoğalt</value></data>
+  <data name="CommandToggleFavorite" xml:space="preserve"><value>Favoriyi aç/kapat</value></data>
+  <data name="CommandDeleteProfile" xml:space="preserve"><value>Sil</value></data>
+  <data name="CommandOk" xml:space="preserve"><value>Tamam</value></data>
+  <data name="CommandCancel" xml:space="preserve"><value>İptal</value></data>
+  <data name="ProfileImportDialogTitle" xml:space="preserve"><value>Profil içe aktar</value></data>
+  <data name="ProfileExportDialogTitle" xml:space="preserve"><value>Profili dışa aktar</value></data>
+  <data name="ProfileJsonFileFilter" xml:space="preserve"><value>IPMan profil dosyası (*.json)|*.json</value></data>
+  <data name="ProfileRenameTitle" xml:space="preserve"><value>Profili yeniden adlandır</value></data>
+  <data name="ProfileNameRequired" xml:space="preserve"><value>Profil adı zorunludur.</value></data>
+  <data name="ProfileDhcpGuidance" xml:space="preserve"><value>Bu profil DHCP kullanır. Uygulamak için Otomatik Al (DHCP) düğmesini kullanın.</value></data>
+  <data name="ConfirmProfileLoadTitle" xml:space="preserve"><value>Taslak değişiklikleri değiştirilsin mi?</value></data>
+  <data name="ConfirmProfileLoadMessage" xml:space="preserve"><value>Kaydedilmemiş taslak değişiklikleri profil değerleriyle değiştirilecek. Devam etmek istiyor musunuz?</value></data>
+  <data name="ProfileLoadCancelled" xml:space="preserve"><value>Profil yükleme iptal edildi.</value></data>
+  <data name="ConfirmProfileDeleteTitle" xml:space="preserve"><value>Profil silinsin mi?</value></data>
+  <data name="ConfirmProfileDeleteMessage" xml:space="preserve"><value>{0} profili kalıcı olarak silinecek. Devam etmek istiyor musunuz?</value></data>
+  <data name="ProfileSaveSuccess" xml:space="preserve"><value>Profil kaydedildi.</value></data>
+  <data name="ProfileDeleteSuccess" xml:space="preserve"><value>Profil silindi.</value></data>
+  <data name="ProfileImportSuccess" xml:space="preserve"><value>Profil içe aktarıldı.</value></data>
+  <data name="ProfileImportSuccessWithName" xml:space="preserve"><value>Profil içe aktarıldı: {0}</value></data>
+  <data name="ProfileExportSuccess" xml:space="preserve"><value>Profil dışa aktarıldı.</value></data>
+  <data name="ProfileInvalidContent" xml:space="preserve"><value>Profil içeriği geçerli değil.</value></data>
+  <data name="ProfileAccessDenied" xml:space="preserve"><value>Profil dosyasına erişim reddedildi.</value></data>
+  <data name="ProfileIoFailure" xml:space="preserve"><value>Profil dosyası işlemi tamamlanamadı.</value></data>
+  <data name="ProfileNotFound" xml:space="preserve"><value>Profil bulunamadı.</value></data>
+  <data name="ProfileProblemMalformedJson" xml:space="preserve"><value>Geçersiz JSON</value></data>
+  <data name="ProfileProblemUnsupportedSchema" xml:space="preserve"><value>Desteklenmeyen şema sürümü</value></data>
+  <data name="ProfileProblemInvalidContent" xml:space="preserve"><value>Geçersiz profil içeriği</value></data>
+  <data name="ProfileProblemReadFailure" xml:space="preserve"><value>Dosya okunamadı</value></data>
 </root>

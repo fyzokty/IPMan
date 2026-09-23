@@ -150,6 +150,38 @@ public sealed class ProfileCatalog : IProfileCatalog
     }
 
     /// <inheritdoc />
+    public async Task<ProfileImportResult> ImportAsync(
+        Stream source,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+
+        ProfileImportResult result = await _repository
+            .ImportAsync(source, cancellationToken)
+            .ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            return result;
+        }
+
+        await ReloadAsync(cancellationToken).ConfigureAwait(false);
+        return result;
+    }
+
+    /// <inheritdoc />
+    public Task<ProfileExportResult> ExportAsync(
+        string profileId,
+        Stream destination,
+        CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(profileId);
+        ArgumentNullException.ThrowIfNull(destination);
+
+        return _repository.ExportAsync(profileId, destination, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public void Dispose()
     {
         lock (_sync)

@@ -38,6 +38,22 @@
             </StackPanel>
         </DataTemplate>
 
+        <Style x:Key="DraftIpv4DifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
+            <Style.Triggers><DataTrigger Binding="{Binding IsIpv4AddressDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{StaticResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
+        </Style>
+        <Style x:Key="DraftSubnetDifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
+            <Style.Triggers><DataTrigger Binding="{Binding IsSubnetMaskDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{StaticResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
+        </Style>
+        <Style x:Key="DraftGatewayDifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
+            <Style.Triggers><DataTrigger Binding="{Binding IsGatewayDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{StaticResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
+        </Style>
+        <Style x:Key="DraftPrimaryDnsDifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
+            <Style.Triggers><DataTrigger Binding="{Binding IsPrimaryDnsDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{StaticResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
+        </Style>
+        <Style x:Key="DraftSecondaryDnsDifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
+            <Style.Triggers><DataTrigger Binding="{Binding IsSecondaryDnsDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{StaticResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
+        </Style>
+
         <!-- Tab content: current configuration on the left, editable draft on the right. -->
         <DataTemplate x:Key="AdapterTabContentTemplate" DataType="{x:Type vm:AdapterViewModel}">
             <ScrollViewer VerticalScrollBarVisibility="Auto"
@@ -184,6 +200,11 @@
                                        Text="{x:Static res:Strings.DraftConfigurationHint}"
                                        TextWrapping="Wrap" />
 
+                            <TextBlock Margin="0,0,0,10"
+                                       Foreground="{StaticResource SecondaryTextBrush}"
+                                       Text="{Binding ProfileGuidance}"
+                                       TextWrapping="Wrap" />
+
                             <Grid>
                                 <Grid.Style>
                                     <Style TargetType="Grid">
@@ -215,7 +236,7 @@
                                            Text="{x:Static res:Strings.FieldIpv4Address}" />
                                 <StackPanel Grid.Row="0" Grid.Column="1">
                                     <TextBox x:Name="Ipv4AddressBox"
-                                             Style="{StaticResource DraftTextBoxStyle}"
+                                             Style="{StaticResource DraftIpv4DifferentStyle}"
                                              AutomationProperties.Name="{x:Static res:Strings.FieldIpv4Address}"
                                              Text="{Binding Ipv4Address, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBlock Style="{StaticResource FieldErrorTextStyle}"
@@ -233,7 +254,7 @@
                                            Style="{StaticResource FieldLabelStyle}"
                                            Text="{x:Static res:Strings.FieldSubnetMask}" />
                                 <StackPanel Grid.Row="1" Grid.Column="1">
-                                    <TextBox Style="{StaticResource DraftTextBoxStyle}"
+                                    <TextBox Style="{StaticResource DraftSubnetDifferentStyle}"
                                              AutomationProperties.Name="{x:Static res:Strings.FieldSubnetMask}"
                                              Text="{Binding SubnetMask, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBlock Style="{StaticResource FieldErrorTextStyle}"
@@ -251,7 +272,7 @@
                                            Style="{StaticResource FieldLabelStyle}"
                                            Text="{x:Static res:Strings.FieldGateway}" />
                                 <StackPanel Grid.Row="2" Grid.Column="1">
-                                    <TextBox Style="{StaticResource DraftTextBoxStyle}"
+                                    <TextBox Style="{StaticResource DraftGatewayDifferentStyle}"
                                              AutomationProperties.Name="{x:Static res:Strings.FieldGateway}"
                                              Text="{Binding Gateway, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBlock Style="{StaticResource FieldErrorTextStyle}"
@@ -269,7 +290,7 @@
                                            Style="{StaticResource FieldLabelStyle}"
                                            Text="{x:Static res:Strings.FieldPrimaryDns}" />
                                 <StackPanel Grid.Row="3" Grid.Column="1">
-                                    <TextBox Style="{StaticResource DraftTextBoxStyle}"
+                                    <TextBox Style="{StaticResource DraftPrimaryDnsDifferentStyle}"
                                              AutomationProperties.Name="{x:Static res:Strings.FieldPrimaryDns}"
                                              Text="{Binding PrimaryDns, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBlock Style="{StaticResource FieldErrorTextStyle}"
@@ -287,7 +308,7 @@
                                            Style="{StaticResource FieldLabelStyle}"
                                            Text="{x:Static res:Strings.FieldSecondaryDns}" />
                                 <StackPanel Grid.Row="4" Grid.Column="1">
-                                    <TextBox Style="{StaticResource DraftTextBoxStyle}"
+                                    <TextBox Style="{StaticResource DraftSecondaryDnsDifferentStyle}"
                                              AutomationProperties.Name="{x:Static res:Strings.FieldSecondaryDns}"
                                              Text="{Binding SecondaryDns, UpdateSourceTrigger=PropertyChanged}" />
                                     <TextBlock Style="{StaticResource FieldErrorTextStyle}"
@@ -445,13 +466,118 @@
 
         <!-- Main content -->
         <Grid Margin="20,12,20,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="250" />
+                <ColumnDefinition Width="12" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
+            <Border x:Name="ProfilePanelRoot"
+                    Grid.Row="0"
+                    Grid.RowSpan="2"
+                    Grid.Column="0"
+                    Style="{StaticResource CardStyle}"
+                    VerticalAlignment="Stretch"
+                    DataContext="{Binding ProfilePanel}">
+                <DockPanel LastChildFill="True">
+                    <StackPanel DockPanel.Dock="Top">
+                        <TextBlock Style="{StaticResource SectionHeaderStyle}"
+                                   Text="{x:Static res:Strings.ProfilePanelHeader}" />
+                        <TextBox Margin="0,0,0,8"
+                                 AutomationProperties.Name="{x:Static res:Strings.ProfileSearchPlaceholder}"
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                        <Button Margin="0,0,0,10"
+                                Command="{Binding ImportCommand}"
+                                Content="{x:Static res:Strings.CommandImportProfile}" />
+                    </StackPanel>
+
+                    <StackPanel DockPanel.Dock="Bottom">
+                        <TextBox Margin="0,8,0,4"
+                                 AutomationProperties.Name="{x:Static res:Strings.ProfileNameLabel}"
+                                 Text="{Binding NewProfileName, UpdateSourceTrigger=PropertyChanged}" />
+                        <TextBox Margin="0,0,0,4"
+                                 AutomationProperties.Name="{x:Static res:Strings.ProfileDescriptionLabel}"
+                                 Text="{Binding NewProfileDescription, UpdateSourceTrigger=PropertyChanged}" />
+                        <CheckBox Margin="0,0,0,4"
+                                  Content="{x:Static res:Strings.ProfileUseDhcpLabel}"
+                                  IsChecked="{Binding NewProfileUsesDhcp}" />
+                        <Button Command="{Binding SaveCommand}"
+                                Content="{x:Static res:Strings.CommandSaveProfile}" />
+                        <TextBlock Margin="0,6,0,0"
+                                   Foreground="{StaticResource SecondaryTextBrush}"
+                                   Text="{Binding StatusMessage}"
+                                   TextWrapping="Wrap"
+                                   Visibility="{Binding HasStatusMessage, Converter={StaticResource BooleanToVisibility}}" />
+                        <Expander Margin="0,8,0,0"
+                                  Header="{Binding ProblemsHeader}"
+                                  Visibility="{Binding HasProblems, Converter={StaticResource BooleanToVisibility}}">
+                            <ItemsControl ItemsSource="{Binding Problems}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                            <TextBlock Margin="0,3,0,0" TextWrapping="Wrap">
+                                                <Run Text="{Binding FileName}" />
+                                            <Run Text="{x:Static res:Strings.ProfileProblemSeparator}" />
+                                                <Run Text="{Binding Reason}" />
+                                            </TextBlock>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </Expander>
+                    </StackPanel>
+
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding Groups}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel Margin="0,0,0,8">
+                                        <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
+                                        <ListBox BorderThickness="0"
+                                                 Background="Transparent"
+                                                 ItemsSource="{Binding Profiles}"
+                                                 SelectedItem="{Binding DataContext.SelectedProfile, ElementName=ProfilePanelRoot}">
+                                            <ListBox.ItemTemplate>
+                                                <DataTemplate>
+                                            <TextBlock Padding="4"
+                                                       Tag="{Binding DataContext, ElementName=ProfilePanelRoot}"
+                                                       Text="{Binding Name}">
+                                                <TextBlock.ContextMenu>
+                                                    <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                                        <MenuItem Command="{Binding RenameCommand}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+                                                                  Header="{x:Static res:Strings.CommandRenameProfile}" />
+                                                        <MenuItem Command="{Binding DuplicateCommand}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+                                                                  Header="{x:Static res:Strings.CommandDuplicateProfile}" />
+                                                        <MenuItem Command="{Binding ToggleFavoriteCommand}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+                                                                  Header="{x:Static res:Strings.CommandToggleFavorite}" />
+                                                        <MenuItem Command="{Binding ExportCommand}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+                                                                  Header="{x:Static res:Strings.CommandExportProfile}" />
+                                                        <MenuItem Command="{Binding DeleteCommand}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+                                                                  Header="{x:Static res:Strings.CommandDeleteProfile}" />
+                                                    </ContextMenu>
+                                                </TextBlock.ContextMenu>
+                                                    </TextBlock>
+                                                </DataTemplate>
+                                            </ListBox.ItemTemplate>
+                                        </ListBox>
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </DockPanel>
+            </Border>
+
             <!-- Inline refresh failure: never modal, never clears the last valid state. -->
             <Border Grid.Row="0"
+                    Grid.Column="2"
                     Margin="0,0,0,12"
                     Padding="12,8"
                     Background="{StaticResource WarningBackgroundBrush}"
@@ -465,6 +591,7 @@
             </Border>
 
             <TabControl Grid.Row="1"
+                        Grid.Column="2"
                         Background="Transparent"
                         BorderThickness="0"
                         ItemsSource="{Binding Adapters}"
@@ -475,6 +602,7 @@
 
             <!-- Loading -->
             <StackPanel Grid.Row="1"
+                        Grid.Column="2"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
                         Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibility}}">
@@ -489,6 +617,7 @@
 
             <!-- Empty -->
             <StackPanel Grid.Row="1"
+                        Grid.Column="2"
                         MaxWidth="460"
                         HorizontalAlignment="Center"
                         VerticalAlignment="Center"
