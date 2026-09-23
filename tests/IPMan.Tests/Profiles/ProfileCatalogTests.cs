@@ -132,6 +132,45 @@ public sealed class ProfileCatalogTests
     }
 
     [Fact]
+    public async Task ImportAsync_WhenRepositoryCompletes_DelegatesAndRefreshes()
+    {
+        NetworkProfile imported = TestData.Profile(profileId: "imported", name: "PLC (1)");
+        FakeProfileRepository repository = new()
+        {
+            ImportResult = ProfileImportResult.Success(imported),
+            LoadResult = new ProfileLoadResult([imported], [])
+        };
+        using ProfileCatalog catalog = new(repository, new FakeProfileDirectoryWatcher());
+        using MemoryStream source = new([1, 2, 3]);
+
+        ProfileImportResult result = await catalog.ImportAsync(source, CancellationToken.None);
+
+        Assert.Same(source, Assert.Single(repository.ImportedSources));
+        Assert.Same(repository.ImportResult, result);
+        Assert.Same(imported, Assert.Single(catalog.Profiles));
+        Assert.Single(repository.LoadCalls);
+    }
+
+    [Fact]
+    public async Task ExportAsync_WhenRepositoryCompletes_DelegatesWithoutReloading()
+    {
+        FakeProfileRepository repository = new();
+        using ProfileCatalog catalog = new(repository, new FakeProfileDirectoryWatcher());
+        using MemoryStream destination = new();
+
+        ProfileExportResult result = await catalog.ExportAsync(
+            "profile-1",
+            destination,
+            CancellationToken.None);
+
+        Assert.Same(repository.ExportResult, result);
+        (string profileId, Stream stream) = Assert.Single(repository.ExportedProfiles);
+        Assert.Equal("profile-1", profileId);
+        Assert.Same(destination, stream);
+        Assert.Empty(repository.LoadCalls);
+    }
+
+    [Fact]
     public void WatcherChanged_AfterStopWatching_DoesNotReload()
     {
         FakeProfileRepository repository = new();

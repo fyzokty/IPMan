@@ -54,6 +54,30 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         IApplicationVersionProvider versionProvider,
         AdapterActionsViewModel actions,
         IStaticIpv4ConfigurationValidator validator)
+        : this(
+            refreshCoordinator,
+            uiDispatcher,
+            clipboardService,
+            clock,
+            elevationStateProvider,
+            versionProvider,
+            actions,
+            validator,
+            null)
+    {
+    }
+
+    /// <summary>Creates the main-window coordinator with the fixed profile panel.</summary>
+    public MainWindowViewModel(
+        IAdapterRefreshCoordinator refreshCoordinator,
+        IUiDispatcher uiDispatcher,
+        IClipboardService clipboardService,
+        IClock clock,
+        IElevationStateProvider elevationStateProvider,
+        IApplicationVersionProvider versionProvider,
+        AdapterActionsViewModel actions,
+        IStaticIpv4ConfigurationValidator validator,
+        ProfilePanelViewModel? profilePanel)
     {
         ArgumentNullException.ThrowIfNull(refreshCoordinator);
         ArgumentNullException.ThrowIfNull(uiDispatcher);
@@ -69,6 +93,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _clipboardService = clipboardService;
         _clock = clock;
         _validator = validator;
+        ProfilePanel = profilePanel;
 
         Actions = actions;
         Actions.PropertyChanged += OnActionsPropertyChanged;
@@ -97,6 +122,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     /// <summary>The shared action state for the currently selected adapter.</summary>
     public AdapterActionsViewModel Actions { get; }
+
+    /// <summary>The fixed profile-management panel shown beside adapter tabs.</summary>
+    public ProfilePanelViewModel? ProfilePanel { get; }
 
     /// <summary>Shown when discovery has completed and Windows reported no adapters.</summary>
     public bool IsEmptyStateVisible => !IsLoading && Adapters.Count == 0;
@@ -131,12 +159,14 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _refreshCoordinator.RefreshFailed -= OnAdapterRefreshFailed;
         Actions.PropertyChanged -= OnActionsPropertyChanged;
         Actions.Dispose();
+        ProfilePanel?.Dispose();
     }
 
     partial void OnSelectedAdapterChanged(AdapterViewModel? value)
     {
         UpdateSelectedAdapterStatus();
         Actions.Attach(value);
+        ProfilePanel?.SetDraft(value?.Draft);
     }
 
     private void OnAdaptersRefreshed(object? sender, AdapterRefreshedEventArgs e) =>

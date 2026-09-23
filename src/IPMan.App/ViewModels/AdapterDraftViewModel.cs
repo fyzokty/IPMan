@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using IPMan.App.Presentation;
 using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
+using IPMan.Domain.Profiles;
 
 namespace IPMan.App.ViewModels;
 
@@ -74,6 +75,24 @@ public sealed partial class AdapterDraftViewModel : ObservableObject
     [ObservableProperty]
     private bool _isDirty;
 
+    [ObservableProperty]
+    private bool _isIpv4AddressDifferentFromWindows;
+
+    [ObservableProperty]
+    private bool _isSubnetMaskDifferentFromWindows;
+
+    [ObservableProperty]
+    private bool _isGatewayDifferentFromWindows;
+
+    [ObservableProperty]
+    private bool _isPrimaryDnsDifferentFromWindows;
+
+    [ObservableProperty]
+    private bool _isSecondaryDnsDifferentFromWindows;
+
+    [ObservableProperty]
+    private string _profileGuidance = string.Empty;
+
     /// <summary>Creates an editable draft with clipboard and validation services.</summary>
     public AdapterDraftViewModel(
         IClipboardService clipboardService,
@@ -122,8 +141,53 @@ public sealed partial class AdapterDraftViewModel : ObservableObject
         }
         else
         {
+            UpdateDifferenceFlags();
             Validate();
         }
+    }
+
+    /// <summary>Loads a profile into this draft without changing Windows.</summary>
+    public void LoadProfile(NetworkProfile profile)
+    {
+        ArgumentNullException.ThrowIfNull(profile);
+
+        if (profile.Mode == NetworkConfigurationMode.Dhcp)
+        {
+            Apply(DraftValues.Empty);
+            ProfileGuidance = Resources.Strings.ProfileDhcpGuidance;
+            return;
+        }
+
+        Apply(new DraftValues(
+            profile.Ipv4Address ?? string.Empty,
+            profile.SubnetMask ?? string.Empty,
+            profile.Gateway ?? string.Empty,
+            profile.PrimaryDns ?? string.Empty,
+            profile.SecondaryDns ?? string.Empty));
+        ProfileGuidance = string.Empty;
+    }
+
+    /// <summary>Creates a profile containing the current draft values.</summary>
+    public NetworkProfile CreateProfile(string name, string? description, bool useDhcp)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(name);
+
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        return new NetworkProfile(
+            NetworkProfile.CurrentSchemaVersion,
+            Guid.NewGuid().ToString("N"),
+            name,
+            string.IsNullOrWhiteSpace(description) ? null : description,
+            useDhcp ? NetworkConfigurationMode.Dhcp : NetworkConfigurationMode.Static,
+            useDhcp ? null : Ipv4Address,
+            useDhcp ? null : SubnetMask,
+            useDhcp ? null : NullIfEmpty(Gateway),
+            useDhcp ? null : NullIfEmpty(PrimaryDns),
+            useDhcp ? null : NullIfEmpty(SecondaryDns),
+            false,
+            null,
+            now,
+            now);
     }
 
     public DraftValues ToValues() =>
@@ -178,6 +242,7 @@ public sealed partial class AdapterDraftViewModel : ObservableObject
         }
 
         UpdateDirtyState();
+        UpdateDifferenceFlags();
         Validate();
     }
 
@@ -189,6 +254,7 @@ public sealed partial class AdapterDraftViewModel : ObservableObject
         }
 
         UpdateDirtyState();
+        UpdateDifferenceFlags();
         Validate();
     }
 
@@ -200,6 +266,7 @@ public sealed partial class AdapterDraftViewModel : ObservableObject
         }
 
         UpdateDirtyState();
+        UpdateDifferenceFlags();
         Validate();
     }
 
@@ -211,6 +278,7 @@ public sealed partial class AdapterDraftViewModel : ObservableObject
         }
 
         UpdateDirtyState();
+        UpdateDifferenceFlags();
         Validate();
     }
 
@@ -222,6 +290,7 @@ public sealed partial class AdapterDraftViewModel : ObservableObject
         }
 
         UpdateDirtyState();
+        UpdateDifferenceFlags();
         Validate();
     }
 
@@ -245,6 +314,7 @@ public sealed partial class AdapterDraftViewModel : ObservableObject
         _baseline = values;
         IsDirty = false;
         ResetTouchedFields();
+        UpdateDifferenceFlags();
         Validate();
     }
 
@@ -268,6 +338,15 @@ public sealed partial class AdapterDraftViewModel : ObservableObject
         OnPropertyChanged(nameof(Errors));
 
         UpdateVisibleErrors();
+    }
+
+    private void UpdateDifferenceFlags()
+    {
+        IsIpv4AddressDifferentFromWindows = Ipv4Address != _currentSnapshotValues.Ipv4Address;
+        IsSubnetMaskDifferentFromWindows = SubnetMask != _currentSnapshotValues.SubnetMask;
+        IsGatewayDifferentFromWindows = Gateway != _currentSnapshotValues.Gateway;
+        IsPrimaryDnsDifferentFromWindows = PrimaryDns != _currentSnapshotValues.PrimaryDns;
+        IsSecondaryDnsDifferentFromWindows = SecondaryDns != _currentSnapshotValues.SecondaryDns;
     }
 
     private StaticIpv4Configuration CreateConfiguration() =>

@@ -209,6 +209,45 @@ public static class Strings
 
     public static string StatusLastRefreshNever => Get(nameof(StatusLastRefreshNever));
 
+    public static string ProfilePanelHeader => Get(nameof(ProfilePanelHeader));
+    public static string ProfileSearchPlaceholder => Get(nameof(ProfileSearchPlaceholder));
+    public static string ProfileGroupFavorites => Get(nameof(ProfileGroupFavorites));
+    public static string ProfileGroupOthers => Get(nameof(ProfileGroupOthers));
+    public static string ProfileNameLabel => Get(nameof(ProfileNameLabel));
+    public static string ProfileDescriptionLabel => Get(nameof(ProfileDescriptionLabel));
+    public static string ProfileUseDhcpLabel => Get(nameof(ProfileUseDhcpLabel));
+    public static string CommandSaveProfile => Get(nameof(CommandSaveProfile));
+    public static string CommandImportProfile => Get(nameof(CommandImportProfile));
+    public static string CommandExportProfile => Get(nameof(CommandExportProfile));
+    public static string CommandRenameProfile => Get(nameof(CommandRenameProfile));
+    public static string CommandDuplicateProfile => Get(nameof(CommandDuplicateProfile));
+    public static string CommandToggleFavorite => Get(nameof(CommandToggleFavorite));
+    public static string CommandDeleteProfile => Get(nameof(CommandDeleteProfile));
+    public static string CommandOk => Get(nameof(CommandOk));
+    public static string CommandCancel => Get(nameof(CommandCancel));
+    public static string ProfileImportDialogTitle => Get(nameof(ProfileImportDialogTitle));
+    public static string ProfileExportDialogTitle => Get(nameof(ProfileExportDialogTitle));
+    public static string ProfileJsonFileFilter => Get(nameof(ProfileJsonFileFilter));
+    public static string ProfileRenameTitle => Get(nameof(ProfileRenameTitle));
+    public static string ProfileNameRequired => Get(nameof(ProfileNameRequired));
+    public static string ProfileDhcpGuidance => Get(nameof(ProfileDhcpGuidance));
+    public static string ConfirmProfileLoadTitle => Get(nameof(ConfirmProfileLoadTitle));
+    public static string ConfirmProfileLoadMessage => Get(nameof(ConfirmProfileLoadMessage));
+    public static string ProfileLoadCancelled => Get(nameof(ProfileLoadCancelled));
+    public static string ConfirmProfileDeleteTitle => Get(nameof(ConfirmProfileDeleteTitle));
+    public static string ProfileSaveSuccess => Get(nameof(ProfileSaveSuccess));
+    public static string ProfileDeleteSuccess => Get(nameof(ProfileDeleteSuccess));
+    public static string ProfileImportSuccess => Get(nameof(ProfileImportSuccess));
+    public static string ProfileExportSuccess => Get(nameof(ProfileExportSuccess));
+    public static string ProfileInvalidContent => Get(nameof(ProfileInvalidContent));
+    public static string ProfileAccessDenied => Get(nameof(ProfileAccessDenied));
+    public static string ProfileIoFailure => Get(nameof(ProfileIoFailure));
+    public static string ProfileNotFound => Get(nameof(ProfileNotFound));
+    public static string ProfileProblemMalformedJson => Get(nameof(ProfileProblemMalformedJson));
+    public static string ProfileProblemUnsupportedSchema => Get(nameof(ProfileProblemUnsupportedSchema));
+    public static string ProfileProblemInvalidContent => Get(nameof(ProfileProblemInvalidContent));
+    public static string ProfileProblemReadFailure => Get(nameof(ProfileProblemReadFailure));
+
     public static string FormatLinkSpeedGigabits(string value, IFormatProvider formatProvider) =>
         Format(Get("LinkSpeedGigabitsPerSecond"), formatProvider, value);
 
@@ -229,6 +268,15 @@ public static class Strings
 
     public static string FormatVersion(string version) =>
         Format(Get("StatusVersion"), CultureInfo.CurrentCulture, version);
+
+    public static string FormatProfileImportSuccess(string name) =>
+        Format(Get("ProfileImportSuccessWithName"), CultureInfo.CurrentCulture, name);
+
+    public static string FormatProfileProblemsHeader(int count) =>
+        Format(Get("ProfileProblemsHeader"), CultureInfo.CurrentCulture, count);
+
+    public static string FormatConfirmProfileDeleteMessage(string name) =>
+        Format(Get("ConfirmProfileDeleteMessage"), CultureInfo.CurrentCulture, name);
 
     /// <summary>Formats the conflict confirmation message for an IPv4 address.</summary>
     public static string FormatConfirmConflictMessage(string address) =>
