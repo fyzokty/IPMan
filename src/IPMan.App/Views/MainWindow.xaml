@@ -518,11 +518,11 @@
                             <ItemsControl ItemsSource="{Binding Problems}">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <TextBlock Margin="0,3,0,0" TextWrapping="Wrap">
-                                            <Run Text="{Binding FileName}" />
-                                            <Run Text=" — " />
-                                            <Run Text="{Binding Reason}" />
-                                        </TextBlock>
+                                            <TextBlock Margin="0,3,0,0" TextWrapping="Wrap">
+                                                <Run Text="{Binding FileName}" />
+                                            <Run Text="{x:Static res:Strings.ProfileProblemSeparator}" />
+                                                <Run Text="{Binding Reason}" />
+                                            </TextBlock>
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
@@ -541,26 +541,28 @@
                                                  SelectedItem="{Binding DataContext.SelectedProfile, ElementName=ProfilePanelRoot}">
                                             <ListBox.ItemTemplate>
                                                 <DataTemplate>
-                                                    <TextBlock Padding="4" Text="{Binding Name}">
-                                                        <TextBlock.ContextMenu>
-                                                            <ContextMenu>
-                                                                <MenuItem Command="{Binding DataContext.RenameCommand, ElementName=ProfilePanelRoot}"
-                                                                          CommandParameter="{Binding}"
-                                                                          Header="{x:Static res:Strings.CommandRenameProfile}" />
-                                                                <MenuItem Command="{Binding DataContext.DuplicateCommand, ElementName=ProfilePanelRoot}"
-                                                                          CommandParameter="{Binding}"
-                                                                          Header="{x:Static res:Strings.CommandDuplicateProfile}" />
-                                                                <MenuItem Command="{Binding DataContext.ToggleFavoriteCommand, ElementName=ProfilePanelRoot}"
-                                                                          CommandParameter="{Binding}"
-                                                                          Header="{x:Static res:Strings.CommandToggleFavorite}" />
-                                                                <MenuItem Command="{Binding DataContext.ExportCommand, ElementName=ProfilePanelRoot}"
-                                                                          CommandParameter="{Binding}"
-                                                                          Header="{x:Static res:Strings.CommandExportProfile}" />
-                                                                <MenuItem Command="{Binding DataContext.DeleteCommand, ElementName=ProfilePanelRoot}"
-                                                                          CommandParameter="{Binding}"
-                                                                          Header="{x:Static res:Strings.CommandDeleteProfile}" />
-                                                            </ContextMenu>
-                                                        </TextBlock.ContextMenu>
+                                            <TextBlock Padding="4"
+                                                       Tag="{Binding DataContext, ElementName=ProfilePanelRoot}"
+                                                       Text="{Binding Name}">
+                                                <TextBlock.ContextMenu>
+                                                    <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
+                                                        <MenuItem Command="{Binding RenameCommand}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+                                                                  Header="{x:Static res:Strings.CommandRenameProfile}" />
+                                                        <MenuItem Command="{Binding DuplicateCommand}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+                                                                  Header="{x:Static res:Strings.CommandDuplicateProfile}" />
+                                                        <MenuItem Command="{Binding ToggleFavoriteCommand}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+                                                                  Header="{x:Static res:Strings.CommandToggleFavorite}" />
+                                                        <MenuItem Command="{Binding ExportCommand}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+                                                                  Header="{x:Static res:Strings.CommandExportProfile}" />
+                                                        <MenuItem Command="{Binding DeleteCommand}"
+                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
+                                                                  Header="{x:Static res:Strings.CommandDeleteProfile}" />
+                                                    </ContextMenu>
+                                                </TextBlock.ContextMenu>
                                                     </TextBlock>
                                                 </DataTemplate>
                                             </ListBox.ItemTemplate>

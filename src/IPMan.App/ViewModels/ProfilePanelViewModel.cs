@@ -20,7 +20,9 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     private readonly IUserConfirmationService _confirmationService;
     private readonly IUiDispatcher _uiDispatcher;
     private AdapterDraftViewModel? _draft;
+    private bool _isRestoringSelection;
     private bool _isDisposed;
+    private ProfileListItemViewModel? _previousSelectedProfile;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasStatusMessage))]
@@ -99,8 +101,20 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
 
     partial void OnSelectedProfileChanged(ProfileListItemViewModel? value)
     {
-        if (value is null || _draft is null)
+        if (_isRestoringSelection || value is null)
         {
+            return;
+        }
+
+        if (_draft is null)
+        {
+            _previousSelectedProfile = value;
+            return;
+        }
+
+        if (_previousSelectedProfile?.Id == value.Id)
+        {
+            _previousSelectedProfile = value;
             return;
         }
 
@@ -108,12 +122,22 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
                 Strings.ConfirmProfileLoadTitle,
                 Strings.ConfirmProfileLoadMessage)))
         {
-            SelectedProfile = null;
+            _isRestoringSelection = true;
+            try
+            {
+                SelectedProfile = _previousSelectedProfile;
+            }
+            finally
+            {
+                _isRestoringSelection = false;
+            }
+
             StatusMessage = Strings.ProfileLoadCancelled;
             return;
         }
 
         _draft.LoadProfile(value.Profile);
+        _previousSelectedProfile = value;
     }
 
     [RelayCommand(CanExecute = nameof(CanSave))]

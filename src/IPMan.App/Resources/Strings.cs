@@ -216,6 +216,7 @@ public static class Strings
     public static string ProfileNameLabel => Get(nameof(ProfileNameLabel));
     public static string ProfileDescriptionLabel => Get(nameof(ProfileDescriptionLabel));
     public static string ProfileUseDhcpLabel => Get(nameof(ProfileUseDhcpLabel));
+    public static string ProfileProblemSeparator => Get(nameof(ProfileProblemSeparator));
     public static string CommandSaveProfile => Get(nameof(CommandSaveProfile));
     public static string CommandImportProfile => Get(nameof(CommandImportProfile));
     public static string CommandExportProfile => Get(nameof(CommandExportProfile));

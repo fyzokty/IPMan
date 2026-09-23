@@ -152,6 +152,26 @@ public sealed class ProfileCatalogTests
     }
 
     [Fact]
+    public async Task ImportAsync_WhenRepositoryFails_DoesNotReloadCatalog()
+    {
+        NetworkProfile existing = TestData.Profile(profileId: "existing", name: "Existing");
+        FakeProfileRepository repository = new()
+        {
+            ImportResult = ProfileImportResult.Failed(ProfileImportStatus.InvalidContent),
+            LoadResult = new ProfileLoadResult([existing], [])
+        };
+        using ProfileCatalog catalog = new(repository, new FakeProfileDirectoryWatcher());
+        await catalog.InitializeAsync(CancellationToken.None);
+        using MemoryStream source = new([1, 2, 3]);
+
+        ProfileImportResult result = await catalog.ImportAsync(source, CancellationToken.None);
+
+        Assert.Equal(ProfileImportStatus.InvalidContent, result.Status);
+        Assert.Single(repository.LoadCalls);
+        Assert.Same(existing, Assert.Single(catalog.Profiles));
+    }
+
+    [Fact]
     public async Task ExportAsync_WhenRepositoryCompletes_DelegatesWithoutReloading()
     {
         FakeProfileRepository repository = new();

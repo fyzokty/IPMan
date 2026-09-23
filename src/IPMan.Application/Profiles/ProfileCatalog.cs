@@ -159,6 +159,12 @@ public sealed class ProfileCatalog : IProfileCatalog
         ProfileImportResult result = await _repository
             .ImportAsync(source, cancellationToken)
             .ConfigureAwait(false);
+
+        if (!result.IsSuccess)
+        {
+            return result;
+        }
+
         await ReloadAsync(cancellationToken).ConfigureAwait(false);
         return result;
     }

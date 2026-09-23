@@ -81,6 +81,32 @@ public sealed class ProfilePanelViewModelTests
     }
 
     [Fact]
+    public void SelectedProfile_WhenDirtyDraftLoadIsDeclined_RestoresPreviousSelection()
+    {
+        FakeProfileCatalog catalog = new()
+        {
+            Profiles =
+            [
+                TestData.Profile(profileId: "first", name: "First", ipv4Address: "10.0.0.10"),
+                TestData.Profile(profileId: "second", name: "Second", ipv4Address: "10.0.0.20")
+            ]
+        };
+        FakeUserConfirmationService confirmation = new() { Answer = true };
+        using ProfilePanelViewModel viewModel = Create(catalog, confirmation);
+        AdapterDraftViewModel draft = new(new FakeClipboardService(), new StaticIpv4ConfigurationValidator());
+        viewModel.SetDraft(draft);
+        ProfileListItemViewModel first = viewModel.Groups[0].Profiles[0];
+
+        viewModel.SelectedProfile = first;
+        draft.Ipv4Address = "10.0.0.99";
+        confirmation.Answer = false;
+        viewModel.SelectedProfile = viewModel.Groups[0].Profiles[1];
+
+        Assert.Same(first, viewModel.SelectedProfile);
+        Assert.Equal("10.0.0.99", draft.Ipv4Address);
+    }
+
+    [Fact]
     public void CatalogChanged_WhenProblemsReported_UpdatesInformationalProblemList()
     {
         FakeProfileCatalog catalog = new()

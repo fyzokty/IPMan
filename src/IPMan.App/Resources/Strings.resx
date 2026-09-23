@@ -345,6 +345,7 @@
   <data name="ProfileDescriptionLabel" xml:space="preserve"><value>Açıklama</value></data>
   <data name="ProfileUseDhcpLabel" xml:space="preserve"><value>DHCP kullan</value></data>
   <data name="ProfileProblemsHeader" xml:space="preserve"><value>Okunamayan profil dosyaları ({0})</value></data>
+  <data name="ProfileProblemSeparator" xml:space="preserve"><value> — </value></data>
   <data name="CommandSaveProfile" xml:space="preserve"><value>Profili kaydet</value></data>
   <data name="CommandImportProfile" xml:space="preserve"><value>İçe aktar</value></data>
   <data name="CommandExportProfile" xml:space="preserve"><value>Dışa aktar</value></data>
