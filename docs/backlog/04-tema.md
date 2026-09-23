@@ -16,3 +16,9 @@ Windows'u takip et / Açık / Koyu tema seçenekleri.
 ## Bitti sayılır
 - [ ] Üç seçenek de doğru görünüyor, tüm denetimler okunabilir
 - [ ] Windows teması değişince uygulama uyum sağlıyor
+
+## Sorular
+
+1. Tema tercihi kalıcı olarak hangi ayarda saklanmalı ve uygulama ilk açıldığında varsayılan seçenek "Windows'u takip et" mi olmalı?
+2. Açık/koyu tema yalnızca uygulama içi renkleri mi kapsamalı, yoksa başlık çubuğu ve Windows denetimlerinin görünümü de temaya uyarlanmalı mı?
+3. "Windows'u takip et" seçeneğinde sistem temasındaki değişiklik hangi mekanizmayla algılanmalı ve güncellemenin gerçekleşmesi için kabul edilebilir gecikme nedir?
