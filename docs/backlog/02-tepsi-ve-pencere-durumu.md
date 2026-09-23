@@ -19,3 +19,8 @@ Uygulama tepsiye küçülebilir ve pencere düzenini hatırlar.
 - [ ] Yeniden başlatmada pencere aynı yerde ve boyutta açılıyor
 - [ ] Seçilen kapatma davranışı kalıcı
 - [ ] Ekran dışında kalan konum güvenli şekilde düzeltiliyor
+
+## Sorular
+1. İlk kapatma veya küçültme işleminde kullanıcıya sunulacak seçenekler tam olarak neler olmalı (örneğin tepsiye küçült, uygulamadan çık) ve varsayılan seçim hangisi olmalı?
+2. Tepsi simgesi uygulama açıkken her zaman mı görünmeli, yoksa yalnızca pencere tepsiye küçültüldüğünde mi gösterilmeli?
+3. Kaydedilen pencere konumunun ekran dışında sayılması ve güvenli konuma alınması için çoklu monitör, çözünürlük ve DPI değişimlerinde hangi davranış bekleniyor?
