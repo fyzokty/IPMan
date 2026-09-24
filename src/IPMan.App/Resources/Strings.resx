@@ -315,6 +315,33 @@
   <data name="ExistingInstanceNotResponding" xml:space="preserve">
     <value>Çalışan IPMan örneğine ulaşılamadı. Lütfen mevcut pencereyi denetleyip yeniden deneyin.</value>
   </data>
+  <data name="ApplicationName" xml:space="preserve">
+    <value>IPMan</value>
+  </data>
+  <data name="TrayApplicationVersion" xml:space="preserve">
+    <value>IPMan — Sürüm {0}</value>
+  </data>
+  <data name="TrayOpen" xml:space="preserve">
+    <value>Aç</value>
+  </data>
+  <data name="TrayExit" xml:space="preserve">
+    <value>Çıkış</value>
+  </data>
+  <data name="TrayPreferenceTitle" xml:space="preserve">
+    <value>Tepsi davranışı</value>
+  </data>
+  <data name="TrayPreferenceMessage" xml:space="preserve">
+    <value>Pencere kapatıldığında veya küçültüldüğünde sistem tepsisine gönderilsin mi?</value>
+  </data>
+  <data name="TrayBalloonMessage" xml:space="preserve">
+    <value>IPMan sistem tepsisinde çalışmaya devam ediyor.</value>
+  </data>
+  <data name="ExitConfirmationTitle" xml:space="preserve">
+    <value>Uygulamadan çıkılsın mı?</value>
+  </data>
+  <data name="ExitConfirmationMessage" xml:space="preserve">
+    <value>Devam eden bir işlem veya kaydedilmemiş taslak değişiklikleri var. Yine de çıkmak istiyor musunuz?</value>
+  </data>
 
   <data name="StatusAdministratorYes" xml:space="preserve">
     <value>Yönetici: Evet</value>

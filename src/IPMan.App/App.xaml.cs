@@ -71,8 +71,10 @@ public partial class App : System.Windows.Application
                 ValidateScopes = true
             });
 
+        ShutdownMode = ShutdownMode.OnLastWindowClose;
         MainWindow window = _serviceProvider.GetRequiredService<MainWindow>();
         MainWindow = window;
+        SessionEnding += OnSessionEnding;
         window.Show();
 
         IUiDispatcher uiDispatcher = _serviceProvider.GetRequiredService<IUiDispatcher>();
@@ -90,6 +92,8 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        SessionEnding -= OnSessionEnding;
+
         if (_activationChannelServer is not null)
         {
             if (_activationHandler is not null)
@@ -172,7 +176,16 @@ public partial class App : System.Windows.Application
         services.AddSingleton<AdapterActionsViewModel>();
         services.AddSingleton<ProfilePanelViewModel>();
         services.AddSingleton<MainWindowViewModel>();
+        services.AddSingleton<TrayIconManager>();
         services.AddSingleton<MainWindow>();
+    }
+
+    private void OnSessionEnding(object sender, SessionEndingCancelEventArgs e)
+    {
+        if (MainWindow is MainWindow window)
+        {
+            window.ExitWithoutPrompt();
+        }
     }
 
     private static void AllowExistingInstanceToSetForegroundWindow() =>
