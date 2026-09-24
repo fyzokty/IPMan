@@ -28,6 +28,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly IStaticIpv4ConfigurationValidator _validator;
 
     private DateTimeOffset? _lastSuccessfulRefreshUtc;
+    private string? _lastSelectedAdapterId;
     private bool _isInitialized;
     private bool _isDisposed;
 
@@ -131,6 +132,23 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public bool IsContentVisible => !IsLoading && Adapters.Count > 0;
 
+    /// <summary>Gets the stable identifier that should be persisted for the selected adapter.</summary>
+    public string? LastSelectedAdapterId => _lastSelectedAdapterId;
+
+    /// <summary>Gets whether a network configuration action is currently running.</summary>
+    public bool IsBusy => Actions.IsBusy;
+
+    /// <summary>Gets whether any adapter draft contains unapplied changes.</summary>
+    public bool HasDirtyDrafts => Adapters.Any(adapter => adapter.Draft.IsDirty);
+
+    /// <summary>Sets the adapter identity restored from application settings before discovery.</summary>
+    public void SetLastSelectedAdapterId(string? adapterId)
+    {
+        _lastSelectedAdapterId = Guid.TryParse(adapterId, out Guid parsed)
+            ? parsed.ToString("B").ToUpperInvariant()
+            : null;
+    }
+
     /// <summary>Starts observation. Called once by the composition root.</summary>
     public void Initialize()
     {
@@ -164,6 +182,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     partial void OnSelectedAdapterChanged(AdapterViewModel? value)
     {
+        _lastSelectedAdapterId = value?.Id.Value;
         UpdateSelectedAdapterStatus();
         Actions.Attach(value);
         ProfilePanel?.SetDraft(value?.Draft);
@@ -261,6 +280,19 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             }
         }
 
+        if (_lastSelectedAdapterId is not null)
+        {
+            NetworkAdapterId restoredId = new(_lastSelectedAdapterId);
+            int restoredIndex = IndexOf(restoredId);
+
+            if (restoredIndex >= 0)
+            {
+                SelectedAdapter = Adapters[restoredIndex];
+                UpdateSelectedAdapterStatus();
+                return;
+            }
+        }
+
         SelectedAdapter = Adapters.Count > 0 ? Adapters[0] : null;
         UpdateSelectedAdapterStatus();
     }
@@ -289,13 +321,16 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         if (e.PropertyName == nameof(AdapterActionsViewModel.IsBusy))
         {
+            OnPropertyChanged(nameof(IsBusy));
             StatusBar.ApplicationState = Actions.IsBusy
                 ? Strings.StateApplying
                 : HasRefreshError
                     ? Strings.StateError
                     : Strings.StateReady;
+            }
+
+            OnPropertyChanged(nameof(HasDirtyDrafts));
         }
-    }
 
     private void NotifyStateVisibilityChanged()
     {

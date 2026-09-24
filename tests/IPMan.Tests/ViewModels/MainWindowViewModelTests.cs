@@ -106,6 +106,35 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
+    public void Refresh_WhenPersistedAdapterGuidExists_RestoresThatSelection()
+    {
+        using MainWindowHarness harness = MainWindowHarness.Create();
+        harness.ViewModel.SetLastSelectedAdapterId("827a2938-bb14-4d18-b67f-94e9c4f818ba");
+        harness.ViewModel.Initialize();
+
+        harness.Coordinator.PublishRefresh(
+            TestData.Snapshot(id: "{927A2938-BB14-4D18-B67F-94E9C4F818BA}", name: "Ethernet"),
+            TestData.Snapshot(id: "{827A2938-BB14-4D18-B67F-94E9C4F818BA}", name: "Wi-Fi"));
+
+        Assert.Equal("{827A2938-BB14-4D18-B67F-94E9C4F818BA}", harness.ViewModel.SelectedAdapter?.Id.Value);
+    }
+
+    [Fact]
+    public void Refresh_WhenPersistedAdapterGuidIsMissing_SelectsFirstAdapter()
+    {
+        using MainWindowHarness harness = MainWindowHarness.Create();
+        harness.ViewModel.SetLastSelectedAdapterId("827a2938-bb14-4d18-b67f-94e9c4f818ba");
+        harness.ViewModel.Initialize();
+
+        harness.Coordinator.PublishRefresh(TestData.Snapshot(
+            id: "{927A2938-BB14-4D18-B67F-94E9C4F818BA}",
+            name: "Ethernet"));
+
+        Assert.Equal("{927A2938-BB14-4D18-B67F-94E9C4F818BA}", harness.ViewModel.SelectedAdapter?.Id.Value);
+        Assert.Equal(harness.ViewModel.SelectedAdapter?.Id.Value, harness.ViewModel.LastSelectedAdapterId);
+    }
+
+    [Fact]
     public void Refresh_AddsNewlyDiscoveredAdaptersWithoutRestart()
     {
         using MainWindowHarness harness = MainWindowHarness.Create();

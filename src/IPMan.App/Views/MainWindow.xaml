@@ -9,7 +9,7 @@
         MinWidth="900"
         MinHeight="600"
         Background="{StaticResource WindowBackgroundBrush}"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="Manual">
 
     <Window.Resources>
         <!-- Tab header: name plus a shape-based connection marker, never colour alone. -->

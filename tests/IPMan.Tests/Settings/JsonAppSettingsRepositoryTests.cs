@@ -35,7 +35,10 @@ public sealed class JsonAppSettingsRepositoryTests
             AppSettings.CurrentSchemaVersion,
             AppTheme.Dark,
             ApplyProfileOnSelection: true,
-            NotificationsEnabled: false);
+            NotificationsEnabled: false,
+            WindowPlacement: new AppWindowPlacement(120, 80, 1000, 700, IsMaximized: true),
+            LastSelectedAdapterId: "{827A2938-BB14-4D18-B67F-94E9C4F818BA}",
+            CloseToTray: true);
 
         try
         {
@@ -105,6 +108,51 @@ public sealed class JsonAppSettingsRepositoryTests
 
             Assert.Equal(AppSettings.Default, result);
             Assert.False(File.Exists($"{settingsPath}.invalid"));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task LoadAsync_WhenNewPlacementFieldsAreInvalid_ResetsOnlyThoseFields()
+    {
+        string directory = CreateTestDirectory();
+        string settingsPath = Path.Combine(directory, "settings.json");
+        await File.WriteAllTextAsync(settingsPath, """
+            {
+              "schemaVersion": 1,
+              "theme": "Dark",
+              "applyProfileOnSelection": true,
+              "notificationsEnabled": false,
+              "windowPlacement": {
+                "left": 120,
+                "top": "bozuk",
+                "width": 0,
+                "height": 700,
+                "isMaximized": "bozuk"
+              },
+              "lastSelectedAdapterId": "bozuk",
+              "closeToTray": "bozuk"
+            }
+            """);
+
+        try
+        {
+            AppSettings result = await CreateRepository(directory).LoadAsync(CancellationToken.None);
+
+            Assert.Equal(AppTheme.Dark, result.Theme);
+            Assert.True(result.ApplyProfileOnSelection);
+            Assert.False(result.NotificationsEnabled);
+            Assert.NotNull(result.WindowPlacement);
+            Assert.Equal(120, result.WindowPlacement.Left);
+            Assert.Null(result.WindowPlacement.Top);
+            Assert.Null(result.WindowPlacement.Width);
+            Assert.Equal(700, result.WindowPlacement.Height);
+            Assert.Null(result.WindowPlacement.IsMaximized);
+            Assert.Null(result.LastSelectedAdapterId);
+            Assert.Null(result.CloseToTray);
         }
         finally
         {

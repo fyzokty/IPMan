@@ -201,6 +201,25 @@ public static class Strings
 
     public static string ExistingInstanceNotResponding => Get(nameof(ExistingInstanceNotResponding));
 
+    public static string ApplicationName => Get(nameof(ApplicationName));
+
+    public static string TrayOpen => Get(nameof(TrayOpen));
+
+    public static string TrayExit => Get(nameof(TrayExit));
+
+    public static string TrayPreferenceTitle => Get(nameof(TrayPreferenceTitle));
+
+    public static string TrayPreferenceMessage => Get(nameof(TrayPreferenceMessage));
+
+    public static string TrayBalloonMessage => Get(nameof(TrayBalloonMessage));
+
+    public static string ExitConfirmationTitle => Get(nameof(ExitConfirmationTitle));
+
+    public static string ExitConfirmationMessage => Get(nameof(ExitConfirmationMessage));
+
+    public static string FormatTrayApplicationVersion(string version) =>
+        Format(Get("TrayApplicationVersion"), CultureInfo.CurrentCulture, version);
+
     public static string StatusAdministratorYes => Get(nameof(StatusAdministratorYes));
 
     public static string StatusAdministratorNo => Get(nameof(StatusAdministratorNo));
