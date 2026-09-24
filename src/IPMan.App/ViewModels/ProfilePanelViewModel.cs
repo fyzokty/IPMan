@@ -23,6 +23,14 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     private bool _isRestoringSelection;
     private bool _isDisposed;
     private ProfileListItemViewModel? _previousSelectedProfile;
+    private string? _profileSelectedBeforeExplicitMouseClickId;
+    private string? _lastAppliedProfileId;
+    private string? _pendingProfileApplyId;
+    private string? _failedProfileApplyId;
+    private bool _applyProfileOnSelection;
+
+    /// <summary>Raised for an explicit mouse selection when immediate application is enabled.</summary>
+    public event EventHandler<NetworkProfile>? ExplicitProfileApplyRequested;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasStatusMessage))]
@@ -78,6 +86,49 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     public string ProblemsHeader => Strings.FormatProfileProblemsHeader(ProblemCount);
 
     public bool HasStatusMessage => StatusMessage.Length > 0;
+
+    /// <summary>Enables immediate profile application for explicit mouse selection only.</summary>
+    public void SetApplyProfileOnSelection(bool enabled) => _applyProfileOnSelection = enabled;
+
+    /// <summary>Records the selected profile before an explicit mouse selection changes it.</summary>
+    public void BeginExplicitProfileSelection() =>
+        _profileSelectedBeforeExplicitMouseClickId = SelectedProfile?.Id;
+
+    /// <summary>Requests the standard apply flow for an explicitly clicked, changed profile.</summary>
+    public void ApplyOnExplicitSelection(ProfileListItemViewModel? item)
+    {
+        if (!_applyProfileOnSelection || item is null || SelectedProfile?.Id != item.Id ||
+            item.Id == _lastAppliedProfileId || item.Id == _pendingProfileApplyId ||
+            (item.Id == _profileSelectedBeforeExplicitMouseClickId && item.Id != _failedProfileApplyId))
+        {
+            return;
+        }
+
+        _pendingProfileApplyId = item.Id;
+        ExplicitProfileApplyRequested?.Invoke(this, item.Profile);
+    }
+
+    /// <summary>Completes an immediate profile application after the validated action flow finishes.</summary>
+    public bool CompleteExplicitProfileApply(bool succeeded)
+    {
+        if (_pendingProfileApplyId is null)
+        {
+            return false;
+        }
+
+        if (succeeded)
+        {
+            _lastAppliedProfileId = _pendingProfileApplyId;
+            _failedProfileApplyId = null;
+        }
+        else
+        {
+            _failedProfileApplyId = _pendingProfileApplyId;
+        }
+
+        _pendingProfileApplyId = null;
+        return succeeded;
+    }
 
     /// <summary>Associates the selected adapter draft; null disables draft-specific commands.</summary>
     public void SetDraft(AdapterDraftViewModel? draft)

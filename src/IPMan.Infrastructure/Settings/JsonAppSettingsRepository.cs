@@ -11,6 +11,9 @@ public sealed class JsonAppSettingsRepository : IAppSettingsRepository
     private readonly string _settingsFilePath;
     private readonly AppSettingsJsonCodec _codec = new();
 
+    /// <summary>Gets whether the most recent load could not read a present settings file.</summary>
+    public bool LastLoadFailed { get; private set; }
+
     /// <summary>Initializes a settings repository with an explicit document path.</summary>
     public JsonAppSettingsRepository(AppSettingsRepositoryOptions options)
     {
@@ -27,11 +30,6 @@ public sealed class JsonAppSettingsRepository : IAppSettingsRepository
     public async Task<AppSettings> LoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (!File.Exists(_settingsFilePath))
-        {
-            return AppSettings.Default;
-        }
-
         try
         {
             await using FileStream stream = new(
@@ -41,19 +39,34 @@ public sealed class JsonAppSettingsRepository : IAppSettingsRepository
                 FileShare.ReadWrite | FileShare.Delete,
                 bufferSize: 4096,
                 FileOptions.Asynchronous | FileOptions.SequentialScan);
-            return await _codec.DeserializeAsync(stream, cancellationToken).ConfigureAwait(false);
+            AppSettings settings = await _codec.DeserializeAsync(stream, cancellationToken).ConfigureAwait(false);
+            LastLoadFailed = false;
+            return settings;
+        }
+        catch (FileNotFoundException)
+        {
+            LastLoadFailed = false;
+            return AppSettings.Default;
+        }
+        catch (DirectoryNotFoundException)
+        {
+            LastLoadFailed = false;
+            return AppSettings.Default;
         }
         catch (JsonException)
         {
+            LastLoadFailed = true;
             TryPreserveInvalidDocument();
             return AppSettings.Default;
         }
         catch (UnauthorizedAccessException)
         {
+            LastLoadFailed = true;
             return AppSettings.Default;
         }
         catch (IOException)
         {
+            LastLoadFailed = true;
             return AppSettings.Default;
         }
     }

@@ -27,8 +27,7 @@
     },
     "review": {
       "chain": [
-        "flash-high",
-        "luna"
+        "flash-high"
       ],
       "permission": "read-only"
     }

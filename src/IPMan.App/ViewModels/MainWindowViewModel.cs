@@ -6,6 +6,7 @@ using IPMan.App.Presentation;
 using IPMan.App.Resources;
 using IPMan.Application.Common;
 using IPMan.Application.Networking;
+using IPMan.Domain.Adapters;
 using IPMan.Domain.Networking;
 
 namespace IPMan.App.ViewModels;
@@ -31,6 +32,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private string? _lastSelectedAdapterId;
     private bool _isInitialized;
     private bool _isDisposed;
+    private bool _showVirtualAdapters = true;
 
     /// <summary>True until the first discovery pass completes or fails.</summary>
     [ObservableProperty]
@@ -40,6 +42,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private bool _hasRefreshError;
+
+    [ObservableProperty]
+    private bool _settingsWarningVisible;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsEmptyStateVisible))]
@@ -98,6 +103,11 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
         Actions = actions;
         Actions.PropertyChanged += OnActionsPropertyChanged;
+        Actions.ApplyCompleted += OnApplyCompleted;
+        if (ProfilePanel is not null)
+        {
+            ProfilePanel.ExplicitProfileApplyRequested += OnExplicitProfileApplyRequested;
+        }
 
         StatusBar = new StatusBarViewModel
         {
@@ -116,6 +126,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     public string ApplicationTagline { get; } = Strings.ApplicationTagline;
 
     public string RefreshErrorText { get; } = Strings.RefreshFailedTitle;
+
+    public string SettingsWarningText { get; } = Strings.SettingsPersistenceWarning;
 
     public ObservableCollection<AdapterViewModel> Adapters { get; } = new();
 
@@ -149,6 +161,13 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             : null;
     }
 
+    /// <summary>Updates virtual-adapter visibility for subsequent refreshes.</summary>
+    public void SetShowVirtualAdapters(bool showVirtualAdapters)
+    {
+        _showVirtualAdapters = showVirtualAdapters;
+        _refreshCoordinator.RequestRefresh("SettingsChanged");
+    }
+
     /// <summary>Starts observation. Called once by the composition root.</summary>
     public void Initialize()
     {
@@ -176,6 +195,11 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _refreshCoordinator.Refreshed -= OnAdaptersRefreshed;
         _refreshCoordinator.RefreshFailed -= OnAdapterRefreshFailed;
         Actions.PropertyChanged -= OnActionsPropertyChanged;
+        Actions.ApplyCompleted -= OnApplyCompleted;
+        if (ProfilePanel is not null)
+        {
+            ProfilePanel.ExplicitProfileApplyRequested -= OnExplicitProfileApplyRequested;
+        }
         Actions.Dispose();
         ProfilePanel?.Dispose();
     }
@@ -231,11 +255,26 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     /// </summary>
     private void MergeAdapters(IReadOnlyList<NetworkAdapterSnapshot> adapters)
     {
+        IReadOnlyList<NetworkAdapterSnapshot> displayedAdapters = adapters
+            .Where(adapter => AdapterCategoryClassifier.IsVisible(adapter, _showVirtualAdapters) ||
+                adapter.Id == SelectedAdapter?.Id)
+            .ToArray();
         NetworkAdapterId? previouslySelectedId = SelectedAdapter?.Id;
+        HashSet<NetworkAdapterId> displayedAdapterIds = displayedAdapters
+            .Select(adapter => adapter.Id)
+            .ToHashSet();
 
-        for (int targetIndex = 0; targetIndex < adapters.Count; targetIndex++)
+        for (int index = Adapters.Count - 1; index >= 0; index--)
         {
-            NetworkAdapterSnapshot snapshot = adapters[targetIndex];
+            if (!displayedAdapterIds.Contains(Adapters[index].Id))
+            {
+                Adapters.RemoveAt(index);
+            }
+        }
+
+        for (int targetIndex = 0; targetIndex < displayedAdapters.Count; targetIndex++)
+        {
+            NetworkAdapterSnapshot snapshot = displayedAdapters[targetIndex];
             int existingIndex = IndexOf(snapshot.Id);
 
             if (existingIndex < 0)
@@ -250,12 +289,6 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             {
                 Adapters.Move(existingIndex, targetIndex);
             }
-        }
-
-        // Everything past the discovered set no longer exists in Windows.
-        while (Adapters.Count > adapters.Count)
-        {
-            Adapters.RemoveAt(Adapters.Count - 1);
         }
 
         RestoreSelection(previouslySelectedId);
@@ -336,5 +369,24 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         OnPropertyChanged(nameof(IsEmptyStateVisible));
         OnPropertyChanged(nameof(IsContentVisible));
+    }
+
+    private void OnExplicitProfileApplyRequested(object? sender, IPMan.Domain.Profiles.NetworkProfile profile)
+    {
+        if (profile.Mode == NetworkConfigurationMode.Dhcp)
+        {
+            Actions.ApplyDhcpCommand.Execute(null);
+            return;
+        }
+
+        Actions.ApplyStaticCommand.Execute(null);
+    }
+
+    private void OnApplyCompleted(object? sender, bool succeeded)
+    {
+        if (ProfilePanel?.CompleteExplicitProfileApply(succeeded) == true)
+        {
+            Actions.ShowProfileAppliedNotice();
+        }
     }
 }

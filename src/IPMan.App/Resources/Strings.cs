@@ -259,6 +259,7 @@ public static class Strings
     public static string ProfileDeleteSuccess => Get(nameof(ProfileDeleteSuccess));
     public static string ProfileImportSuccess => Get(nameof(ProfileImportSuccess));
     public static string ProfileExportSuccess => Get(nameof(ProfileExportSuccess));
+    public static string ProfileApplied => Get(nameof(ProfileApplied));
     public static string ProfileInvalidContent => Get(nameof(ProfileInvalidContent));
     public static string ProfileAccessDenied => Get(nameof(ProfileAccessDenied));
     public static string ProfileIoFailure => Get(nameof(ProfileIoFailure));
@@ -267,6 +268,31 @@ public static class Strings
     public static string ProfileProblemUnsupportedSchema => Get(nameof(ProfileProblemUnsupportedSchema));
     public static string ProfileProblemInvalidContent => Get(nameof(ProfileProblemInvalidContent));
     public static string ProfileProblemReadFailure => Get(nameof(ProfileProblemReadFailure));
+
+    public static string SettingsTitle => Get(nameof(SettingsTitle));
+    public static string SettingsTheme => Get(nameof(SettingsTheme));
+    public static string SettingsThemeLight => Get(nameof(SettingsThemeLight));
+    public static string SettingsThemeDark => Get(nameof(SettingsThemeDark));
+    public static string SettingsThemeSystem => Get(nameof(SettingsThemeSystem));
+    public static string SettingsThemeSoon => Get(nameof(SettingsThemeSoon));
+    public static string SettingsCloseBehavior => Get(nameof(SettingsCloseBehavior));
+    public static string SettingsCloseAsk => Get(nameof(SettingsCloseAsk));
+    public static string SettingsCloseTray => Get(nameof(SettingsCloseTray));
+    public static string SettingsCloseExit => Get(nameof(SettingsCloseExit));
+    public static string SettingsNotifications => Get(nameof(SettingsNotifications));
+    public static string SettingsApplyOnSelection => Get(nameof(SettingsApplyOnSelection));
+    public static string SettingsShowVirtual => Get(nameof(SettingsShowVirtual));
+    public static string SettingsRememberWindow => Get(nameof(SettingsRememberWindow));
+    public static string SettingsReset => Get(nameof(SettingsReset));
+    public static string SettingsResetTitle => Get(nameof(SettingsResetTitle));
+    public static string SettingsResetMessage => Get(nameof(SettingsResetMessage));
+    public static string SettingsPersistenceWarning => Get(nameof(SettingsPersistenceWarning));
+    public static string SettingsHelpTheme => Get(nameof(SettingsHelpTheme));
+    public static string SettingsHelpClose => Get(nameof(SettingsHelpClose));
+    public static string SettingsHelpNotifications => Get(nameof(SettingsHelpNotifications));
+    public static string SettingsHelpApplyOnSelection => Get(nameof(SettingsHelpApplyOnSelection));
+    public static string SettingsHelpShowVirtual => Get(nameof(SettingsHelpShowVirtual));
+    public static string SettingsHelpRememberWindow => Get(nameof(SettingsHelpRememberWindow));
 
     public static string FormatLinkSpeedGigabits(string value, IFormatProvider formatProvider) =>
         Format(Get("LinkSpeedGigabitsPerSecond"), formatProvider, value);

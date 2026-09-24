@@ -16,9 +16,11 @@ public sealed class JsonAppSettingsRepositoryTests
 
         try
         {
-            AppSettings result = await CreateRepository(directory).LoadAsync(CancellationToken.None);
+            JsonAppSettingsRepository repository = CreateRepository(directory);
+            AppSettings result = await repository.LoadAsync(CancellationToken.None);
 
             Assert.Equal(AppSettings.Default, result);
+            Assert.False(repository.LastLoadFailed);
         }
         finally
         {
@@ -38,7 +40,9 @@ public sealed class JsonAppSettingsRepositoryTests
             NotificationsEnabled: false,
             WindowPlacement: new AppWindowPlacement(120, 80, 1000, 700, IsMaximized: true),
             LastSelectedAdapterId: "{827A2938-BB14-4D18-B67F-94E9C4F818BA}",
-            CloseToTray: true);
+            CloseToTray: true,
+            ShowVirtualAdapters: false,
+            RememberWindowState: false);
 
         try
         {
@@ -73,9 +77,11 @@ public sealed class JsonAppSettingsRepositoryTests
 
         try
         {
-            AppSettings result = await CreateRepository(directory).LoadAsync(CancellationToken.None);
+            JsonAppSettingsRepository repository = CreateRepository(directory);
+            AppSettings result = await repository.LoadAsync(CancellationToken.None);
 
             Assert.Equal(AppSettings.Default, result);
+            Assert.True(repository.LastLoadFailed);
             Assert.True(File.Exists(invalidPath));
             Assert.Equal(malformedJson, await File.ReadAllTextAsync(invalidPath));
         }
@@ -89,6 +95,28 @@ public sealed class JsonAppSettingsRepositoryTests
     public void Default_WhenRead_LeavesApplyProfileOnSelectionDisabled()
     {
         Assert.False(AppSettings.Default.ApplyProfileOnSelection);
+    }
+
+    [Fact]
+    public async Task LoadAsync_WhenSettingsPathCannotBeOpened_SetsLoadFailure()
+    {
+        string directory = CreateTestDirectory();
+        string settingsPath = Path.Combine(directory, "settings.json");
+        Directory.CreateDirectory(settingsPath);
+
+        try
+        {
+            JsonAppSettingsRepository repository = CreateRepository(directory);
+
+            AppSettings result = await repository.LoadAsync(CancellationToken.None);
+
+            Assert.Equal(AppSettings.Default, result);
+            Assert.True(repository.LastLoadFailed);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     [Fact]
@@ -153,6 +181,30 @@ public sealed class JsonAppSettingsRepositoryTests
             Assert.Null(result.WindowPlacement.IsMaximized);
             Assert.Null(result.LastSelectedAdapterId);
             Assert.Null(result.CloseToTray);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task LoadAsync_WhenSchemaIsOld_ReturnsCurrentDefaults()
+    {
+        string directory = CreateTestDirectory();
+        string settingsPath = Path.Combine(directory, "settings.json");
+        await File.WriteAllTextAsync(settingsPath, """
+            {
+              "schemaVersion": 0,
+              "showVirtualAdapters": false
+            }
+            """);
+
+        try
+        {
+            AppSettings result = await CreateRepository(directory).LoadAsync(CancellationToken.None);
+
+            Assert.Equal(AppSettings.Default, result);
         }
         finally
         {

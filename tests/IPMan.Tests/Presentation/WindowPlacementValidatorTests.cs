@@ -25,7 +25,7 @@ public sealed class WindowPlacementValidatorTests
     }
 
     [Fact]
-    public void Validate_WhenPlacementIsPartlyOutsideMonitor_CentersOnPrimaryWorkArea()
+    public void Validate_WhenPlacementIsPartlyOutsideMonitor_UsesDefaultSizeOnPrimaryWorkArea()
     {
         AppWindowPlacement result = WindowPlacementValidator.Validate(
             new AppWindowPlacement(1500, 100, 900, 600, IsMaximized: false),
@@ -36,14 +36,14 @@ public sealed class WindowPlacementValidatorTests
             1100,
             700);
 
-        Assert.Equal(510, result.Left);
-        Assert.Equal(240, result.Top);
-        Assert.Equal(900, result.Width);
-        Assert.Equal(600, result.Height);
+        Assert.Equal(410, result.Left);
+        Assert.Equal(190, result.Top);
+        Assert.Equal(1100, result.Width);
+        Assert.Equal(700, result.Height);
     }
 
     [Fact]
-    public void Validate_WhenSavedMonitorIsUnavailable_CentersOnPrimaryWorkArea()
+    public void Validate_WhenSavedMonitorIsUnavailable_UsesDefaultSizeOnPrimaryWorkArea()
     {
         AppWindowPlacement result = WindowPlacementValidator.Validate(
             new AppWindowPlacement(-1500, 20, 800, 600, IsMaximized: false),
@@ -54,8 +54,10 @@ public sealed class WindowPlacementValidatorTests
             1100,
             700);
 
-        Assert.Equal(560, result.Left);
-        Assert.Equal(240, result.Top);
+        Assert.Equal(410, result.Left);
+        Assert.Equal(190, result.Top);
+        Assert.Equal(1100, result.Width);
+        Assert.Equal(700, result.Height);
     }
 
     [Fact]
