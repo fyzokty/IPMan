@@ -1,6 +1,6 @@
 # 07 — Kritik hata günlüğü ve çökme işareti
 
-- **Durum:** yapılacak
+- **Durum:** tamamlandı
 - **Bağımlılık:** yok
 - **Gereksinimler:** PR-026, PR-027 · AC-022
 
@@ -16,8 +16,8 @@ açılışta bildirmek.
 - Oturum işareti: temiz kapanışta silinir, sonraki açılışta varsa kısa bilgi gösterilir
 
 ## Bitti sayılır
-- [ ] Yakalanmamış istisna günlüğe düşüyor
-- [ ] Zorla kapatılan uygulama bir sonraki açılışta bunu bildiriyor
+- [x] Yakalanmamış istisna günlüğe düşüyor
+- [x] Zorla kapatılan uygulama bir sonraki açılışta bunu bildiriyor
 
 ## Sorular
 
