@@ -1,12 +1,14 @@
 using System.Windows;
 using System.Windows.Threading;
 using IPMan.App.Presentation;
+using IPMan.App.Services;
 using IPMan.App.ViewModels;
 using IPMan.App.Views;
 using IPMan.Application.Common;
 using IPMan.Application.Networking;
 using IPMan.Application.Profiles;
 using IPMan.Application.Settings;
+using IPMan.Domain.Settings;
 using IPMan.Infrastructure.Common;
 using IPMan.Infrastructure.Networking;
 using IPMan.Infrastructure.Profiles;
@@ -72,6 +74,9 @@ public partial class App : System.Windows.Application
             });
 
         ShutdownMode = ShutdownMode.OnLastWindowClose;
+        IAppSettingsRepository settingsRepository = _serviceProvider.GetRequiredService<IAppSettingsRepository>();
+        AppTheme theme = settingsRepository.LoadAsync(CancellationToken.None).GetAwaiter().GetResult().Theme;
+        _serviceProvider.GetRequiredService<WindowsThemeService>().Apply(theme);
         MainWindow window = _serviceProvider.GetRequiredService<MainWindow>();
         MainWindow = window;
         SessionEnding += OnSessionEnding;
@@ -169,6 +174,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IUiDispatcher>(new WpfUiDispatcher(uiDispatcher));
         services.AddSingleton<IClipboardService, WpfClipboardService>();
         services.AddSingleton<IApplicationVersionProvider, AssemblyApplicationVersionProvider>();
+        services.AddSingleton<WindowsThemeService>();
 
         services.AddSingleton<IUserConfirmationService, WpfUserConfirmationService>();
         services.AddSingleton<IUserTextInputService, WpfUserTextInputService>();

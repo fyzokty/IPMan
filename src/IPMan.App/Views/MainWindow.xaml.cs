@@ -3,6 +3,7 @@ using System.Windows.Controls;
 using Forms = System.Windows.Forms;
 using IPMan.App.Presentation;
 using IPMan.App.Resources;
+using IPMan.App.Services;
 using IPMan.App.ViewModels;
 using IPMan.Application.Settings;
 using IPMan.Domain.Settings;
@@ -20,6 +21,7 @@ public partial class MainWindow : Window
     private readonly IUserConfirmationService _confirmationService;
     private readonly TrayIconManager _trayIconManager;
     private readonly SettingsViewModel _settingsViewModel;
+    private readonly WindowsThemeService _themeService;
     private AppSettings _settings;
     private bool _isHidingToTray;
     private bool _isExiting;
@@ -31,19 +33,22 @@ public partial class MainWindow : Window
         IAppSettingsRepository settingsRepository,
         IUserConfirmationService confirmationService,
         TrayIconManager trayIconManager,
-        SettingsViewModel settingsViewModel)
+        SettingsViewModel settingsViewModel,
+        WindowsThemeService themeService)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(settingsRepository);
         ArgumentNullException.ThrowIfNull(confirmationService);
         ArgumentNullException.ThrowIfNull(trayIconManager);
         ArgumentNullException.ThrowIfNull(settingsViewModel);
+        ArgumentNullException.ThrowIfNull(themeService);
 
         _viewModel = viewModel;
         _settingsRepository = settingsRepository;
         _confirmationService = confirmationService;
         _trayIconManager = trayIconManager;
         _settingsViewModel = settingsViewModel;
+        _themeService = themeService;
         _settings = _settingsRepository.LoadAsync(CancellationToken.None).GetAwaiter().GetResult();
         _viewModel.SetLastSelectedAdapterId(_settings.LastSelectedAdapterId);
         _viewModel.SetShowVirtualAdapters(_settings.ShowVirtualAdapters);
@@ -53,6 +58,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         DataContext = viewModel;
         SourceInitialized += OnSourceInitialized;
+        _themeService.AttachWindow(this);
         Closing += OnClosing;
         StateChanged += OnStateChanged;
         _trayIconManager.OpenRequested += OnTrayOpenRequested;
@@ -111,6 +117,7 @@ public partial class MainWindow : Window
         }
 
         _settingsWindow = new SettingsWindow(_settingsViewModel) { Owner = this };
+        _themeService.AttachWindow(_settingsWindow);
         _settingsWindow.Closed += OnSettingsWindowClosed;
         _settingsWindow.ShowDialog();
     }

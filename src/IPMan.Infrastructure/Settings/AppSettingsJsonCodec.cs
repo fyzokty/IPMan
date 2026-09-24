@@ -20,7 +20,7 @@ internal sealed class AppSettingsJsonCodec
             .ConfigureAwait(false);
     }
 
-    public async Task<AppSettings> DeserializeAsync(
+    public async Task<AppSettingsReadResult> DeserializeAsync(
         Stream source,
         CancellationToken cancellationToken)
     {
@@ -33,9 +33,10 @@ internal sealed class AppSettingsJsonCodec
         }
 
         AppSettings defaults = AppSettings.Default;
+        (AppTheme theme, bool themeWasCorrected) = ReadTheme(document.Theme, defaults.Theme);
         AppSettings settings = new(
             document.SchemaVersion.Value,
-            document.Theme ?? defaults.Theme,
+            theme,
             document.ApplyProfileOnSelection ?? defaults.ApplyProfileOnSelection,
             document.NotificationsEnabled ?? defaults.NotificationsEnabled,
             ReadWindowPlacement(document.WindowPlacement),
@@ -44,7 +45,7 @@ internal sealed class AppSettingsJsonCodec
             document.ShowVirtualAdapters ?? defaults.ShowVirtualAdapters,
             document.RememberWindowState ?? defaults.RememberWindowState);
         Validate(settings);
-        return settings;
+        return new AppSettingsReadResult(settings, themeWasCorrected);
     }
 
     private static void Validate(AppSettings settings)
@@ -54,6 +55,33 @@ internal sealed class AppSettingsJsonCodec
         {
             throw new JsonException("Settings schema version or theme is not supported.");
         }
+    }
+
+    private static (AppTheme Theme, bool WasCorrected) ReadTheme(
+        JsonElement? element,
+        AppTheme defaultTheme)
+    {
+        if (element is null || element.Value.ValueKind is JsonValueKind.Null or JsonValueKind.Undefined)
+        {
+            return (defaultTheme, false);
+        }
+
+        JsonElement value = element.Value;
+        if (value.ValueKind == JsonValueKind.String &&
+            Enum.TryParse(value.GetString(), ignoreCase: true, out AppTheme stringTheme) &&
+            Enum.IsDefined(stringTheme))
+        {
+            return (stringTheme, false);
+        }
+
+        if (value.ValueKind == JsonValueKind.Number &&
+            value.TryGetInt32(out int numericTheme) &&
+            Enum.IsDefined((AppTheme)numericTheme))
+        {
+            return ((AppTheme)numericTheme, false);
+        }
+
+        return (AppTheme.System, true);
     }
 
     private static AppWindowPlacement? ReadWindowPlacement(JsonElement? element)
@@ -113,7 +141,7 @@ internal sealed class AppSettingsJsonCodec
 
     private sealed record SettingsDocument(
         int? SchemaVersion,
-        AppTheme? Theme,
+        JsonElement? Theme,
         bool? ApplyProfileOnSelection,
         bool? NotificationsEnabled,
         JsonElement? WindowPlacement,
@@ -122,3 +150,5 @@ internal sealed class AppSettingsJsonCodec
         bool? ShowVirtualAdapters,
         bool? RememberWindowState);
 }
+
+internal sealed record AppSettingsReadResult(AppSettings Settings, bool ThemeWasCorrected);

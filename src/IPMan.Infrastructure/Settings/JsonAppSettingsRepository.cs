@@ -32,16 +32,32 @@ public sealed class JsonAppSettingsRepository : IAppSettingsRepository
         cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            await using FileStream stream = new(
+            AppSettingsReadResult readResult;
+            await using (FileStream stream = new(
                 _settingsFilePath,
                 FileMode.Open,
                 FileAccess.Read,
                 FileShare.ReadWrite | FileShare.Delete,
                 bufferSize: 4096,
-                FileOptions.Asynchronous | FileOptions.SequentialScan);
-            AppSettings settings = await _codec.DeserializeAsync(stream, cancellationToken).ConfigureAwait(false);
-            LastLoadFailed = false;
-            return settings;
+                FileOptions.Asynchronous | FileOptions.SequentialScan))
+            {
+                readResult = await _codec
+                    .DeserializeAsync(stream, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            if (readResult.ThemeWasCorrected)
+            {
+                SettingsSaveResult correctionResult = await SaveAsync(readResult.Settings, cancellationToken)
+                    .ConfigureAwait(false);
+                LastLoadFailed = !correctionResult.IsSuccess;
+            }
+            else
+            {
+                LastLoadFailed = false;
+            }
+
+            return readResult.Settings;
         }
         catch (FileNotFoundException)
         {

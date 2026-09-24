@@ -8,7 +8,7 @@
         Height="700"
         MinWidth="900"
         MinHeight="600"
-        Background="{StaticResource WindowBackgroundBrush}"
+        Background="{DynamicResource WindowBackgroundBrush}"
         WindowStartupLocation="Manual">
 
     <Window.Resources>
@@ -22,10 +22,10 @@
                            VerticalAlignment="Center">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
-                            <Setter Property="Foreground" Value="{StaticResource DisconnectedBrush}" />
+                            <Setter Property="Foreground" Value="{DynamicResource DisconnectedBrush}" />
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsConnected}" Value="True">
-                                    <Setter Property="Foreground" Value="{StaticResource ConnectedBrush}" />
+                                    <Setter Property="Foreground" Value="{DynamicResource ConnectedBrush}" />
                                 </DataTrigger>
                             </Style.Triggers>
                         </Style>
@@ -39,19 +39,19 @@
         </DataTemplate>
 
         <Style x:Key="DraftIpv4DifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
-            <Style.Triggers><DataTrigger Binding="{Binding IsIpv4AddressDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{StaticResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
+            <Style.Triggers><DataTrigger Binding="{Binding IsIpv4AddressDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
         </Style>
         <Style x:Key="DraftSubnetDifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
-            <Style.Triggers><DataTrigger Binding="{Binding IsSubnetMaskDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{StaticResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
+            <Style.Triggers><DataTrigger Binding="{Binding IsSubnetMaskDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
         </Style>
         <Style x:Key="DraftGatewayDifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
-            <Style.Triggers><DataTrigger Binding="{Binding IsGatewayDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{StaticResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
+            <Style.Triggers><DataTrigger Binding="{Binding IsGatewayDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
         </Style>
         <Style x:Key="DraftPrimaryDnsDifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
-            <Style.Triggers><DataTrigger Binding="{Binding IsPrimaryDnsDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{StaticResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
+            <Style.Triggers><DataTrigger Binding="{Binding IsPrimaryDnsDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
         </Style>
         <Style x:Key="DraftSecondaryDnsDifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
-            <Style.Triggers><DataTrigger Binding="{Binding IsSecondaryDnsDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{StaticResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
+            <Style.Triggers><DataTrigger Binding="{Binding IsSecondaryDnsDifferentFromWindows}" Value="True"><Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}" /></DataTrigger></Style.Triggers>
         </Style>
 
         <!-- Tab content: current configuration on the left, editable draft on the right. -->
@@ -196,12 +196,12 @@
                                        Text="{x:Static res:Strings.DraftConfigurationHeader}" />
 
                             <TextBlock Margin="0,0,0,14"
-                                       Foreground="{StaticResource SecondaryTextBrush}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
                                        Text="{x:Static res:Strings.DraftConfigurationHint}"
                                        TextWrapping="Wrap" />
 
                             <TextBlock Margin="0,0,0,10"
-                                       Foreground="{StaticResource SecondaryTextBrush}"
+                                       Foreground="{DynamicResource SecondaryTextBrush}"
                                        Text="{Binding ProfileGuidance}"
                                        TextWrapping="Wrap" />
 
@@ -370,37 +370,37 @@
                                                          Converter={StaticResource BooleanToVisibility}}">
                                 <Border.Style>
                                     <Style TargetType="Border">
-                                        <Setter Property="Background" Value="{StaticResource SurfaceBrush}" />
-                                        <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}" />
+                                        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+                                        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding DataContext.Actions.StatusSeverity,
                                                                          RelativeSource={RelativeSource AncestorType=Window}}"
                                                          Value="{x:Static vm:ApplyStatusSeverity.Success}">
-                                                <Setter Property="Background" Value="{StaticResource SuccessBackgroundBrush}" />
-                                                <Setter Property="BorderBrush" Value="{StaticResource SuccessBorderBrush}" />
+                                                <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource SuccessBorderBrush}" />
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding DataContext.Actions.StatusSeverity,
                                                                          RelativeSource={RelativeSource AncestorType=Window}}"
                                                          Value="{x:Static vm:ApplyStatusSeverity.Information}">
-                                                <Setter Property="Background" Value="{StaticResource InfoBackgroundBrush}" />
-                                                <Setter Property="BorderBrush" Value="{StaticResource InfoBorderBrush}" />
+                                                <Setter Property="Background" Value="{DynamicResource InfoBackgroundBrush}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource InfoBorderBrush}" />
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding DataContext.Actions.StatusSeverity,
                                                                          RelativeSource={RelativeSource AncestorType=Window}}"
                                                          Value="{x:Static vm:ApplyStatusSeverity.Warning}">
-                                                <Setter Property="Background" Value="{StaticResource WarningBackgroundBrush}" />
-                                                <Setter Property="BorderBrush" Value="{StaticResource WarningBorderBrush}" />
+                                                <Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource WarningBorderBrush}" />
                                             </DataTrigger>
                                             <DataTrigger Binding="{Binding DataContext.Actions.StatusSeverity,
                                                                          RelativeSource={RelativeSource AncestorType=Window}}"
                                                          Value="{x:Static vm:ApplyStatusSeverity.Error}">
-                                                <Setter Property="Background" Value="{StaticResource ErrorBackgroundBrush}" />
-                                                <Setter Property="BorderBrush" Value="{StaticResource ErrorBorderBrush}" />
+                                                <Setter Property="Background" Value="{DynamicResource ErrorBackgroundBrush}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}" />
                                             </DataTrigger>
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <TextBlock Foreground="{StaticResource PrimaryTextBrush}"
+                                <TextBlock Foreground="{DynamicResource PrimaryTextBrush}"
                                            Text="{Binding DataContext.Actions.StatusMessage,
                                                           RelativeSource={RelativeSource AncestorType=Window}}"
                                            TextWrapping="Wrap" />
@@ -416,8 +416,8 @@
 
         <!-- Header -->
         <Border DockPanel.Dock="Top"
-                Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource BorderBrush}"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="20,12">
             <Grid>
@@ -425,9 +425,9 @@
                 <StackPanel>
                 <TextBlock FontSize="20"
                            FontWeight="SemiBold"
-                           Foreground="{StaticResource PrimaryTextBrush}"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
                            Text="{Binding ApplicationName}" />
-                <TextBlock Foreground="{StaticResource SecondaryTextBrush}"
+                <TextBlock Foreground="{DynamicResource SecondaryTextBrush}"
                            Text="{Binding ApplicationTagline}" />
                 </StackPanel>
                 <Button Grid.Column="1" Content="⚙" FontSize="18" Padding="8,2"
@@ -437,8 +437,8 @@
 
         <!-- Status bar -->
         <Border DockPanel.Dock="Bottom"
-                Background="{StaticResource SurfaceBrush}"
-                BorderBrush="{StaticResource BorderBrush}"
+                Background="{DynamicResource SurfaceBrush}"
+                BorderBrush="{DynamicResource BorderBrush}"
                 BorderThickness="0,1,0,0"
                 Padding="20,6">
             <Grid DataContext="{Binding StatusBar}">
@@ -513,7 +513,7 @@
                         <Button Command="{Binding SaveCommand}"
                                 Content="{x:Static res:Strings.CommandSaveProfile}" />
                         <TextBlock Margin="0,6,0,0"
-                                   Foreground="{StaticResource SecondaryTextBrush}"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
                                    Text="{Binding StatusMessage}"
                                    TextWrapping="Wrap"
                                    Visibility="{Binding HasStatusMessage, Converter={StaticResource BooleanToVisibility}}" />
@@ -587,19 +587,19 @@
                     Grid.Column="2"
                     Margin="0,0,0,12"
                     Padding="12,8"
-                    Background="{StaticResource WarningBackgroundBrush}"
-                    BorderBrush="{StaticResource WarningBorderBrush}"
+                    Background="{DynamicResource WarningBackgroundBrush}"
+                    BorderBrush="{DynamicResource WarningBorderBrush}"
                     BorderThickness="1"
                     CornerRadius="4"
                     Visibility="{Binding HasRefreshError, Converter={StaticResource BooleanToVisibility}}">
-                <TextBlock Foreground="{StaticResource PrimaryTextBrush}"
+                <TextBlock Foreground="{DynamicResource PrimaryTextBrush}"
                            Text="{Binding RefreshErrorText}"
                            TextWrapping="Wrap" />
             </Border>
 
             <Border Grid.Row="0" Grid.Column="2" Margin="0,52,0,0" Padding="8,4"
-                    Background="#FDECEC" Visibility="{Binding SettingsWarningVisible, Converter={StaticResource BooleanToVisibility}}">
-                <TextBlock Foreground="#B00020" Text="{Binding SettingsWarningText}" TextWrapping="Wrap" />
+                Background="{DynamicResource ErrorBackgroundBrush}" BorderBrush="{DynamicResource ErrorBorderBrush}" BorderThickness="1" Visibility="{Binding SettingsWarningVisible, Converter={StaticResource BooleanToVisibility}}">
+                <TextBlock Foreground="{DynamicResource ErrorTextBrush}" Text="{Binding SettingsWarningText}" TextWrapping="Wrap" />
             </Border>
 
             <TabControl Grid.Row="1"
@@ -623,7 +623,7 @@
                              IsIndeterminate="True" />
                 <TextBlock Margin="0,12,0,0"
                            HorizontalAlignment="Center"
-                           Foreground="{StaticResource SecondaryTextBrush}"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
                            Text="{x:Static res:Strings.LoadingAdapters}" />
             </StackPanel>
 
@@ -637,12 +637,12 @@
                 <TextBlock HorizontalAlignment="Center"
                            FontSize="15"
                            FontWeight="SemiBold"
-                           Foreground="{StaticResource PrimaryTextBrush}"
+                           Foreground="{DynamicResource PrimaryTextBrush}"
                            Text="{x:Static res:Strings.EmptyStateTitle}"
                            TextAlignment="Center"
                            TextWrapping="Wrap" />
                 <TextBlock Margin="0,8,0,0"
-                           Foreground="{StaticResource SecondaryTextBrush}"
+                           Foreground="{DynamicResource SecondaryTextBrush}"
                            Text="{x:Static res:Strings.EmptyStateDescription}"
                            TextAlignment="Center"
                            TextWrapping="Wrap" />

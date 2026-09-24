@@ -2,6 +2,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using IPMan.App.Presentation;
 using IPMan.App.Resources;
+using IPMan.App.Services;
 using IPMan.Application.Settings;
 using IPMan.Domain.Settings;
 
@@ -12,6 +13,7 @@ public sealed partial class SettingsViewModel : ObservableObject
 {
     private readonly IAppSettingsRepository _settingsRepository;
     private readonly IUserConfirmationService _confirmationService;
+    private readonly WindowsThemeService _themeService;
     private readonly string _persistenceWarningText = Strings.SettingsPersistenceWarning;
     private AppSettings _settings = AppSettings.Default;
     private bool _isLoading;
@@ -43,17 +45,20 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// <summary>Creates the settings editor from the persisted user preferences.</summary>
     public SettingsViewModel(
         IAppSettingsRepository settingsRepository,
-        IUserConfirmationService confirmationService)
+        IUserConfirmationService confirmationService,
+        WindowsThemeService themeService)
     {
         ArgumentNullException.ThrowIfNull(settingsRepository);
         ArgumentNullException.ThrowIfNull(confirmationService);
+        ArgumentNullException.ThrowIfNull(themeService);
 
         _settingsRepository = settingsRepository;
         _confirmationService = confirmationService;
+        _themeService = themeService;
         AppSettings settings = _settingsRepository.LoadAsync(CancellationToken.None).GetAwaiter().GetResult();
         _settings = settings;
         _isLoading = true;
-        Theme = AppTheme.Light;
+        Theme = settings.Theme;
         CloseToTray = settings.CloseToTray;
         NotificationsEnabled = settings.NotificationsEnabled;
         ApplyProfileOnSelection = settings.ApplyProfileOnSelection;
@@ -66,7 +71,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// <summary>Gets localized text for the persistence warning.</summary>
     public string PersistenceWarningText => _persistenceWarningText;
 
-    /// <summary>Gets or sets whether the currently supported light theme is selected.</summary>
+    /// <summary>Gets or sets whether the light theme is selected.</summary>
     public bool IsLightTheme
     {
         get => Theme == AppTheme.Light;
@@ -79,9 +84,37 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
+    /// <summary>Gets or sets whether the dark theme is selected.</summary>
+    public bool IsDarkTheme
+    {
+        get => Theme == AppTheme.Dark;
+        set
+        {
+            if (value)
+            {
+                Theme = AppTheme.Dark;
+            }
+        }
+    }
+
+    /// <summary>Gets or sets whether the Windows theme is followed.</summary>
+    public bool IsSystemTheme
+    {
+        get => Theme == AppTheme.System;
+        set
+        {
+            if (value)
+            {
+                Theme = AppTheme.System;
+            }
+        }
+    }
+
     partial void OnThemeChanged(AppTheme value)
     {
         OnPropertyChanged(nameof(IsLightTheme));
+        OnPropertyChanged(nameof(IsDarkTheme));
+        OnPropertyChanged(nameof(IsSystemTheme));
         SaveIfReady();
     }
     partial void OnCloseToTrayChanged(bool? value) => SaveIfReady();
@@ -126,7 +159,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         AppSettings settings = _settings with
         {
             SchemaVersion = AppSettings.CurrentSchemaVersion,
-            Theme = AppTheme.Light,
+            Theme = Theme,
             ApplyProfileOnSelection = ApplyProfileOnSelection,
             NotificationsEnabled = NotificationsEnabled,
             CloseToTray = CloseToTray,
@@ -134,6 +167,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             RememberWindowState = RememberWindowState,
             WindowPlacement = RememberWindowState ? _settings.WindowPlacement : null
         };
+        _themeService.Apply(Theme);
         SettingsSaveResult result = _settingsRepository
             .SaveAsync(settings, CancellationToken.None)
             .GetAwaiter()
