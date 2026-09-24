@@ -1,6 +1,6 @@
 # 06 — Bildirimler
 
-- **Durum:** yapılacak
+- **Durum:** tamamlandı
 - **Bağımlılık:** 03
 - **Gereksinimler:** PR-025
 
@@ -14,8 +14,8 @@
 - Özellikle pencere tepsideyken anlamlı
 
 ## Bitti sayılır
-- [ ] Bildirimler çıkıyor ve ayarla kapatılabiliyor
-- [ ] Bildirim kapalıyken de sonuç uygulama içinde görülebiliyor
+- [x] Bildirimler çıkıyor ve ayarla kapatılabiliyor
+- [x] Bildirim kapalıyken de sonuç uygulama içinde görülebiliyor
 
 ## Sorular
 

@@ -1,3 +1,5 @@
+using System.Text.Json.Serialization;
+
 namespace IPMan.Domain.Settings;
 
 /// <summary>Persistent application preferences supported by the current release.</summary>
@@ -5,21 +7,24 @@ public sealed record AppSettings(
     int SchemaVersion,
     AppTheme Theme,
     bool ApplyProfileOnSelection,
-    bool NotificationsEnabled,
+    [property: JsonIgnore] bool NotificationsEnabled,
     AppWindowPlacement? WindowPlacement = null,
     string? LastSelectedAdapterId = null,
     bool? CloseToTray = null,
     bool ShowVirtualAdapters = true,
     bool RememberWindowState = true,
-    bool SkipDhcpQuickActionConfirmation = false)
+    bool SkipDhcpQuickActionConfirmation = false,
+    NotificationMode NotificationMode = NotificationMode.Disabled,
+    bool NotificationPromptShown = false)
 {
     /// <summary>The settings schema version understood by this release.</summary>
     public const int CurrentSchemaVersion = 1;
 
     /// <summary>Gets the safe preferences used when no valid settings document exists.</summary>
     public static AppSettings Default { get; } =
-        new(CurrentSchemaVersion, AppTheme.System, ApplyProfileOnSelection: false, NotificationsEnabled: true,
-            ShowVirtualAdapters: true, RememberWindowState: true);
+        new(CurrentSchemaVersion, AppTheme.System, ApplyProfileOnSelection: false, NotificationsEnabled: false,
+            ShowVirtualAdapters: true, RememberWindowState: true,
+            NotificationMode: NotificationMode.Disabled, NotificationPromptShown: false);
 }
 
 /// <summary>Persisted WPF device-independent window placement values.</summary>

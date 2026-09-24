@@ -44,7 +44,9 @@ internal sealed class AppSettingsJsonCodec
             ReadBoolean(document.CloseToTray),
             document.ShowVirtualAdapters ?? defaults.ShowVirtualAdapters,
             document.RememberWindowState ?? defaults.RememberWindowState,
-            document.SkipDhcpQuickActionConfirmation ?? defaults.SkipDhcpQuickActionConfirmation);
+            document.SkipDhcpQuickActionConfirmation ?? defaults.SkipDhcpQuickActionConfirmation,
+            ReadNotificationMode(document.NotificationMode, document.NotificationsEnabled),
+            document.NotificationPromptShown ?? defaults.NotificationPromptShown);
         Validate(settings);
         return new AppSettingsReadResult(settings, themeWasCorrected);
     }
@@ -83,6 +85,33 @@ internal sealed class AppSettingsJsonCodec
         }
 
         return (AppTheme.System, true);
+    }
+
+    private static NotificationMode ReadNotificationMode(JsonElement? element, bool? legacyEnabled)
+    {
+        if (element is { } value)
+        {
+            if (value.ValueKind == JsonValueKind.String &&
+                Enum.TryParse(value.GetString(), ignoreCase: true, out NotificationMode mode) &&
+                Enum.IsDefined(mode))
+            {
+                return mode;
+            }
+
+            if (value.ValueKind == JsonValueKind.Number &&
+                value.TryGetInt32(out int numericMode) &&
+                Enum.IsDefined((NotificationMode)numericMode))
+            {
+                return (NotificationMode)numericMode;
+            }
+
+            if (value.ValueKind is not JsonValueKind.Null and not JsonValueKind.Undefined)
+            {
+                return NotificationMode.Disabled;
+            }
+        }
+
+        return legacyEnabled == true ? NotificationMode.WhenUnfocused : NotificationMode.Disabled;
     }
 
     private static AppWindowPlacement? ReadWindowPlacement(JsonElement? element)
@@ -150,7 +179,9 @@ internal sealed class AppSettingsJsonCodec
         JsonElement? CloseToTray,
         bool? ShowVirtualAdapters,
         bool? RememberWindowState,
-        bool? SkipDhcpQuickActionConfirmation);
+        bool? SkipDhcpQuickActionConfirmation,
+        JsonElement? NotificationMode,
+        bool? NotificationPromptShown);
 }
 
 internal sealed record AppSettingsReadResult(AppSettings Settings, bool ThemeWasCorrected);

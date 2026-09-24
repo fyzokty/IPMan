@@ -42,7 +42,9 @@ public sealed class JsonAppSettingsRepositoryTests
             LastSelectedAdapterId: "{827A2938-BB14-4D18-B67F-94E9C4F818BA}",
             CloseToTray: true,
             ShowVirtualAdapters: false,
-            RememberWindowState: false);
+            RememberWindowState: false,
+            NotificationMode: NotificationMode.Always,
+            NotificationPromptShown: true);
 
         try
         {
@@ -59,6 +61,9 @@ public sealed class JsonAppSettingsRepositoryTests
             Assert.Equal(JsonValueKind.String, theme.ValueKind);
             Assert.Equal("Dark", theme.GetString());
             Assert.False(document.RootElement.TryGetProperty("Theme", out _));
+            Assert.Equal("Always", document.RootElement.GetProperty("notificationMode").GetString());
+            Assert.True(document.RootElement.GetProperty("notificationPromptShown").GetBoolean());
+            Assert.False(document.RootElement.TryGetProperty("notificationsEnabled", out _));
         }
         finally
         {
@@ -101,6 +106,64 @@ public sealed class JsonAppSettingsRepositoryTests
     public void Default_WhenRead_UsesSystemTheme()
     {
         Assert.Equal(AppTheme.System, AppSettings.Default.Theme);
+    }
+
+    [Fact]
+    public void Default_WhenRead_DisablesNotificationsUntilTheUserChooses()
+    {
+        Assert.Equal(NotificationMode.Disabled, AppSettings.Default.NotificationMode);
+        Assert.False(AppSettings.Default.NotificationPromptShown);
+    }
+
+    [Fact]
+    public async Task LoadAsync_WhenLegacyNotificationFlagIsPresent_MapsEnabledFlagToWhenUnfocused()
+    {
+        string directory = CreateTestDirectory();
+        string settingsPath = Path.Combine(directory, "settings.json");
+        await File.WriteAllTextAsync(settingsPath, """
+            {
+              "schemaVersion": 1,
+              "theme": "Dark",
+              "notificationsEnabled": true
+            }
+            """);
+
+        try
+        {
+            AppSettings result = await CreateRepository(directory).LoadAsync(CancellationToken.None);
+
+            Assert.Equal(AppTheme.Dark, result.Theme);
+            Assert.Equal(NotificationMode.WhenUnfocused, result.NotificationMode);
+            Assert.False(result.NotificationPromptShown);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task LoadAsync_WhenNotificationModeIsInvalid_UsesDisabled()
+    {
+        string directory = CreateTestDirectory();
+        string settingsPath = Path.Combine(directory, "settings.json");
+        await File.WriteAllTextAsync(settingsPath, """
+            {
+              "schemaVersion": 1,
+              "notificationMode": "Unknown"
+            }
+            """);
+
+        try
+        {
+            AppSettings result = await CreateRepository(directory).LoadAsync(CancellationToken.None);
+
+            Assert.Equal(NotificationMode.Disabled, result.NotificationMode);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     [Theory]

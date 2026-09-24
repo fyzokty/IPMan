@@ -443,6 +443,9 @@
   <data name="SettingsCloseTray" xml:space="preserve"><value>Tepsiye küçült</value></data>
   <data name="SettingsCloseExit" xml:space="preserve"><value>Uygulamadan çık</value></data>
   <data name="SettingsNotifications" xml:space="preserve"><value>Windows ve tepsi bildirimlerini göster</value></data>
+  <data name="SettingsNotificationsDisabled" xml:space="preserve"><value>Kapalı</value></data>
+  <data name="SettingsNotificationsWhenUnfocused" xml:space="preserve"><value>Yalnızca pencere odakta değilken</value></data>
+  <data name="SettingsNotificationsAlways" xml:space="preserve"><value>Her zaman</value></data>
   <data name="SettingsApplyOnSelection" xml:space="preserve"><value>Profil seçilince hemen uygula</value></data>
   <data name="SettingsShowVirtual" xml:space="preserve"><value>Sanal bağdaştırıcıları göster</value></data>
   <data name="SettingsRememberWindow" xml:space="preserve"><value>Son pencere durumunu hatırla</value></data>
@@ -452,8 +455,20 @@
   <data name="SettingsPersistenceWarning" xml:space="preserve"><value>settings.json yazılamıyor, ayarlarınız şu an kaydedilemiyor</value></data>
   <data name="SettingsHelpTheme" xml:space="preserve"><value>Şimdilik yalnızca açık tema kullanılabilir.&#x0A;Varsayılan: Açık</value></data>
   <data name="SettingsHelpClose" xml:space="preserve"><value>Kapatma düğmesi ve Alt+F4 için davranışı belirler.&#x0A;Varsayılan: İlk kapatmada sor</value></data>
-  <data name="SettingsHelpNotifications" xml:space="preserve"><value>Windows ve tepsi bildirimlerini açar. Hatalar her zaman görünür.&#x0A;Varsayılan: Açık</value></data>
+  <data name="SettingsHelpNotifications" xml:space="preserve"><value>Bağdaştırıcı ayarları değiştiğinde Windows bildiriminin ne zaman gösterileceğini belirler.&#x0A;Varsayılan: Kapalı</value></data>
   <data name="SettingsHelpApplyOnSelection" xml:space="preserve"><value>Fareyle yeni profil seçildiğinde normal uygulama akışını başlatır.&#x0A;Varsayılan: Kapalı</value></data>
   <data name="SettingsHelpShowVirtual" xml:space="preserve"><value>Sanal bağdaştırıcı sekmelerini gösterir.&#x0A;Varsayılan: Açık</value></data>
   <data name="SettingsHelpRememberWindow" xml:space="preserve"><value>Pencere konumu ve boyutunu sonraki açılış için saklar.&#x0A;Varsayılan: Açık</value></data>
+  <data name="NotificationSucceeded" xml:space="preserve"><value>Başarılı</value></data>
+  <data name="NotificationFailed" xml:space="preserve"><value>Başarısız</value></data>
+  <data name="NotificationOperationApply" xml:space="preserve"><value>Yapılandırma uygula</value></data>
+  <data name="NotificationOperationDhcp" xml:space="preserve"><value>DHCP'ye al</value></data>
+  <data name="NotificationOperationRestore" xml:space="preserve"><value>Son yapılandırmayı geri yükle</value></data>
+  <data name="NotificationOperationRenewIp" xml:space="preserve"><value>IP yenile</value></data>
+  <data name="OperationNotification" xml:space="preserve"><value>{0}: {1} — {2}</value></data>
+  <data name="NotificationHistory" xml:space="preserve"><value>Bildirim geçmişi</value></data>
+  <data name="NotificationHistoryEmpty" xml:space="preserve"><value>Henüz bağdaştırıcı işlemi sonucu yok.</value></data>
+  <data name="NotificationHistoryClear" xml:space="preserve"><value>Temizle</value></data>
+  <data name="NotificationPromptTitle" xml:space="preserve"><value>Windows bildirimleri</value></data>
+  <data name="NotificationPromptMessage" xml:space="preserve"><value>İşlem sonuçları için Windows bildirimleri gösterilsin mi?</value></data>
 </root>

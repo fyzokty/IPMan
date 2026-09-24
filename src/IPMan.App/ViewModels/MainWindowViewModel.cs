@@ -2,8 +2,10 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using IPMan.App.Presentation;
 using IPMan.App.Resources;
+using IPMan.App.Services;
 using IPMan.Application.Common;
 using IPMan.Application.Networking;
 using IPMan.Domain.Adapters;
@@ -27,6 +29,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly IClipboardService _clipboardService;
     private readonly IClock _clock;
     private readonly IStaticIpv4ConfigurationValidator _validator;
+    private readonly OperationNotificationService? _operationNotificationService;
 
     private DateTimeOffset? _lastSuccessfulRefreshUtc;
     private string? _lastSelectedAdapterId;
@@ -69,6 +72,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             versionProvider,
             actions,
             validator,
+            null,
             null)
     {
     }
@@ -83,7 +87,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         IApplicationVersionProvider versionProvider,
         AdapterActionsViewModel actions,
         IStaticIpv4ConfigurationValidator validator,
-        ProfilePanelViewModel? profilePanel)
+        ProfilePanelViewModel? profilePanel,
+        OperationNotificationService? operationNotificationService = null)
     {
         ArgumentNullException.ThrowIfNull(refreshCoordinator);
         ArgumentNullException.ThrowIfNull(uiDispatcher);
@@ -99,6 +104,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _clipboardService = clipboardService;
         _clock = clock;
         _validator = validator;
+        _operationNotificationService = operationNotificationService;
         ProfilePanel = profilePanel;
 
         Actions = actions;
@@ -139,6 +145,16 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     /// <summary>The fixed profile-management panel shown beside adapter tabs.</summary>
     public ProfilePanelViewModel? ProfilePanel { get; }
 
+    /// <summary>Gets the session-only history of adapter operation notifications.</summary>
+    public ObservableCollection<OperationNotificationService.OperationNotificationRecord> NotificationHistory =>
+        _operationNotificationService?.History ?? _emptyNotificationHistory;
+
+    private static readonly ObservableCollection<OperationNotificationService.OperationNotificationRecord>
+        _emptyNotificationHistory = new();
+
+    [ObservableProperty]
+    private bool _isHistoryOpen;
+
     /// <summary>Shown when discovery has completed and Windows reported no adapters.</summary>
     public bool IsEmptyStateVisible => !IsLoading && Adapters.Count == 0;
 
@@ -170,6 +186,28 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _showVirtualAdapters = showVirtualAdapters;
         _refreshCoordinator.RequestRefresh("SettingsChanged");
     }
+
+    /// <summary>Selects an adapter when a related operating-system notification is clicked.</summary>
+    public void SelectAdapter(string adapterId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(adapterId);
+        if (Guid.TryParse(adapterId, out Guid parsed))
+        {
+            string normalizedAdapterId = parsed.ToString("B");
+            AdapterViewModel? adapter = Adapters.FirstOrDefault(item =>
+                string.Equals(item.Id.Value, normalizedAdapterId, StringComparison.OrdinalIgnoreCase));
+            if (adapter is not null)
+            {
+                SelectedAdapter = adapter;
+            }
+        }
+    }
+
+    [RelayCommand]
+    private void ToggleHistory() => IsHistoryOpen = !IsHistoryOpen;
+
+    [RelayCommand]
+    private void ClearHistory() => _operationNotificationService?.Clear();
 
     /// <summary>Starts observation. Called once by the composition root.</summary>
     public void Initialize()

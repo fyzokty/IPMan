@@ -6,6 +6,7 @@ using IPMan.App.Resources;
 using IPMan.App.Services;
 using IPMan.App.ViewModels;
 using IPMan.Application.Settings;
+using IPMan.Application.Common;
 using IPMan.Domain.Settings;
 
 namespace IPMan.App.Views;
@@ -22,6 +23,8 @@ public partial class MainWindow : Window
     private readonly TrayIconManager _trayIconManager;
     private readonly SettingsViewModel _settingsViewModel;
     private readonly WindowsThemeService _themeService;
+    private readonly OperationNotificationService _operationNotificationService;
+    private readonly IUiDispatcher _uiDispatcher;
     private AppSettings _settings;
     private bool _isHidingToTray;
     private bool _isExiting;
@@ -34,7 +37,9 @@ public partial class MainWindow : Window
         IUserConfirmationService confirmationService,
         TrayIconManager trayIconManager,
         SettingsViewModel settingsViewModel,
-        WindowsThemeService themeService)
+        WindowsThemeService themeService,
+        OperationNotificationService operationNotificationService,
+        IUiDispatcher uiDispatcher)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(settingsRepository);
@@ -42,6 +47,8 @@ public partial class MainWindow : Window
         ArgumentNullException.ThrowIfNull(trayIconManager);
         ArgumentNullException.ThrowIfNull(settingsViewModel);
         ArgumentNullException.ThrowIfNull(themeService);
+        ArgumentNullException.ThrowIfNull(operationNotificationService);
+        ArgumentNullException.ThrowIfNull(uiDispatcher);
 
         _viewModel = viewModel;
         _settingsRepository = settingsRepository;
@@ -49,6 +56,8 @@ public partial class MainWindow : Window
         _trayIconManager = trayIconManager;
         _settingsViewModel = settingsViewModel;
         _themeService = themeService;
+        _operationNotificationService = operationNotificationService;
+        _uiDispatcher = uiDispatcher;
         _settings = _settingsRepository.LoadAsync(CancellationToken.None).GetAwaiter().GetResult();
         _viewModel.SetLastSelectedAdapterId(_settings.LastSelectedAdapterId);
         _viewModel.SetShowVirtualAdapters(_settings.ShowVirtualAdapters);
@@ -61,10 +70,12 @@ public partial class MainWindow : Window
         _themeService.AttachWindow(this);
         Closing += OnClosing;
         StateChanged += OnStateChanged;
+        ContentRendered += OnContentRendered;
         _trayIconManager.OpenRequested += OnTrayOpenRequested;
         _trayIconManager.ExitRequested += OnTrayExitRequested;
-        _viewModel.Actions.PropertyChanged += OnActionsPropertyChanged;
+        _trayIconManager.NotificationClicked += OnNotificationClicked;
         _settingsViewModel.SettingsChanged += OnSettingsChanged;
+        _operationNotificationService.SetWindowStateProvider(GetNotificationWindowState);
     }
 
     /// <summary>Restores the window, makes it foreground and gives it keyboard focus.</summary>
@@ -220,39 +231,26 @@ public partial class MainWindow : Window
         Close();
     }
 
-    private void OnActionsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    private void OnContentRendered(object? sender, EventArgs e)
     {
-        if (e.PropertyName != nameof(AdapterActionsViewModel.StatusSeverity))
+        ContentRendered -= OnContentRendered;
+        if (_settings.NotificationPromptShown)
         {
             return;
         }
 
-        if (_viewModel.Actions.StatusSeverity == ApplyStatusSeverity.Error)
-        {
-            if (!IsVisible)
-            {
-                RestoreAndActivate();
-            }
-
-            if (!string.IsNullOrWhiteSpace(_viewModel.Actions.StatusMessage))
-            {
-                MessageBox.Show(
-                    _viewModel.Actions.StatusMessage,
-                    Strings.ApplicationName,
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error);
-            }
-            return;
-        }
-
-        if (_viewModel.Actions.StatusSeverity == ApplyStatusSeverity.Information &&
-            !IsVisible &&
-            _settings.NotificationsEnabled &&
-            !string.IsNullOrWhiteSpace(_viewModel.Actions.StatusMessage))
-        {
-            _trayIconManager.ShowBalloon(_viewModel.Actions.StatusMessage);
-        }
+        bool accepted = _confirmationService.Confirm(new UserConfirmationRequest(
+            Strings.NotificationPromptTitle,
+            Strings.NotificationPromptMessage));
+        _settingsViewModel.CompleteNotificationPrompt(accepted);
     }
+
+    private void OnNotificationClicked(object? sender, string adapterId) =>
+        _uiDispatcher.Post(() =>
+        {
+            RestoreAndActivate();
+            _viewModel.SelectAdapter(adapterId);
+        });
 
     private void SendToTray()
     {
@@ -262,10 +260,6 @@ public partial class MainWindow : Window
             PersistSettings();
             _trayIconManager.Show();
             Hide();
-            if (_settings.NotificationsEnabled)
-            {
-                _trayIconManager.ShowBalloon(Strings.TrayBalloonMessage);
-            }
         }
         finally
         {
@@ -299,6 +293,9 @@ public partial class MainWindow : Window
         _viewModel.ProfilePanel?.SetApplyProfileOnSelection(settings.ApplyProfileOnSelection);
         _viewModel.SettingsWarningVisible = _settingsViewModel.PersistenceWarning;
     }
+
+    private OperationNotificationService.NotificationWindowState GetNotificationWindowState() =>
+        new(IsActive, WindowState == WindowState.Minimized, IsVisible);
 
     private AppWindowPlacement CapturePlacement()
     {

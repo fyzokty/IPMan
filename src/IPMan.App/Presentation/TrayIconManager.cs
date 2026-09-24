@@ -9,6 +9,7 @@ namespace IPMan.App.Presentation;
 public sealed class TrayIconManager : IDisposable
 {
     private readonly NotifyIcon _notifyIcon;
+    private string? _notificationAdapterId;
     private bool _isDisposed;
 
     /// <summary>Initializes the icon and its minimal context menu.</summary>
@@ -39,6 +40,7 @@ public sealed class TrayIconManager : IDisposable
         };
         _notifyIcon.MouseClick += OnMouseClick;
         _notifyIcon.DoubleClick += OnDoubleClick;
+        _notifyIcon.BalloonTipClicked += OnBalloonTipClicked;
     }
 
     /// <summary>Raised when the user asks to show the window.</summary>
@@ -46,6 +48,9 @@ public sealed class TrayIconManager : IDisposable
 
     /// <summary>Raised when the user asks to exit the application.</summary>
     public event EventHandler? ExitRequested;
+
+    /// <summary>Raised when an operation-result notification is clicked.</summary>
+    public event EventHandler<string>? NotificationClicked;
 
     /// <summary>Makes the icon visible.</summary>
     public void Show() => _notifyIcon.Visible = true;
@@ -68,6 +73,30 @@ public sealed class TrayIconManager : IDisposable
         }
     }
 
+    /// <summary>Shows an operating-system notification associated with an adapter.</summary>
+    public void ShowNotification(string title, string text, bool isError, string adapterId)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(title);
+        ArgumentException.ThrowIfNullOrWhiteSpace(text);
+        ArgumentException.ThrowIfNullOrWhiteSpace(adapterId);
+
+        bool wasVisible = _notifyIcon.Visible;
+        _notificationAdapterId = adapterId;
+        try
+        {
+            _notifyIcon.Visible = true;
+            _notifyIcon.ShowBalloonTip(3000, title, text, isError ? ToolTipIcon.Error : ToolTipIcon.Info);
+        }
+        catch (InvalidOperationException)
+        {
+            // Windows can reject a notification when notifications are unavailable.
+        }
+        finally
+        {
+            _notifyIcon.Visible = wasVisible;
+        }
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {
@@ -79,6 +108,7 @@ public sealed class TrayIconManager : IDisposable
         _isDisposed = true;
         _notifyIcon.MouseClick -= OnMouseClick;
         _notifyIcon.DoubleClick -= OnDoubleClick;
+        _notifyIcon.BalloonTipClicked -= OnBalloonTipClicked;
         _notifyIcon.Visible = false;
         _notifyIcon.Dispose();
     }
@@ -102,4 +132,12 @@ public sealed class TrayIconManager : IDisposable
 
     private void OnExitClick(object? sender, EventArgs e) =>
         ExitRequested?.Invoke(this, EventArgs.Empty);
+
+    private void OnBalloonTipClicked(object? sender, EventArgs e)
+    {
+        if (_notificationAdapterId is not null)
+        {
+            NotificationClicked?.Invoke(this, _notificationAdapterId);
+        }
+    }
 }

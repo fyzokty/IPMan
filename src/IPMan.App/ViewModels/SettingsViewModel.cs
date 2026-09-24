@@ -25,7 +25,7 @@ public sealed partial class SettingsViewModel : ObservableObject
     private bool? _closeToTray;
 
     [ObservableProperty]
-    private bool _notificationsEnabled;
+    private NotificationMode _notificationMode;
 
     [ObservableProperty]
     private bool _applyProfileOnSelection;
@@ -60,7 +60,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _isLoading = true;
         Theme = settings.Theme;
         CloseToTray = settings.CloseToTray;
-        NotificationsEnabled = settings.NotificationsEnabled;
+        NotificationMode = settings.NotificationMode;
         ApplyProfileOnSelection = settings.ApplyProfileOnSelection;
         ShowVirtualAdapters = settings.ShowVirtualAdapters;
         RememberWindowState = settings.RememberWindowState;
@@ -70,6 +70,14 @@ public sealed partial class SettingsViewModel : ObservableObject
 
     /// <summary>Gets localized text for the persistence warning.</summary>
     public string PersistenceWarningText => _persistenceWarningText;
+
+    /// <summary>Stores the one-time notification prompt response.</summary>
+    public void CompleteNotificationPrompt(bool accepted)
+    {
+        _settings = _settings with { NotificationPromptShown = true };
+        NotificationMode = accepted ? NotificationMode.WhenUnfocused : NotificationMode.Disabled;
+        Save();
+    }
 
     /// <summary>Gets or sets whether the light theme is selected.</summary>
     public bool IsLightTheme
@@ -110,6 +118,45 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
+    /// <summary>Gets or sets whether operating-system notifications are disabled.</summary>
+    public bool IsNotificationModeDisabled
+    {
+        get => NotificationMode == NotificationMode.Disabled;
+        set
+        {
+            if (value)
+            {
+                NotificationMode = NotificationMode.Disabled;
+            }
+        }
+    }
+
+    /// <summary>Gets or sets whether notifications are shown while the window is unfocused.</summary>
+    public bool IsNotificationModeWhenUnfocused
+    {
+        get => NotificationMode == NotificationMode.WhenUnfocused;
+        set
+        {
+            if (value)
+            {
+                NotificationMode = NotificationMode.WhenUnfocused;
+            }
+        }
+    }
+
+    /// <summary>Gets or sets whether notifications are always shown.</summary>
+    public bool IsNotificationModeAlways
+    {
+        get => NotificationMode == NotificationMode.Always;
+        set
+        {
+            if (value)
+            {
+                NotificationMode = NotificationMode.Always;
+            }
+        }
+    }
+
     partial void OnThemeChanged(AppTheme value)
     {
         OnPropertyChanged(nameof(IsLightTheme));
@@ -118,7 +165,13 @@ public sealed partial class SettingsViewModel : ObservableObject
         SaveIfReady();
     }
     partial void OnCloseToTrayChanged(bool? value) => SaveIfReady();
-    partial void OnNotificationsEnabledChanged(bool value) => SaveIfReady();
+    partial void OnNotificationModeChanged(NotificationMode value)
+    {
+        OnPropertyChanged(nameof(IsNotificationModeDisabled));
+        OnPropertyChanged(nameof(IsNotificationModeWhenUnfocused));
+        OnPropertyChanged(nameof(IsNotificationModeAlways));
+        SaveIfReady();
+    }
     partial void OnApplyProfileOnSelectionChanged(bool value) => SaveIfReady();
     partial void OnShowVirtualAdaptersChanged(bool value) => SaveIfReady();
     partial void OnRememberWindowStateChanged(bool value) => SaveIfReady();
@@ -138,7 +191,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         _isLoading = true;
         Theme = defaults.Theme;
         CloseToTray = defaults.CloseToTray;
-        NotificationsEnabled = defaults.NotificationsEnabled;
+        NotificationMode = defaults.NotificationMode;
         ApplyProfileOnSelection = defaults.ApplyProfileOnSelection;
         ShowVirtualAdapters = defaults.ShowVirtualAdapters;
         RememberWindowState = defaults.RememberWindowState;
@@ -161,7 +214,8 @@ public sealed partial class SettingsViewModel : ObservableObject
             SchemaVersion = AppSettings.CurrentSchemaVersion,
             Theme = Theme,
             ApplyProfileOnSelection = ApplyProfileOnSelection,
-            NotificationsEnabled = NotificationsEnabled,
+            NotificationsEnabled = NotificationMode != NotificationMode.Disabled,
+            NotificationMode = NotificationMode,
             CloseToTray = CloseToTray,
             ShowVirtualAdapters = ShowVirtualAdapters,
             RememberWindowState = RememberWindowState,
