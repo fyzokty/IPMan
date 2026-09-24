@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using IPMan.App.Presentation;
 using IPMan.App.Resources;
+using IPMan.App.Services;
 using IPMan.Application.Networking;
 using IPMan.Application.Settings;
 using IPMan.Domain.Networking;
@@ -25,6 +26,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
     private readonly IQuickNetworkActionService? _quickActionService;
     private readonly IClipboardService? _clipboardService;
     private readonly IAppSettingsRepository? _settingsRepository;
+    private readonly OperationNotificationService? _operationNotificationService;
     private bool _actionCancelledBecauseAdapterUnavailable;
     private bool _isDisposed;
 
@@ -85,7 +87,8 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             refreshCoordinator,
             quickActionService: null,
             clipboardService: null,
-            settingsRepository: null)
+            settingsRepository: null,
+            operationNotificationService: null)
     {
     }
 
@@ -98,7 +101,8 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         IAdapterRefreshCoordinator refreshCoordinator,
         IQuickNetworkActionService? quickActionService,
         IClipboardService? clipboardService,
-        IAppSettingsRepository? settingsRepository = null)
+        IAppSettingsRepository? settingsRepository = null,
+        OperationNotificationService? operationNotificationService = null)
     {
         ArgumentNullException.ThrowIfNull(staticApplyService);
         ArgumentNullException.ThrowIfNull(dhcpApplyService);
@@ -114,6 +118,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         _quickActionService = quickActionService;
         _clipboardService = clipboardService;
         _settingsRepository = settingsRepository;
+        _operationNotificationService = operationNotificationService;
     }
 
     /// <summary>Attaches the actions to the selected adapter, or detaches them when null.</summary>
@@ -212,6 +217,10 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
 
             ApplyStatusMessage message = ApplyResultMessageFormatter.Describe(result);
             SetStatus(message);
+            ReportOperation(
+                Strings.NotificationOperationApply,
+                adapter,
+                result.Status is StaticIpv4ApplyStatus.VerifiedSuccess or StaticIpv4ApplyStatus.NoChange);
 
             if (result.Status is StaticIpv4ApplyStatus.VerifiedSuccess or StaticIpv4ApplyStatus.NoChange)
             {
@@ -258,6 +267,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
                 cancellationToken);
             SetStatus(ApplyResultMessageFormatter.Describe(result));
             succeeded = result.Status is DhcpApplyStatus.VerifiedSuccess or DhcpApplyStatus.NoChange;
+            ReportOperation(Strings.NotificationOperationDhcp, adapter, succeeded);
         }
         finally
         {
@@ -366,11 +376,13 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
                 .ReleaseRenewAsync(adapter.Id, cancellationToken)
                 .ConfigureAwait(true);
             SetRenewIpStatus(result, previousSnapshot);
+            ReportOperation(Strings.NotificationOperationRenewIp, adapter, result.IsSuccess);
             _refreshCoordinator.RequestRefresh(NetworkChangeReason.ConfigurationApplied);
         }
         catch (OperationCanceledException)
         {
             SetStatus(Strings.AdapterActionUnavailable, ApplyStatusSeverity.Error);
+            ReportOperation(Strings.NotificationOperationRenewIp, adapter, succeeded: false);
         }
         finally
         {
@@ -417,6 +429,10 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             }
 
             SetStatus(ApplyResultMessageFormatter.Describe(result));
+            ReportOperation(
+                Strings.NotificationOperationRestore,
+                adapter,
+                result.Status is RecoveryRestoreStatus.VerifiedSuccess or RecoveryRestoreStatus.NoChange);
         }
         finally
         {
@@ -763,4 +779,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
                 result.ErrorCode),
             ApplyStatusSeverity.Error);
     }
+
+    private void ReportOperation(string operation, AdapterViewModel adapter, bool succeeded) =>
+        _operationNotificationService?.Report(operation, adapter.Id.Value, adapter.DisplayName, succeeded);
 }

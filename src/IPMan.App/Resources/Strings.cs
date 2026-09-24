@@ -348,6 +348,9 @@ public static class Strings
     public static string SettingsCloseTray => Get(nameof(SettingsCloseTray));
     public static string SettingsCloseExit => Get(nameof(SettingsCloseExit));
     public static string SettingsNotifications => Get(nameof(SettingsNotifications));
+    public static string SettingsNotificationsDisabled => Get(nameof(SettingsNotificationsDisabled));
+    public static string SettingsNotificationsWhenUnfocused => Get(nameof(SettingsNotificationsWhenUnfocused));
+    public static string SettingsNotificationsAlways => Get(nameof(SettingsNotificationsAlways));
     public static string SettingsApplyOnSelection => Get(nameof(SettingsApplyOnSelection));
     public static string SettingsShowVirtual => Get(nameof(SettingsShowVirtual));
     public static string SettingsRememberWindow => Get(nameof(SettingsRememberWindow));
@@ -361,6 +364,21 @@ public static class Strings
     public static string SettingsHelpApplyOnSelection => Get(nameof(SettingsHelpApplyOnSelection));
     public static string SettingsHelpShowVirtual => Get(nameof(SettingsHelpShowVirtual));
     public static string SettingsHelpRememberWindow => Get(nameof(SettingsHelpRememberWindow));
+
+    public static string NotificationSucceeded => Get(nameof(NotificationSucceeded));
+    public static string NotificationFailed => Get(nameof(NotificationFailed));
+    public static string NotificationOperationApply => Get(nameof(NotificationOperationApply));
+    public static string NotificationOperationDhcp => Get(nameof(NotificationOperationDhcp));
+    public static string NotificationOperationRestore => Get(nameof(NotificationOperationRestore));
+    public static string NotificationOperationRenewIp => Get(nameof(NotificationOperationRenewIp));
+    public static string NotificationHistory => Get(nameof(NotificationHistory));
+    public static string NotificationHistoryEmpty => Get(nameof(NotificationHistoryEmpty));
+    public static string NotificationHistoryClear => Get(nameof(NotificationHistoryClear));
+    public static string NotificationPromptTitle => Get(nameof(NotificationPromptTitle));
+    public static string NotificationPromptMessage => Get(nameof(NotificationPromptMessage));
+
+    public static string FormatOperationNotification(string operation, string adapterName, string result) =>
+        Format(Get("OperationNotification"), CultureInfo.CurrentCulture, operation, adapterName, result);
 
     public static string FormatLinkSpeedGigabits(string value, IFormatProvider formatProvider) =>
         Format(Get("LinkSpeedGigabitsPerSecond"), formatProvider, value);
