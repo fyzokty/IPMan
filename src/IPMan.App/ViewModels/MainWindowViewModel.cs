@@ -258,6 +258,12 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     /// </summary>
     private void MergeAdapters(IReadOnlyList<NetworkAdapterSnapshot> adapters)
     {
+        if (Actions.IsBusy && Actions.CurrentAdapter is AdapterViewModel activeAdapter &&
+            !adapters.Any(adapter => adapter.Id == activeAdapter.Id && adapter.IsConnected))
+        {
+            Actions.CancelUnavailableAction();
+        }
+
         IReadOnlyList<NetworkAdapterSnapshot> displayedAdapters = adapters
             .Where(adapter => AdapterCategoryClassifier.IsVisible(adapter, _showVirtualAdapters) ||
                 adapter.Id == SelectedAdapter?.Id)

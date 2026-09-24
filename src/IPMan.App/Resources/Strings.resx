@@ -172,8 +172,10 @@
   <data name="ConfirmFlushDnsMessage" xml:space="preserve"><value>Bu işlem seçili bağdaştırıcıyla sınırlı değildir; tüm sistemin DNS önbelleğini temizler. Devam etmek istiyor musunuz?</value></data>
   <data name="ConfirmDhcpTitle" xml:space="preserve"><value>DHCP'ye geçilsin mi?</value></data>
   <data name="ConfirmDhcpMessage" xml:space="preserve"><value>Seçili bağdaştırıcının statik ayarları otomatik yapılandırmaya geçirilecek. Mevcut değerler: IP {0}, maske {1}, ağ geçidi {2}, DNS {3}. Devam etmek istiyor musunuz?</value></data>
+  <data name="ConfirmDoNotShowAgain" xml:space="preserve"><value>Bu pencereyi bir daha gösterme</value></data>
   <data name="DnsFlushSuccess" xml:space="preserve"><value>Tüm sistem için DNS önbelleği temizlendi.</value></data>
   <data name="IpRenewSuccess" xml:space="preserve"><value>Seçili bağdaştırıcının DHCP IP kirası yenilendi.</value></data>
+  <data name="IpRenewFailure" xml:space="preserve"><value>IP yenileme tamamlanamadı. Önceki değerler: IP {0}, maske {1}, ağ geçidi {2}. Hata kodu: {3}</value></data>
   <data name="AdapterActionUnavailable" xml:space="preserve"><value>Bağdaştırıcı artık kullanılamıyor, işlem iptal edildi.</value></data>
   <data name="QuickActionFailure" xml:space="preserve"><value>İşlem tamamlanamadı. Hata kodu: {0}</value></data>
   <data name="PingResult" xml:space="preserve"><value>{0} ping sonucu: gönderilen {1}, alınan {2}, kayıp %{3}, RTT min/ort/maks {4}/{5}/{6} ms. Hata kodu: {7}</value></data>

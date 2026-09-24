@@ -324,11 +324,13 @@
                             </Grid>
 
                             <WrapPanel Margin="0,6,0,0">
-                                <Button Style="{StaticResource SecondaryActionButtonStyle}"
+                                    <Button Style="{StaticResource SecondaryActionButtonStyle}"
+                                            ToolTipService.ShowOnDisabled="True"
                                         Command="{Binding DataContext.Actions.CopyNetworkInfoCommand,
                                                           RelativeSource={RelativeSource AncestorType=Window}}"
                                         Content="{x:Static res:Strings.CommandCopyNetworkInfo}" />
-                                <Button Style="{StaticResource SecondaryActionButtonStyle}"
+                                    <Button Style="{StaticResource SecondaryActionButtonStyle}"
+                                            ToolTipService.ShowOnDisabled="True"
                                         Command="{Binding DataContext.Actions.PingGatewayCommand,
                                                           RelativeSource={RelativeSource AncestorType=Window}}"
                                         ToolTip="{Binding DataContext.Actions.PingGatewayDisabledReason,
@@ -339,6 +341,7 @@
                                                           RelativeSource={RelativeSource AncestorType=Window}}"
                                         Content="{x:Static res:Strings.CommandFlushDns}" />
                                 <Button Style="{StaticResource SecondaryActionButtonStyle}"
+                                        ToolTipService.ShowOnDisabled="True"
                                         Command="{Binding DataContext.Actions.RenewIpCommand,
                                                           RelativeSource={RelativeSource AncestorType=Window}}"
                                         ToolTip="{Binding DataContext.Actions.RenewIpDisabledReason,

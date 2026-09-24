@@ -5,7 +5,9 @@ using CommunityToolkit.Mvvm.Input;
 using IPMan.App.Presentation;
 using IPMan.App.Resources;
 using IPMan.Application.Networking;
+using IPMan.Application.Settings;
 using IPMan.Domain.Networking;
+using IPMan.Domain.Settings;
 
 namespace IPMan.App.ViewModels;
 
@@ -22,6 +24,8 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
     private readonly IAdapterRefreshCoordinator _refreshCoordinator;
     private readonly IQuickNetworkActionService? _quickActionService;
     private readonly IClipboardService? _clipboardService;
+    private readonly IAppSettingsRepository? _settingsRepository;
+    private bool _actionCancelledBecauseAdapterUnavailable;
     private bool _isDisposed;
 
     [ObservableProperty]
@@ -80,7 +84,8 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             confirmationService,
             refreshCoordinator,
             quickActionService: null,
-            clipboardService: null)
+            clipboardService: null,
+            settingsRepository: null)
     {
     }
 
@@ -92,7 +97,8 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         IUserConfirmationService confirmationService,
         IAdapterRefreshCoordinator refreshCoordinator,
         IQuickNetworkActionService? quickActionService,
-        IClipboardService? clipboardService)
+        IClipboardService? clipboardService,
+        IAppSettingsRepository? settingsRepository = null)
     {
         ArgumentNullException.ThrowIfNull(staticApplyService);
         ArgumentNullException.ThrowIfNull(dhcpApplyService);
@@ -107,6 +113,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         _refreshCoordinator = refreshCoordinator;
         _quickActionService = quickActionService;
         _clipboardService = clipboardService;
+        _settingsRepository = settingsRepository;
     }
 
     /// <summary>Attaches the actions to the selected adapter, or detaches them when null.</summary>
@@ -235,15 +242,8 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             return;
         }
 
-        if (!_confirmationService.Confirm(new UserConfirmationRequest(
-                Strings.ConfirmDhcpTitle,
-                Strings.FormatConfirmDhcpMessage(
-                    adapter.Snapshot.Ipv4Address ?? Strings.ValueUnavailable,
-                    adapter.Snapshot.SubnetMask ?? Strings.ValueUnavailable,
-                    adapter.Snapshot.Gateway ?? Strings.ValueUnavailable,
-                    string.Join(", ", adapter.Snapshot.Ipv4DnsServers)))))
+        if (!ShouldApplyDhcp(adapter))
         {
-            SetStatus(Strings.ActionDeclined, ApplyStatusSeverity.Information);
             ApplyCompleted?.Invoke(this, false);
             return;
         }
@@ -358,13 +358,14 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             return;
         }
 
+        NetworkAdapterSnapshot previousSnapshot = adapter.Snapshot;
         IsBusy = true;
         try
         {
             QuickNetworkActionResult result = await _quickActionService
                 .ReleaseRenewAsync(adapter.Id, cancellationToken)
                 .ConfigureAwait(true);
-            SetQuickActionStatus(result, Strings.IpRenewSuccess);
+            SetRenewIpStatus(result, previousSnapshot);
             _refreshCoordinator.RequestRefresh(NetworkChangeReason.ConfigurationApplied);
         }
         catch (OperationCanceledException)
@@ -571,6 +572,33 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
 
     private bool CanExecuteAction() => !IsBusy && CurrentAdapter is not null;
 
+    /// <summary>Cancels an in-flight action after discovery loses its target adapter.</summary>
+    public void CancelUnavailableAction()
+    {
+        if (!IsBusy)
+        {
+            return;
+        }
+
+        _actionCancelledBecauseAdapterUnavailable = true;
+        ApplyStaticCommand.Cancel();
+        ApplyDhcpCommand.Cancel();
+        RestoreLastCommand.Cancel();
+        PingGatewayCommand.Cancel();
+        FlushDnsCommand.Cancel();
+        RenewIpCommand.Cancel();
+        SetStatus(Strings.AdapterActionUnavailable, ApplyStatusSeverity.Error);
+    }
+
+    partial void OnIsBusyChanged(bool value)
+    {
+        if (!value && _actionCancelledBecauseAdapterUnavailable)
+        {
+            _actionCancelledBecauseAdapterUnavailable = false;
+            SetStatus(Strings.AdapterActionUnavailable, ApplyStatusSeverity.Error);
+        }
+    }
+
     private bool CanExecuteDhcp() => CanExecuteAction() &&
         CurrentAdapter!.Snapshot.Mode != NetworkConfigurationMode.Dhcp;
 
@@ -667,6 +695,72 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
 
         SetStatus(
             result.IsAdapterUnavailable ? Strings.AdapterActionUnavailable : Strings.FormatQuickActionFailure(result.ErrorCode),
+            ApplyStatusSeverity.Error);
+    }
+
+    private bool ShouldApplyDhcp(AdapterViewModel adapter)
+    {
+        AppSettings? settings = LoadSettings();
+        if (settings?.SkipDhcpQuickActionConfirmation == true)
+        {
+            return true;
+        }
+
+        (bool accepted, bool doNotShowAgain) = _confirmationService.ConfirmWithOptions(
+            new UserConfirmationRequest(
+                Strings.ConfirmDhcpTitle,
+                Strings.FormatConfirmDhcpMessage(
+                    adapter.Snapshot.Ipv4Address ?? Strings.ValueUnavailable,
+                    adapter.Snapshot.SubnetMask ?? Strings.ValueUnavailable,
+                    adapter.Snapshot.Gateway ?? Strings.ValueUnavailable,
+                    string.Join(", ", adapter.Snapshot.Ipv4DnsServers)),
+                ShowDoNotShowAgain: true));
+        if (!accepted)
+        {
+            SetStatus(Strings.ActionDeclined, ApplyStatusSeverity.Information);
+            return false;
+        }
+
+        if (doNotShowAgain && settings is not null)
+        {
+            _ = _settingsRepository!
+                .SaveAsync(
+                    settings with { SkipDhcpQuickActionConfirmation = true },
+                    CancellationToken.None)
+                .GetAwaiter()
+                .GetResult();
+        }
+
+        return true;
+    }
+
+    private AppSettings? LoadSettings() => _settingsRepository?
+        .LoadAsync(CancellationToken.None)
+        .GetAwaiter()
+        .GetResult();
+
+    private void SetRenewIpStatus(
+        QuickNetworkActionResult result,
+        NetworkAdapterSnapshot previousSnapshot)
+    {
+        if (result.IsSuccess)
+        {
+            SetStatus(Strings.IpRenewSuccess, ApplyStatusSeverity.Success);
+            return;
+        }
+
+        if (result.IsAdapterUnavailable)
+        {
+            SetStatus(Strings.AdapterActionUnavailable, ApplyStatusSeverity.Error);
+            return;
+        }
+
+        SetStatus(
+            Strings.FormatIpRenewFailure(
+                previousSnapshot.Ipv4Address ?? Strings.ValueUnavailable,
+                previousSnapshot.SubnetMask ?? Strings.ValueUnavailable,
+                previousSnapshot.Gateway ?? Strings.ValueUnavailable,
+                result.ErrorCode),
             ApplyStatusSeverity.Error);
     }
 }

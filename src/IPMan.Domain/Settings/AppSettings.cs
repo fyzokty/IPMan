@@ -10,7 +10,8 @@ public sealed record AppSettings(
     string? LastSelectedAdapterId = null,
     bool? CloseToTray = null,
     bool ShowVirtualAdapters = true,
-    bool RememberWindowState = true)
+    bool RememberWindowState = true,
+    bool SkipDhcpQuickActionConfirmation = false)
 {
     /// <summary>The settings schema version understood by this release.</summary>
     public const int CurrentSchemaVersion = 1;

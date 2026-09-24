@@ -104,12 +104,23 @@ public static class Strings
 
     public static string ConfirmDhcpTitle => Get(nameof(ConfirmDhcpTitle));
 
+    public static string ConfirmDoNotShowAgain => Get(nameof(ConfirmDoNotShowAgain));
+
     public static string FormatConfirmDhcpMessage(string address, string mask, string gateway, string dns) =>
         Format(Get("ConfirmDhcpMessage"), CultureInfo.CurrentCulture, address, mask, gateway, dns);
 
     public static string DnsFlushSuccess => Get(nameof(DnsFlushSuccess));
 
     public static string IpRenewSuccess => Get(nameof(IpRenewSuccess));
+
+    public static string FormatIpRenewFailure(string address, string mask, string gateway, uint? errorCode) =>
+        Format(
+            Get("IpRenewFailure"),
+            CultureInfo.CurrentCulture,
+            address,
+            mask,
+            gateway,
+            errorCode?.ToString(CultureInfo.CurrentCulture) ?? "0");
 
     public static string AdapterActionUnavailable => Get(nameof(AdapterActionUnavailable));
 
