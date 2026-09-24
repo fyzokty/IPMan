@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Windows;
 using System.Windows.Controls;
 using Forms = System.Windows.Forms;
@@ -75,6 +76,7 @@ public partial class MainWindow : Window
         _trayIconManager.ExitRequested += OnTrayExitRequested;
         _trayIconManager.NotificationClicked += OnNotificationClicked;
         _settingsViewModel.SettingsChanged += OnSettingsChanged;
+        _viewModel.Actions.PropertyChanged += OnActionsPropertyChanged;
         _operationNotificationService.SetWindowStateProvider(GetNotificationWindowState);
     }
 
@@ -188,6 +190,7 @@ public partial class MainWindow : Window
         }
 
         _trayIconManager.Hide();
+        _viewModel.Actions.PropertyChanged -= OnActionsPropertyChanged;
         PersistSettings();
     }
 
@@ -251,6 +254,24 @@ public partial class MainWindow : Window
             RestoreAndActivate();
             _viewModel.SelectAdapter(adapterId);
         });
+
+    private void OnActionsPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(AdapterActionsViewModel.StatusSeverity) ||
+            _settings.NotificationMode != NotificationMode.Disabled ||
+            IsVisible ||
+            _viewModel.Actions.StatusSeverity != ApplyStatusSeverity.Error)
+        {
+            return;
+        }
+
+        RestoreAndActivate();
+        MessageBox.Show(
+            _viewModel.Actions.StatusMessage,
+            Strings.ApplicationName,
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+    }
 
     private void SendToTray()
     {

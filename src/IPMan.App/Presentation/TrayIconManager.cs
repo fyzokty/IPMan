@@ -10,6 +10,7 @@ public sealed class TrayIconManager : IDisposable
 {
     private readonly NotifyIcon _notifyIcon;
     private string? _notificationAdapterId;
+    private bool _restoreVisibilityAfterNotification;
     private bool _isDisposed;
 
     /// <summary>Initializes the icon and its minimal context menu.</summary>
@@ -41,6 +42,7 @@ public sealed class TrayIconManager : IDisposable
         _notifyIcon.MouseClick += OnMouseClick;
         _notifyIcon.DoubleClick += OnDoubleClick;
         _notifyIcon.BalloonTipClicked += OnBalloonTipClicked;
+        _notifyIcon.BalloonTipClosed += OnBalloonTipClosed;
     }
 
     /// <summary>Raised when the user asks to show the window.</summary>
@@ -82,6 +84,7 @@ public sealed class TrayIconManager : IDisposable
 
         bool wasVisible = _notifyIcon.Visible;
         _notificationAdapterId = adapterId;
+        _restoreVisibilityAfterNotification = !wasVisible;
         try
         {
             _notifyIcon.Visible = true;
@@ -90,9 +93,8 @@ public sealed class TrayIconManager : IDisposable
         catch (InvalidOperationException)
         {
             // Windows can reject a notification when notifications are unavailable.
-        }
-        finally
-        {
+            _notificationAdapterId = null;
+            _restoreVisibilityAfterNotification = false;
             _notifyIcon.Visible = wasVisible;
         }
     }
@@ -109,6 +111,7 @@ public sealed class TrayIconManager : IDisposable
         _notifyIcon.MouseClick -= OnMouseClick;
         _notifyIcon.DoubleClick -= OnDoubleClick;
         _notifyIcon.BalloonTipClicked -= OnBalloonTipClicked;
+        _notifyIcon.BalloonTipClosed -= OnBalloonTipClosed;
         _notifyIcon.Visible = false;
         _notifyIcon.Dispose();
     }
@@ -135,9 +138,30 @@ public sealed class TrayIconManager : IDisposable
 
     private void OnBalloonTipClicked(object? sender, EventArgs e)
     {
-        if (_notificationAdapterId is not null)
+        try
         {
-            NotificationClicked?.Invoke(this, _notificationAdapterId);
+            if (_notificationAdapterId is not null)
+            {
+                NotificationClicked?.Invoke(this, _notificationAdapterId);
+            }
         }
+        finally
+        {
+            RestoreVisibilityAfterNotification();
+        }
+    }
+
+    private void OnBalloonTipClosed(object? sender, EventArgs e) => RestoreVisibilityAfterNotification();
+
+    private void RestoreVisibilityAfterNotification()
+    {
+        _notificationAdapterId = null;
+        if (!_restoreVisibilityAfterNotification)
+        {
+            return;
+        }
+
+        _restoreVisibilityAfterNotification = false;
+        _notifyIcon.Visible = false;
     }
 }
