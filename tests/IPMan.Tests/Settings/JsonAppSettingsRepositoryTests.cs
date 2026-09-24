@@ -38,7 +38,9 @@ public sealed class JsonAppSettingsRepositoryTests
             NotificationsEnabled: false,
             WindowPlacement: new AppWindowPlacement(120, 80, 1000, 700, IsMaximized: true),
             LastSelectedAdapterId: "{827A2938-BB14-4D18-B67F-94E9C4F818BA}",
-            CloseToTray: true);
+            CloseToTray: true,
+            ShowVirtualAdapters: false,
+            RememberWindowState: false);
 
         try
         {
@@ -153,6 +155,30 @@ public sealed class JsonAppSettingsRepositoryTests
             Assert.Null(result.WindowPlacement.IsMaximized);
             Assert.Null(result.LastSelectedAdapterId);
             Assert.Null(result.CloseToTray);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task LoadAsync_WhenSchemaIsOld_ReturnsCurrentDefaults()
+    {
+        string directory = CreateTestDirectory();
+        string settingsPath = Path.Combine(directory, "settings.json");
+        await File.WriteAllTextAsync(settingsPath, """
+            {
+              "schemaVersion": 0,
+              "showVirtualAdapters": false
+            }
+            """);
+
+        try
+        {
+            AppSettings result = await CreateRepository(directory).LoadAsync(CancellationToken.None);
+
+            Assert.Equal(AppSettings.Default, result);
         }
         finally
         {

@@ -406,4 +406,28 @@
   <data name="ProfileProblemUnsupportedSchema" xml:space="preserve"><value>Desteklenmeyen şema sürümü</value></data>
   <data name="ProfileProblemInvalidContent" xml:space="preserve"><value>Geçersiz profil içeriği</value></data>
   <data name="ProfileProblemReadFailure" xml:space="preserve"><value>Dosya okunamadı</value></data>
+  <data name="SettingsTitle" xml:space="preserve"><value>Ayarlar</value></data>
+  <data name="SettingsTheme" xml:space="preserve"><value>Tema</value></data>
+  <data name="SettingsThemeLight" xml:space="preserve"><value>Açık</value></data>
+  <data name="SettingsThemeDark" xml:space="preserve"><value>Koyu</value></data>
+  <data name="SettingsThemeSystem" xml:space="preserve"><value>Sistem</value></data>
+  <data name="SettingsThemeSoon" xml:space="preserve"><value>Tema desteği yakında.</value></data>
+  <data name="SettingsCloseBehavior" xml:space="preserve"><value>Kapatma davranışı</value></data>
+  <data name="SettingsCloseAsk" xml:space="preserve"><value>İlk kapatmada sor</value></data>
+  <data name="SettingsCloseTray" xml:space="preserve"><value>Tepsiye küçült</value></data>
+  <data name="SettingsCloseExit" xml:space="preserve"><value>Uygulamadan çık</value></data>
+  <data name="SettingsNotifications" xml:space="preserve"><value>Windows ve tepsi bildirimlerini göster</value></data>
+  <data name="SettingsApplyOnSelection" xml:space="preserve"><value>Profil seçilince hemen uygula</value></data>
+  <data name="SettingsShowVirtual" xml:space="preserve"><value>Sanal bağdaştırıcıları göster</value></data>
+  <data name="SettingsRememberWindow" xml:space="preserve"><value>Son pencere durumunu hatırla</value></data>
+  <data name="SettingsReset" xml:space="preserve"><value>Varsayılanlara dön</value></data>
+  <data name="SettingsResetTitle" xml:space="preserve"><value>Ayarlar sıfırlansın mı?</value></data>
+  <data name="SettingsResetMessage" xml:space="preserve"><value>Tüm ayarlar varsayılan değerlerine döndürülecek.</value></data>
+  <data name="SettingsPersistenceWarning" xml:space="preserve"><value>settings.json yazılamıyor, ayarlarınız şu an kaydedilemiyor</value></data>
+  <data name="SettingsHelpTheme" xml:space="preserve"><value>Şimdilik yalnızca açık tema kullanılabilir.&#x0A;Varsayılan: Açık</value></data>
+  <data name="SettingsHelpClose" xml:space="preserve"><value>Kapatma düğmesi ve Alt+F4 için davranışı belirler.&#x0A;Varsayılan: İlk kapatmada sor</value></data>
+  <data name="SettingsHelpNotifications" xml:space="preserve"><value>Windows ve tepsi bildirimlerini açar. Hatalar her zaman görünür.&#x0A;Varsayılan: Açık</value></data>
+  <data name="SettingsHelpApplyOnSelection" xml:space="preserve"><value>Fareyle yeni profil seçildiğinde normal uygulama akışını başlatır.&#x0A;Varsayılan: Kapalı</value></data>
+  <data name="SettingsHelpShowVirtual" xml:space="preserve"><value>Sanal bağdaştırıcı sekmelerini gösterir.&#x0A;Varsayılan: Açık</value></data>
+  <data name="SettingsHelpRememberWindow" xml:space="preserve"><value>Pencere konumu ve boyutunu sonraki açılış için saklar.&#x0A;Varsayılan: Açık</value></data>
 </root>

@@ -40,7 +40,9 @@ internal sealed class AppSettingsJsonCodec
             document.NotificationsEnabled ?? defaults.NotificationsEnabled,
             ReadWindowPlacement(document.WindowPlacement),
             ReadAdapterId(document.LastSelectedAdapterId),
-            ReadBoolean(document.CloseToTray));
+            ReadBoolean(document.CloseToTray),
+            document.ShowVirtualAdapters ?? defaults.ShowVirtualAdapters,
+            document.RememberWindowState ?? defaults.RememberWindowState);
         Validate(settings);
         return settings;
     }
@@ -116,5 +118,7 @@ internal sealed class AppSettingsJsonCodec
         bool? NotificationsEnabled,
         JsonElement? WindowPlacement,
         JsonElement? LastSelectedAdapterId,
-        JsonElement? CloseToTray);
+        JsonElement? CloseToTray,
+        bool? ShowVirtualAdapters,
+        bool? RememberWindowState);
 }

@@ -23,6 +23,11 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     private bool _isRestoringSelection;
     private bool _isDisposed;
     private ProfileListItemViewModel? _previousSelectedProfile;
+    private string? _lastAppliedProfileId;
+    private bool _applyProfileOnSelection;
+
+    /// <summary>Raised for an explicit mouse selection when immediate application is enabled.</summary>
+    public event EventHandler<NetworkProfile>? ExplicitProfileApplyRequested;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasStatusMessage))]
@@ -78,6 +83,22 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     public string ProblemsHeader => Strings.FormatProfileProblemsHeader(ProblemCount);
 
     public bool HasStatusMessage => StatusMessage.Length > 0;
+
+    /// <summary>Enables immediate profile application for explicit mouse selection only.</summary>
+    public void SetApplyProfileOnSelection(bool enabled) => _applyProfileOnSelection = enabled;
+
+    /// <summary>Requests the standard apply flow for an explicitly clicked, changed profile.</summary>
+    public void ApplyOnExplicitSelection(ProfileListItemViewModel? item)
+    {
+        if (!_applyProfileOnSelection || item is null || SelectedProfile?.Id != item.Id ||
+            item.Id == _lastAppliedProfileId)
+        {
+            return;
+        }
+
+        _lastAppliedProfileId = item.Id;
+        ExplicitProfileApplyRequested?.Invoke(this, item.Profile);
+    }
 
     /// <summary>Associates the selected adapter draft; null disables draft-specific commands.</summary>
     public void SetDraft(AdapterDraftViewModel? draft)

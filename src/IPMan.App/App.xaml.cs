@@ -175,6 +175,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IProfileFileDialogService, WpfProfileFileDialogService>();
         services.AddSingleton<AdapterActionsViewModel>();
         services.AddSingleton<ProfilePanelViewModel>();
+        services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddSingleton<TrayIconManager>();
         services.AddSingleton<MainWindow>();

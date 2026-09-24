@@ -420,14 +420,19 @@
                 BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="0,0,0,1"
                 Padding="20,12">
-            <StackPanel>
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                <StackPanel>
                 <TextBlock FontSize="20"
                            FontWeight="SemiBold"
                            Foreground="{StaticResource PrimaryTextBrush}"
                            Text="{Binding ApplicationName}" />
                 <TextBlock Foreground="{StaticResource SecondaryTextBrush}"
                            Text="{Binding ApplicationTagline}" />
-            </StackPanel>
+                </StackPanel>
+                <Button Grid.Column="1" Content="⚙" FontSize="18" Padding="8,2"
+                        ToolTip="{x:Static res:Strings.SettingsTitle}" Click="OnSettingsClicked" />
+            </Grid>
         </Border>
 
         <!-- Status bar -->
@@ -543,6 +548,7 @@
                                                 <DataTemplate>
                                             <TextBlock Padding="4"
                                                        Tag="{Binding DataContext, ElementName=ProfilePanelRoot}"
+                                                       PreviewMouseLeftButtonUp="OnProfileMouseUp"
                                                        Text="{Binding Name}">
                                                 <TextBlock.ContextMenu>
                                                     <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
@@ -588,6 +594,11 @@
                 <TextBlock Foreground="{StaticResource PrimaryTextBrush}"
                            Text="{Binding RefreshErrorText}"
                            TextWrapping="Wrap" />
+            </Border>
+
+            <Border Grid.Row="0" Grid.Column="2" Margin="0,52,0,0" Padding="8,4"
+                    Background="#FDECEC" Visibility="{Binding SettingsWarningVisible, Converter={StaticResource BooleanToVisibility}}">
+                <TextBlock Foreground="#B00020" Text="{Binding SettingsWarningText}" TextWrapping="Wrap" />
             </Border>
 
             <TabControl Grid.Row="1"

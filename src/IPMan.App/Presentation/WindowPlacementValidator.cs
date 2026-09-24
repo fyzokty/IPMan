@@ -35,6 +35,8 @@ public sealed class WindowPlacementValidator
 
         if (!isInsideWorkArea)
         {
+            width = defaultWidth;
+            height = defaultHeight;
             bounds = Center(primaryWorkArea, width, height);
         }
 
