@@ -382,6 +382,11 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         Actions.ApplyStaticCommand.Execute(null);
     }
 
-    private void OnApplyCompleted(object? sender, bool succeeded) =>
-        ProfilePanel?.CompleteExplicitProfileApply(succeeded);
+    private void OnApplyCompleted(object? sender, bool succeeded)
+    {
+        if (ProfilePanel?.CompleteExplicitProfileApply(succeeded) == true)
+        {
+            Actions.ShowProfileAppliedNotice();
+        }
+    }
 }

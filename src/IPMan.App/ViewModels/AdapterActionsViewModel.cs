@@ -112,6 +112,13 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         }
     }
 
+    /// <summary>Shows the concise completion notice for an explicitly selected profile.</summary>
+    public void ShowProfileAppliedNotice()
+    {
+        StatusSeverity = ApplyStatusSeverity.None;
+        SetStatus(Strings.ProfileApplied, ApplyStatusSeverity.Information);
+    }
+
     [RelayCommand(CanExecute = nameof(CanExecuteAction))]
     private async Task ApplyStaticAsync(CancellationToken cancellationToken)
     {

@@ -398,6 +398,7 @@
   <data name="ProfileImportSuccess" xml:space="preserve"><value>Profil içe aktarıldı.</value></data>
   <data name="ProfileImportSuccessWithName" xml:space="preserve"><value>Profil içe aktarıldı: {0}</value></data>
   <data name="ProfileExportSuccess" xml:space="preserve"><value>Profil dışa aktarıldı.</value></data>
+  <data name="ProfileApplied" xml:space="preserve"><value>Profil uygulandı.</value></data>
   <data name="ProfileInvalidContent" xml:space="preserve"><value>Profil içeriği geçerli değil.</value></data>
   <data name="ProfileAccessDenied" xml:space="preserve"><value>Profil dosyasına erişim reddedildi.</value></data>
   <data name="ProfileIoFailure" xml:space="preserve"><value>Profil dosyası işlemi tamamlanamadı.</value></data>

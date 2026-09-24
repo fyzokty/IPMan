@@ -103,11 +103,12 @@ public sealed class ProfilePanelViewModelTests
         viewModel.BeginExplicitProfileSelection();
         viewModel.SelectedProfile = retry;
         viewModel.ApplyOnExplicitSelection(retry);
-        viewModel.CompleteExplicitProfileApply(succeeded: false);
+        bool completed = viewModel.CompleteExplicitProfileApply(succeeded: false);
 
         viewModel.BeginExplicitProfileSelection();
         viewModel.ApplyOnExplicitSelection(retry);
 
+        Assert.False(completed);
         Assert.Equal(2, requests);
     }
 

@@ -30,12 +30,6 @@ public sealed class JsonAppSettingsRepository : IAppSettingsRepository
     public async Task<AppSettings> LoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (!File.Exists(_settingsFilePath))
-        {
-            LastLoadFailed = false;
-            return AppSettings.Default;
-        }
-
         try
         {
             await using FileStream stream = new(
@@ -48,6 +42,16 @@ public sealed class JsonAppSettingsRepository : IAppSettingsRepository
             AppSettings settings = await _codec.DeserializeAsync(stream, cancellationToken).ConfigureAwait(false);
             LastLoadFailed = false;
             return settings;
+        }
+        catch (FileNotFoundException)
+        {
+            LastLoadFailed = false;
+            return AppSettings.Default;
+        }
+        catch (DirectoryNotFoundException)
+        {
+            LastLoadFailed = false;
+            return AppSettings.Default;
         }
         catch (JsonException)
         {

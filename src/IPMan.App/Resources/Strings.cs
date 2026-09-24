@@ -259,6 +259,7 @@ public static class Strings
     public static string ProfileDeleteSuccess => Get(nameof(ProfileDeleteSuccess));
     public static string ProfileImportSuccess => Get(nameof(ProfileImportSuccess));
     public static string ProfileExportSuccess => Get(nameof(ProfileExportSuccess));
+    public static string ProfileApplied => Get(nameof(ProfileApplied));
     public static string ProfileInvalidContent => Get(nameof(ProfileInvalidContent));
     public static string ProfileAccessDenied => Get(nameof(ProfileAccessDenied));
     public static string ProfileIoFailure => Get(nameof(ProfileIoFailure));

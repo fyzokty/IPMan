@@ -109,11 +109,11 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     }
 
     /// <summary>Completes an immediate profile application after the validated action flow finishes.</summary>
-    public void CompleteExplicitProfileApply(bool succeeded)
+    public bool CompleteExplicitProfileApply(bool succeeded)
     {
         if (_pendingProfileApplyId is null)
         {
-            return;
+            return false;
         }
 
         if (succeeded)
@@ -127,6 +127,7 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
         }
 
         _pendingProfileApplyId = null;
+        return succeeded;
     }
 
     /// <summary>Associates the selected adapter draft; null disables draft-specific commands.</summary>

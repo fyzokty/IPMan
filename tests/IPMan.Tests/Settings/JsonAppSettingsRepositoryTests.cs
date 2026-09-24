@@ -16,9 +16,11 @@ public sealed class JsonAppSettingsRepositoryTests
 
         try
         {
-            AppSettings result = await CreateRepository(directory).LoadAsync(CancellationToken.None);
+            JsonAppSettingsRepository repository = CreateRepository(directory);
+            AppSettings result = await repository.LoadAsync(CancellationToken.None);
 
             Assert.Equal(AppSettings.Default, result);
+            Assert.False(repository.LastLoadFailed);
         }
         finally
         {
@@ -75,9 +77,11 @@ public sealed class JsonAppSettingsRepositoryTests
 
         try
         {
-            AppSettings result = await CreateRepository(directory).LoadAsync(CancellationToken.None);
+            JsonAppSettingsRepository repository = CreateRepository(directory);
+            AppSettings result = await repository.LoadAsync(CancellationToken.None);
 
             Assert.Equal(AppSettings.Default, result);
+            Assert.True(repository.LastLoadFailed);
             Assert.True(File.Exists(invalidPath));
             Assert.Equal(malformedJson, await File.ReadAllTextAsync(invalidPath));
         }
@@ -91,6 +95,28 @@ public sealed class JsonAppSettingsRepositoryTests
     public void Default_WhenRead_LeavesApplyProfileOnSelectionDisabled()
     {
         Assert.False(AppSettings.Default.ApplyProfileOnSelection);
+    }
+
+    [Fact]
+    public async Task LoadAsync_WhenSettingsPathCannotBeOpened_SetsLoadFailure()
+    {
+        string directory = CreateTestDirectory();
+        string settingsPath = Path.Combine(directory, "settings.json");
+        Directory.CreateDirectory(settingsPath);
+
+        try
+        {
+            JsonAppSettingsRepository repository = CreateRepository(directory);
+
+            AppSettings result = await repository.LoadAsync(CancellationToken.None);
+
+            Assert.Equal(AppSettings.Default, result);
+            Assert.True(repository.LastLoadFailed);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
     }
 
     [Fact]
