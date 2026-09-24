@@ -43,6 +43,9 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
     [NotifyPropertyChangedFor(nameof(HasStatusMessage))]
     private ApplyStatusSeverity _statusSeverity;
 
+    /// <summary>Raised when a static or DHCP apply action finishes.</summary>
+    public event EventHandler<bool>? ApplyCompleted;
+
     /// <summary>True when an inline action result should be displayed.</summary>
     public bool HasStatusMessage => StatusSeverity != ApplyStatusSeverity.None;
 
@@ -116,6 +119,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
 
         if (adapter is null)
         {
+            ApplyCompleted?.Invoke(this, false);
             return;
         }
 
@@ -133,10 +137,12 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             SetStatus(
                 string.Concat(Strings.ApplyValidationFailed, Environment.NewLine, fields),
                 ApplyStatusSeverity.Error);
+            ApplyCompleted?.Invoke(this, false);
             return;
         }
 
         StaticIpv4ApplyResult? result = null;
+        bool succeeded = false;
         IsBusy = true;
 
         try
@@ -157,6 +163,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             if (result.Status is StaticIpv4ApplyStatus.VerifiedSuccess or StaticIpv4ApplyStatus.NoChange)
             {
                 draft.MarkApplied();
+                succeeded = true;
             }
         }
         finally
@@ -167,6 +174,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             }
 
             IsBusy = false;
+            ApplyCompleted?.Invoke(this, succeeded);
         }
     }
 
@@ -177,9 +185,11 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
 
         if (adapter is null)
         {
+            ApplyCompleted?.Invoke(this, false);
             return;
         }
 
+        bool succeeded = false;
         IsBusy = true;
 
         try
@@ -188,11 +198,13 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
                 new DhcpApplyRequest(adapter.Id),
                 cancellationToken);
             SetStatus(ApplyResultMessageFormatter.Describe(result));
+            succeeded = result.Status is DhcpApplyStatus.VerifiedSuccess or DhcpApplyStatus.NoChange;
         }
         finally
         {
             _refreshCoordinator.RequestRefresh(NetworkChangeReason.ConfigurationApplied);
             IsBusy = false;
+            ApplyCompleted?.Invoke(this, succeeded);
         }
     }
 

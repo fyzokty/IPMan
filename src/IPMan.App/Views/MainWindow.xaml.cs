@@ -213,14 +213,18 @@ public partial class MainWindow : Window
 
     private void OnActionsPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        if (e.PropertyName != nameof(AdapterActionsViewModel.StatusSeverity) || IsVisible)
+        if (e.PropertyName != nameof(AdapterActionsViewModel.StatusSeverity))
         {
             return;
         }
 
         if (_viewModel.Actions.StatusSeverity == ApplyStatusSeverity.Error)
         {
-            RestoreAndActivate();
+            if (!IsVisible)
+            {
+                RestoreAndActivate();
+            }
+
             if (!string.IsNullOrWhiteSpace(_viewModel.Actions.StatusMessage))
             {
                 MessageBox.Show(
@@ -233,6 +237,7 @@ public partial class MainWindow : Window
         }
 
         if (_viewModel.Actions.StatusSeverity == ApplyStatusSeverity.Information &&
+            !IsVisible &&
             _settings.NotificationsEnabled &&
             !string.IsNullOrWhiteSpace(_viewModel.Actions.StatusMessage))
         {

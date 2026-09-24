@@ -13,7 +13,7 @@
             </Border>
             <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="{x:Static res:Strings.SettingsTheme}" />
             <StackPanel Orientation="Horizontal" Margin="0,4,0,14">
-                <RadioButton Content="{x:Static res:Strings.SettingsThemeLight}" IsChecked="True" IsEnabled="False" />
+                <RadioButton Content="{x:Static res:Strings.SettingsThemeLight}" IsChecked="{Binding IsLightTheme, Mode=TwoWay}" />
                 <RadioButton Content="{x:Static res:Strings.SettingsThemeDark}" IsEnabled="False" Margin="18,0,0,0" ToolTip="{x:Static res:Strings.SettingsThemeSoon}" />
                 <RadioButton Content="{x:Static res:Strings.SettingsThemeSystem}" IsEnabled="False" Margin="18,0,0,0" ToolTip="{x:Static res:Strings.SettingsThemeSoon}" />
                 <TextBlock Text="ⓘ" Margin="8,0,0,0" ToolTip="{x:Static res:Strings.SettingsHelpTheme}" />

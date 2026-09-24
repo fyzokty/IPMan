@@ -67,7 +67,24 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// <summary>Gets localized text for the persistence warning.</summary>
     public string PersistenceWarningText => _persistenceWarningText;
 
-    partial void OnThemeChanged(AppTheme value) => SaveIfReady();
+    /// <summary>Gets or sets whether the currently supported light theme is selected.</summary>
+    public bool IsLightTheme
+    {
+        get => Theme == AppTheme.Light;
+        set
+        {
+            if (value)
+            {
+                Theme = AppTheme.Light;
+            }
+        }
+    }
+
+    partial void OnThemeChanged(AppTheme value)
+    {
+        OnPropertyChanged(nameof(IsLightTheme));
+        SaveIfReady();
+    }
     partial void OnCloseToTrayChanged(bool? value) => SaveIfReady();
     partial void OnNotificationsEnabledChanged(bool value) => SaveIfReady();
     partial void OnApplyProfileOnSelectionChanged(bool value) => SaveIfReady();

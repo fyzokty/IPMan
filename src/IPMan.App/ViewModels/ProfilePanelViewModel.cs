@@ -24,6 +24,7 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     private bool _isDisposed;
     private ProfileListItemViewModel? _previousSelectedProfile;
     private string? _lastAppliedProfileId;
+    private string? _pendingProfileApplyId;
     private bool _applyProfileOnSelection;
 
     /// <summary>Raised for an explicit mouse selection when immediate application is enabled.</summary>
@@ -91,13 +92,29 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     public void ApplyOnExplicitSelection(ProfileListItemViewModel? item)
     {
         if (!_applyProfileOnSelection || item is null || SelectedProfile?.Id != item.Id ||
-            item.Id == _lastAppliedProfileId)
+            item.Id == _lastAppliedProfileId || item.Id == _pendingProfileApplyId)
         {
             return;
         }
 
-        _lastAppliedProfileId = item.Id;
+        _pendingProfileApplyId = item.Id;
         ExplicitProfileApplyRequested?.Invoke(this, item.Profile);
+    }
+
+    /// <summary>Completes an immediate profile application after the validated action flow finishes.</summary>
+    public void CompleteExplicitProfileApply(bool succeeded)
+    {
+        if (_pendingProfileApplyId is null)
+        {
+            return;
+        }
+
+        if (succeeded)
+        {
+            _lastAppliedProfileId = _pendingProfileApplyId;
+        }
+
+        _pendingProfileApplyId = null;
     }
 
     /// <summary>Associates the selected adapter draft; null disables draft-specific commands.</summary>

@@ -62,6 +62,27 @@ public sealed class ProfilePanelViewModelTests
     }
 
     [Fact]
+    public void ApplyOnExplicitSelection_WhenApplyFails_AllowsSelectingTheSameProfileAgain()
+    {
+        FakeProfileCatalog catalog = new()
+        {
+            Profiles = [TestData.Profile(profileId: "retry-profile")]
+        };
+        using ProfilePanelViewModel viewModel = Create(catalog);
+        ProfileListItemViewModel profile = viewModel.Groups[0].Profiles[0];
+        int requests = 0;
+        viewModel.ExplicitProfileApplyRequested += (_, _) => requests++;
+        viewModel.SetApplyProfileOnSelection(true);
+        viewModel.SelectedProfile = profile;
+
+        viewModel.ApplyOnExplicitSelection(profile);
+        viewModel.CompleteExplicitProfileApply(succeeded: false);
+        viewModel.ApplyOnExplicitSelection(profile);
+
+        Assert.Equal(2, requests);
+    }
+
+    [Fact]
     public void SelectedProfile_WhenDhcpProfileSelected_ClearsStaticDraftAndShowsGuidance()
     {
         FakeProfileCatalog catalog = new()

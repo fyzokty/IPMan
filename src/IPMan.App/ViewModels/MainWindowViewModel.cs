@@ -103,6 +103,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
         Actions = actions;
         Actions.PropertyChanged += OnActionsPropertyChanged;
+        Actions.ApplyCompleted += OnApplyCompleted;
         if (ProfilePanel is not null)
         {
             ProfilePanel.ExplicitProfileApplyRequested += OnExplicitProfileApplyRequested;
@@ -194,6 +195,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _refreshCoordinator.Refreshed -= OnAdaptersRefreshed;
         _refreshCoordinator.RefreshFailed -= OnAdapterRefreshFailed;
         Actions.PropertyChanged -= OnActionsPropertyChanged;
+        Actions.ApplyCompleted -= OnApplyCompleted;
         if (ProfilePanel is not null)
         {
             ProfilePanel.ExplicitProfileApplyRequested -= OnExplicitProfileApplyRequested;
@@ -374,4 +376,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
         Actions.ApplyStaticCommand.Execute(null);
     }
+
+    private void OnApplyCompleted(object? sender, bool succeeded) =>
+        ProfilePanel?.CompleteExplicitProfileApply(succeeded);
 }
