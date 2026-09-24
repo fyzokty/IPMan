@@ -98,6 +98,45 @@ public sealed class JsonAppSettingsRepositoryTests
     }
 
     [Fact]
+    public void Default_WhenRead_UsesSystemTheme()
+    {
+        Assert.Equal(AppTheme.System, AppSettings.Default.Theme);
+    }
+
+    [Theory]
+    [InlineData("\"Unknown\"")]
+    [InlineData("99")]
+    [InlineData("false")]
+    public async Task LoadAsync_WhenThemeIsInvalid_UsesSystemAndCorrectsDocument(string invalidTheme)
+    {
+        string directory = CreateTestDirectory();
+        string settingsPath = Path.Combine(directory, "settings.json");
+        await File.WriteAllTextAsync(settingsPath, $$"""
+            {
+              "schemaVersion": 1,
+              "theme": {{invalidTheme}}
+            }
+            """);
+
+        try
+        {
+            JsonAppSettingsRepository repository = CreateRepository(directory);
+
+            AppSettings result = await repository.LoadAsync(CancellationToken.None);
+
+            Assert.Equal(AppTheme.System, result.Theme);
+            Assert.False(repository.LastLoadFailed);
+            using JsonDocument document = JsonDocument.Parse(await File.ReadAllTextAsync(settingsPath));
+            Assert.Equal("System", document.RootElement.GetProperty("theme").GetString());
+            Assert.False(File.Exists($"{settingsPath}.invalid"));
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task LoadAsync_WhenSettingsPathCannotBeOpened_SetsLoadFailure()
     {
         string directory = CreateTestDirectory();

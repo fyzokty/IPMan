@@ -1,6 +1,6 @@
 # 04 — Tema desteği
 
-- **Durum:** yapılacak
+- **Durum:** tamamlandı
 - **Bağımlılık:** 03
 - **Gereksinimler:** PR-018
 
@@ -14,8 +14,8 @@ Windows'u takip et / Açık / Koyu tema seçenekleri.
 - Ayar değişince yeniden başlatmadan uygulanması
 
 ## Bitti sayılır
-- [ ] Üç seçenek de doğru görünüyor, tüm denetimler okunabilir
-- [ ] Windows teması değişince uygulama uyum sağlıyor
+- [x] Üç seçenek de doğru görünüyor, tüm denetimler okunabilir
+- [x] Windows teması değişince uygulama uyum sağlıyor
 
 ## Sorular
 

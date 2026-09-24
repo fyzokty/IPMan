@@ -7,15 +7,15 @@
         WindowStartupLocation="CenterOwner" ResizeMode="NoResize">
     <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Margin="20">
-            <Border Background="#FDECEC" Padding="10" Margin="0,0,0,12"
+            <Border Background="{DynamicResource ErrorBackgroundBrush}" BorderBrush="{DynamicResource ErrorBorderBrush}" BorderThickness="1" Padding="10" Margin="0,0,0,12"
                     Visibility="{Binding PersistenceWarning, Converter={StaticResource BooleanToVisibility}}">
-                <TextBlock Foreground="#B00020" TextWrapping="Wrap" Text="{Binding PersistenceWarningText}" />
+                <TextBlock Foreground="{DynamicResource ErrorTextBrush}" TextWrapping="Wrap" Text="{Binding PersistenceWarningText}" />
             </Border>
             <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="{x:Static res:Strings.SettingsTheme}" />
             <StackPanel Orientation="Horizontal" Margin="0,4,0,14">
                 <RadioButton Content="{x:Static res:Strings.SettingsThemeLight}" IsChecked="{Binding IsLightTheme, Mode=TwoWay}" />
-                <RadioButton Content="{x:Static res:Strings.SettingsThemeDark}" IsEnabled="False" Margin="18,0,0,0" ToolTip="{x:Static res:Strings.SettingsThemeSoon}" />
-                <RadioButton Content="{x:Static res:Strings.SettingsThemeSystem}" IsEnabled="False" Margin="18,0,0,0" ToolTip="{x:Static res:Strings.SettingsThemeSoon}" />
+                <RadioButton Content="{x:Static res:Strings.SettingsThemeDark}" IsChecked="{Binding IsDarkTheme, Mode=TwoWay}" Margin="18,0,0,0" />
+                <RadioButton Content="{x:Static res:Strings.SettingsThemeSystem}" IsChecked="{Binding IsSystemTheme, Mode=TwoWay}" Margin="18,0,0,0" />
                 <TextBlock Text="ⓘ" Margin="8,0,0,0" ToolTip="{x:Static res:Strings.SettingsHelpTheme}" />
             </StackPanel>
             <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="{x:Static res:Strings.SettingsCloseBehavior}" />

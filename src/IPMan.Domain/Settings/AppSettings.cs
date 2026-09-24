@@ -17,7 +17,7 @@ public sealed record AppSettings(
 
     /// <summary>Gets the safe preferences used when no valid settings document exists.</summary>
     public static AppSettings Default { get; } =
-        new(CurrentSchemaVersion, AppTheme.Light, ApplyProfileOnSelection: false, NotificationsEnabled: true,
+        new(CurrentSchemaVersion, AppTheme.System, ApplyProfileOnSelection: false, NotificationsEnabled: true,
             ShowVirtualAdapters: true, RememberWindowState: true);
 }
 
