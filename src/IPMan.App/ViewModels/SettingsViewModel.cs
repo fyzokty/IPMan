@@ -59,8 +59,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         ApplyProfileOnSelection = settings.ApplyProfileOnSelection;
         ShowVirtualAdapters = settings.ShowVirtualAdapters;
         RememberWindowState = settings.RememberWindowState;
-        PersistenceWarning = _settingsRepository is IPMan.Infrastructure.Settings.JsonAppSettingsRepository repository &&
-            repository.LastLoadFailed;
+        PersistenceWarning = _settingsRepository.LastLoadFailed;
         _isLoading = false;
     }
 

@@ -48,8 +48,7 @@ public partial class MainWindow : Window
         _viewModel.SetLastSelectedAdapterId(_settings.LastSelectedAdapterId);
         _viewModel.SetShowVirtualAdapters(_settings.ShowVirtualAdapters);
         _viewModel.ProfilePanel?.SetApplyProfileOnSelection(_settings.ApplyProfileOnSelection);
-        _viewModel.SettingsWarningVisible = _settingsRepository is IPMan.Infrastructure.Settings.JsonAppSettingsRepository repository &&
-            repository.LastLoadFailed;
+        _viewModel.SettingsWarningVisible = _settingsRepository.LastLoadFailed;
 
         InitializeComponent();
         DataContext = viewModel;
