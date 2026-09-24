@@ -140,15 +140,18 @@ public sealed class AdapterActionsViewModelTests
     }
 
     [Fact]
-    public async Task ApplyDhcp_SendsAdapterIdentityWithoutConfirmationAndRefreshes()
+    public async Task ApplyDhcp_ConfirmsStaticValuesAndRefreshes()
     {
         using ActionsContext context = CreateContext();
+        context.Confirmation.Answer = true;
+        context.Adapter.Update(TestData.Snapshot(id: "{A}", mode: IPMan.Domain.Networking.NetworkConfigurationMode.Static));
+        context.Actions.Attach(context.Adapter);
 
         await context.Actions.ApplyDhcpCommand.ExecuteAsync(null);
 
         DhcpApplyRequest request = Assert.Single(context.DhcpApply.Requests);
         Assert.Equal(context.Adapter.Id, request.AdapterId);
-        Assert.Empty(context.Confirmation.Requests);
+        Assert.Single(context.Confirmation.Requests);
         Assert.Equal(Strings.ApplyDhcpSuccess, context.Actions.StatusMessage);
         AssertConfigurationRefreshRequested(context);
     }
@@ -241,6 +244,26 @@ public sealed class AdapterActionsViewModelTests
         Assert.False(context.Actions.ApplyStaticCommand.CanExecute(null));
         Assert.False(context.Actions.ApplyDhcpCommand.CanExecute(null));
         Assert.False(context.Actions.RestoreLastCommand.CanExecute(null));
+        Assert.False(context.Actions.CopyNetworkInfoCommand.CanExecute(null));
+        Assert.False(context.Actions.PingGatewayCommand.CanExecute(null));
+        Assert.False(context.Actions.FlushDnsCommand.CanExecute(null));
+        Assert.False(context.Actions.RenewIpCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void QuickActions_WhenAdapterIsNotEligible_DisablePingAndRenewal()
+    {
+        using ActionsContext context = CreateContext();
+        context.Adapter.Update(TestData.Snapshot(
+            id: "{A}",
+            isConnected: false,
+            mode: IPMan.Domain.Networking.NetworkConfigurationMode.Static,
+            ipv4Gateways: IPMan.Domain.Networking.Ipv4AddressValueCollection.Empty));
+        context.Actions.Attach(context.Adapter);
+
+        Assert.False(context.Actions.PingGatewayCommand.CanExecute(null));
+        Assert.False(context.Actions.RenewIpCommand.CanExecute(null));
+        Assert.Contains(Strings.QuickActionAdapterInactive, context.Actions.PingGatewayDisabledReason, StringComparison.Ordinal);
     }
 
     private static ActionsContext CreateContext(bool attachAdapter = true)

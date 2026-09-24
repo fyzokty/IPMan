@@ -8,5 +8,9 @@ public sealed class FakeClipboardService : IClipboardService
 
     public string? LastCopiedText => CopiedTexts.Count > 0 ? CopiedTexts[^1] : null;
 
-    public void SetText(string text) => CopiedTexts.Add(text);
+    public bool SetText(string text)
+    {
+        CopiedTexts.Add(text);
+        return true;
+    }
 }

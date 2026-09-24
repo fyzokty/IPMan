@@ -109,6 +109,8 @@
   <data name="FieldAdditionalIpv4Addresses" xml:space="preserve">
     <value>Ek IPv4 adresleri</value>
   </data>
+  <data name="FieldDnsServers" xml:space="preserve"><value>DNS sunucuları</value></data>
+  <data name="FieldDnsSuffix" xml:space="preserve"><value>DNS soneki</value></data>
 
   <data name="ConnectionStateConnected" xml:space="preserve">
     <value>Bağlı</value>
@@ -154,6 +156,27 @@
   <data name="CommandRestoreLast" xml:space="preserve">
     <value>Son Yapılandırmayı Geri Yükle</value>
   </data>
+  <data name="CommandCopyNetworkInfo" xml:space="preserve"><value>Ağ Bilgisini Kopyala</value></data>
+  <data name="CommandPingGateway" xml:space="preserve"><value>Ağ Geçidine Ping</value></data>
+  <data name="CommandFlushDns" xml:space="preserve"><value>DNS Önbelleğini Temizle (Tüm sistem)</value></data>
+  <data name="CommandRenewIp" xml:space="preserve"><value>IP Yenile</value></data>
+  <data name="CommandClearStatus" xml:space="preserve"><value>Temizle</value></data>
+  <data name="QuickActionAdapterInactive" xml:space="preserve"><value>Bağdaştırıcı etkin değil</value></data>
+  <data name="QuickActionNoIpv4Gateway" xml:space="preserve"><value>IPv4 ağ geçidi yok</value></data>
+  <data name="QuickActionDhcpRequired" xml:space="preserve"><value>IP yenileme için DHCP gerekli</value></data>
+  <data name="QuickActionDhcpAlreadyEnabled" xml:space="preserve"><value>Bağdaştırıcı zaten DHCP kullanıyor</value></data>
+  <data name="QuickActionUnsupportedAdapter" xml:space="preserve"><value>Bu bağdaştırıcı türünde hızlı eylem kullanılamaz</value></data>
+  <data name="CopyNetworkInfoSuccess" xml:space="preserve"><value>Ağ bilgisi panoya kopyalandı.</value></data>
+  <data name="CopyNetworkInfoFailed" xml:space="preserve"><value>Pano erişimi engellendi; ağ bilgisi kopyalanamadı.</value></data>
+  <data name="ConfirmFlushDnsTitle" xml:space="preserve"><value>DNS önbelleği temizlensin mi?</value></data>
+  <data name="ConfirmFlushDnsMessage" xml:space="preserve"><value>Bu işlem seçili bağdaştırıcıyla sınırlı değildir; tüm sistemin DNS önbelleğini temizler. Devam etmek istiyor musunuz?</value></data>
+  <data name="ConfirmDhcpTitle" xml:space="preserve"><value>DHCP'ye geçilsin mi?</value></data>
+  <data name="ConfirmDhcpMessage" xml:space="preserve"><value>Seçili bağdaştırıcının statik ayarları otomatik yapılandırmaya geçirilecek. Mevcut değerler: IP {0}, maske {1}, ağ geçidi {2}, DNS {3}. Devam etmek istiyor musunuz?</value></data>
+  <data name="DnsFlushSuccess" xml:space="preserve"><value>Tüm sistem için DNS önbelleği temizlendi.</value></data>
+  <data name="IpRenewSuccess" xml:space="preserve"><value>Seçili bağdaştırıcının DHCP IP kirası yenilendi.</value></data>
+  <data name="AdapterActionUnavailable" xml:space="preserve"><value>Bağdaştırıcı artık kullanılamıyor, işlem iptal edildi.</value></data>
+  <data name="QuickActionFailure" xml:space="preserve"><value>İşlem tamamlanamadı. Hata kodu: {0}</value></data>
+  <data name="PingResult" xml:space="preserve"><value>{0} ping sonucu: gönderilen {1}, alınan {2}, kayıp %{3}, RTT min/ort/maks {4}/{5}/{6} ms. Hata kodu: {7}</value></data>
   <data name="CommandCopyFieldTooltip" xml:space="preserve">
     <value>{0} alanını panoya kopyala</value>
   </data>

@@ -45,6 +45,10 @@ public static class Strings
 
     public static string FieldAdditionalIpv4Addresses => Get(nameof(FieldAdditionalIpv4Addresses));
 
+    public static string FieldDnsServers => Get(nameof(FieldDnsServers));
+
+    public static string FieldDnsSuffix => Get(nameof(FieldDnsSuffix));
+
     public static string ConnectionStateConnected => Get(nameof(ConnectionStateConnected));
 
     public static string ConnectionStateDisconnected => Get(nameof(ConnectionStateDisconnected));
@@ -69,6 +73,59 @@ public static class Strings
 
     /// <summary>Gets the recovery restore command label.</summary>
     public static string CommandRestoreLast => Get(nameof(CommandRestoreLast));
+
+    public static string CommandCopyNetworkInfo => Get(nameof(CommandCopyNetworkInfo));
+
+    public static string CommandPingGateway => Get(nameof(CommandPingGateway));
+
+    public static string CommandFlushDns => Get(nameof(CommandFlushDns));
+
+    public static string CommandRenewIp => Get(nameof(CommandRenewIp));
+
+    public static string CommandClearStatus => Get(nameof(CommandClearStatus));
+
+    public static string QuickActionAdapterInactive => Get(nameof(QuickActionAdapterInactive));
+
+    public static string QuickActionNoIpv4Gateway => Get(nameof(QuickActionNoIpv4Gateway));
+
+    public static string QuickActionDhcpRequired => Get(nameof(QuickActionDhcpRequired));
+
+    public static string QuickActionDhcpAlreadyEnabled => Get(nameof(QuickActionDhcpAlreadyEnabled));
+
+    public static string QuickActionUnsupportedAdapter => Get(nameof(QuickActionUnsupportedAdapter));
+
+    public static string CopyNetworkInfoSuccess => Get(nameof(CopyNetworkInfoSuccess));
+
+    public static string CopyNetworkInfoFailed => Get(nameof(CopyNetworkInfoFailed));
+
+    public static string ConfirmFlushDnsTitle => Get(nameof(ConfirmFlushDnsTitle));
+
+    public static string ConfirmFlushDnsMessage => Get(nameof(ConfirmFlushDnsMessage));
+
+    public static string ConfirmDhcpTitle => Get(nameof(ConfirmDhcpTitle));
+
+    public static string FormatConfirmDhcpMessage(string address, string mask, string gateway, string dns) =>
+        Format(Get("ConfirmDhcpMessage"), CultureInfo.CurrentCulture, address, mask, gateway, dns);
+
+    public static string DnsFlushSuccess => Get(nameof(DnsFlushSuccess));
+
+    public static string IpRenewSuccess => Get(nameof(IpRenewSuccess));
+
+    public static string AdapterActionUnavailable => Get(nameof(AdapterActionUnavailable));
+
+    public static string FormatQuickActionFailure(uint? errorCode) =>
+        Format(Get("QuickActionFailure"), CultureInfo.CurrentCulture, errorCode?.ToString(CultureInfo.CurrentCulture) ?? "0");
+
+    public static string FormatPingResult(
+        string gateway,
+        int sent,
+        int received,
+        int lostPercent,
+        string minimum,
+        string average,
+        string maximum,
+        string errorCode) =>
+        Format(Get("PingResult"), CultureInfo.CurrentCulture, gateway, sent, received, lostPercent, minimum, average, maximum, errorCode);
 
     public static string StateLoading => Get(nameof(StateLoading));
 

@@ -10,5 +10,5 @@ public interface IClipboardService
     /// Places <paramref name="text"/> on the clipboard. An empty value clears it
     /// rather than failing.
     /// </summary>
-    void SetText(string text);
+    bool SetText(string text);
 }

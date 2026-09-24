@@ -150,6 +150,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     /// <summary>Gets whether a network configuration action is currently running.</summary>
     public bool IsBusy => Actions.IsBusy;
 
+    /// <summary>Adapter tabs remain fixed while an action targets the selected adapter.</summary>
+    public bool AreAdapterTabsEnabled => !IsBusy;
+
     /// <summary>Gets whether any adapter draft contains unapplied changes.</summary>
     public bool HasDirtyDrafts => Adapters.Any(adapter => adapter.Draft.IsDirty);
 
@@ -355,15 +358,16 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         if (e.PropertyName == nameof(AdapterActionsViewModel.IsBusy))
         {
             OnPropertyChanged(nameof(IsBusy));
+            OnPropertyChanged(nameof(AreAdapterTabsEnabled));
             StatusBar.ApplicationState = Actions.IsBusy
                 ? Strings.StateApplying
                 : HasRefreshError
                     ? Strings.StateError
                     : Strings.StateReady;
-            }
-
-            OnPropertyChanged(nameof(HasDirtyDrafts));
         }
+
+        OnPropertyChanged(nameof(HasDirtyDrafts));
+    }
 
     private void NotifyStateVisibilityChanged()
     {

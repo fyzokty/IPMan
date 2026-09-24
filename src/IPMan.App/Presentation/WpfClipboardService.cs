@@ -4,14 +4,26 @@ namespace IPMan.App.Presentation;
 
 public sealed class WpfClipboardService : IClipboardService
 {
-    public void SetText(string text)
+    public bool SetText(string text)
     {
-        if (string.IsNullOrEmpty(text))
+        try
         {
-            Clipboard.Clear();
-            return;
-        }
+            if (string.IsNullOrEmpty(text))
+            {
+                Clipboard.Clear();
+                return true;
+            }
 
-        Clipboard.SetText(text);
+            Clipboard.SetText(text);
+            return true;
+        }
+        catch (System.Runtime.InteropServices.COMException)
+        {
+            return false;
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            return false;
+        }
     }
 }

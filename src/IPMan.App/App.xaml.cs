@@ -166,6 +166,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IStaticIpv4ApplyService, StaticIpv4ApplyService>();
         services.AddSingleton<IDhcpApplyService, DhcpApplyService>();
         services.AddSingleton<IRecoveryRestoreService, RecoveryRestoreService>();
+        services.AddSingleton<IQuickNetworkActionService, WindowsQuickNetworkActionService>();
         services.AddSingleton<INetworkChangeMonitor, NetworkChangeMonitor>();
         services.AddSingleton(new AdapterRefreshCoordinatorOptions());
         services.AddSingleton<IAdapterRefreshCoordinator, AdapterRefreshCoordinator>();
