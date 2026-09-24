@@ -43,7 +43,8 @@ internal sealed class AppSettingsJsonCodec
             ReadAdapterId(document.LastSelectedAdapterId),
             ReadBoolean(document.CloseToTray),
             document.ShowVirtualAdapters ?? defaults.ShowVirtualAdapters,
-            document.RememberWindowState ?? defaults.RememberWindowState);
+            document.RememberWindowState ?? defaults.RememberWindowState,
+            document.SkipDhcpQuickActionConfirmation ?? defaults.SkipDhcpQuickActionConfirmation);
         Validate(settings);
         return new AppSettingsReadResult(settings, themeWasCorrected);
     }
@@ -148,7 +149,8 @@ internal sealed class AppSettingsJsonCodec
         JsonElement? LastSelectedAdapterId,
         JsonElement? CloseToTray,
         bool? ShowVirtualAdapters,
-        bool? RememberWindowState);
+        bool? RememberWindowState,
+        bool? SkipDhcpQuickActionConfirmation);
 }
 
 internal sealed record AppSettingsReadResult(AppSettings Settings, bool ThemeWasCorrected);

@@ -324,6 +324,29 @@
                             </Grid>
 
                             <WrapPanel Margin="0,6,0,0">
+                                    <Button Style="{StaticResource SecondaryActionButtonStyle}"
+                                            ToolTipService.ShowOnDisabled="True"
+                                        Command="{Binding DataContext.Actions.CopyNetworkInfoCommand,
+                                                          RelativeSource={RelativeSource AncestorType=Window}}"
+                                        Content="{x:Static res:Strings.CommandCopyNetworkInfo}" />
+                                    <Button Style="{StaticResource SecondaryActionButtonStyle}"
+                                            ToolTipService.ShowOnDisabled="True"
+                                        Command="{Binding DataContext.Actions.PingGatewayCommand,
+                                                          RelativeSource={RelativeSource AncestorType=Window}}"
+                                        ToolTip="{Binding DataContext.Actions.PingGatewayDisabledReason,
+                                                          RelativeSource={RelativeSource AncestorType=Window}}"
+                                        Content="{x:Static res:Strings.CommandPingGateway}" />
+                                <Button Style="{StaticResource SecondaryActionButtonStyle}"
+                                        Command="{Binding DataContext.Actions.FlushDnsCommand,
+                                                          RelativeSource={RelativeSource AncestorType=Window}}"
+                                        Content="{x:Static res:Strings.CommandFlushDns}" />
+                                <Button Style="{StaticResource SecondaryActionButtonStyle}"
+                                        ToolTipService.ShowOnDisabled="True"
+                                        Command="{Binding DataContext.Actions.RenewIpCommand,
+                                                          RelativeSource={RelativeSource AncestorType=Window}}"
+                                        ToolTip="{Binding DataContext.Actions.RenewIpDisabledReason,
+                                                          RelativeSource={RelativeSource AncestorType=Window}}"
+                                        Content="{x:Static res:Strings.CommandRenewIp}" />
                                 <Button Style="{StaticResource PrimaryActionButtonStyle}"
                                         Command="{Binding DataContext.Actions.ApplyStaticCommand,
                                                           RelativeSource={RelativeSource AncestorType=Window}}"
@@ -400,10 +423,18 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Border.Style>
-                                <TextBlock Foreground="{DynamicResource PrimaryTextBrush}"
-                                           Text="{Binding DataContext.Actions.StatusMessage,
-                                                          RelativeSource={RelativeSource AncestorType=Window}}"
-                                           TextWrapping="Wrap" />
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <TextBlock Foreground="{DynamicResource PrimaryTextBrush}"
+                                               Text="{Binding DataContext.Actions.StatusMessage,
+                                                              RelativeSource={RelativeSource AncestorType=Window}}"
+                                               TextWrapping="Wrap" />
+                                    <Button Grid.Column="1" Margin="12,0,0,0"
+                                            Style="{StaticResource SecondaryActionButtonStyle}"
+                                            Command="{Binding DataContext.Actions.ClearStatusCommand,
+                                                              RelativeSource={RelativeSource AncestorType=Window}}"
+                                            Content="{x:Static res:Strings.CommandClearStatus}" />
+                                </Grid>
                             </Border>
                         </StackPanel>
                     </Border>
@@ -604,6 +635,7 @@
 
             <TabControl Grid.Row="1"
                         Grid.Column="2"
+                        IsEnabled="{Binding AreAdapterTabsEnabled}"
                         Background="Transparent"
                         BorderThickness="0"
                         ItemsSource="{Binding Adapters}"

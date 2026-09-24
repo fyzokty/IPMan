@@ -51,6 +51,9 @@ public sealed partial class AdapterViewModel : ObservableObject
     /// <summary>Stable Windows identity of the adapter this tab represents.</summary>
     public NetworkAdapterId Id { get; }
 
+    /// <summary>The most recently read Windows state for quick actions.</summary>
+    public NetworkAdapterSnapshot Snapshot { get; private set; } = null!;
+
     public AdapterDetailsViewModel Details { get; }
 
     public AdapterDraftViewModel Draft { get; }
@@ -69,6 +72,8 @@ public sealed partial class AdapterViewModel : ObservableObject
                 "A snapshot for a different adapter cannot update this tab.",
                 nameof(snapshot));
         }
+
+        Snapshot = snapshot;
 
         DisplayName = snapshot.Name;
         IsConnected = snapshot.IsConnected;

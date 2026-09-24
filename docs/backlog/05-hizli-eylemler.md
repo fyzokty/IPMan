@@ -1,6 +1,6 @@
 # 05 — Hızlı eylemler
 
-- **Durum:** yapılacak
+- **Durum:** tamamlandı
 - **Bağımlılık:** 01
 - **Gereksinimler:** PR-023, PR-024
 
@@ -16,8 +16,8 @@ Seçili bağdaştırıcı için sık kullanılan tek tıklık eylemler.
 - Eylemler yalnızca seçili bağdaştırıcıya etki eder; sonuç satır içi gösterilir
 
 ## Bitti sayılır
-- [ ] Her eylem çalışıyor ve sonucu Türkçe gösteriliyor
-- [ ] Uygun olmayan durumda eylem devre dışı (ör. statik IP'de "IP yenile")
+- [x] Her eylem çalışıyor ve sonucu Türkçe gösteriliyor
+- [x] Uygun olmayan durumda eylem devre dışı (ör. statik IP'de "IP yenile")
 
 ## Sorular
 1. "Ağ bilgisini kopyala" eyleminin kısa metin özetinde hangi alanlar (bağdaştırıcı adı, IP, alt ağ maskesi, ağ geçidi, DNS, DHCP durumu vb.) ve hangi biçim yer almalıdır?

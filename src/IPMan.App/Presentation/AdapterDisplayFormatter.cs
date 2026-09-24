@@ -1,5 +1,7 @@
 using System.Globalization;
 using IPMan.App.Resources;
+using IPMan.App.ViewModels;
+using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
 
 namespace IPMan.App.Presentation;
@@ -96,6 +98,61 @@ public static class AdapterDisplayFormatter
             : Strings.FormatLastRefresh(
                 refreshedAtUtc.Value.ToLocalTime().ToString("HH:mm:ss", formatProvider));
     }
+
+    /// <summary>Formats a Turkish plain-text snapshot suitable for the clipboard.</summary>
+    public static string FormatCopySummary(NetworkAdapterSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        string addresses = snapshot.Ipv4Addresses.Count == 0
+            ? Strings.ValueUnavailable
+            : string.Join(
+                ", ",
+                snapshot.Ipv4Addresses.Select(address => string.IsNullOrWhiteSpace(address.SubnetMask)
+                    ? address.Address
+                    : $"{address.Address} ({address.SubnetMask})"));
+
+        return string.Join(
+            Environment.NewLine,
+            $"{Strings.FieldAdapterName}: {OrUnavailable(snapshot.Name)}",
+            $"{Strings.FieldDescription}: {OrUnavailable(snapshot.Description)}",
+            $"{Strings.FieldConnectionState}: {FormatConnectionState(snapshot.IsConnected)}",
+            $"{Strings.FieldMacAddress}: {OrUnavailable(snapshot.MacAddress)}",
+            $"{Strings.FieldIpv4Address}: {addresses}",
+            $"{Strings.FieldGateway}: {FormatValues(snapshot.Ipv4Gateways)}",
+            $"{Strings.FieldDnsServers}: {FormatValues(snapshot.Ipv4DnsServers)}",
+            $"{Strings.FieldDnsSuffix}: {Strings.ValueUnavailable}",
+            $"{Strings.FieldConfigurationMode}: {FormatConfigurationMode(snapshot.Mode)}");
+    }
+
+    /// <summary>Classifies and formats a gateway ping result for the inline status area.</summary>
+    public static ApplyStatusMessage FormatGatewayPingResult(
+        string gateway,
+        GatewayPingResult result)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(gateway);
+        ArgumentNullException.ThrowIfNull(result);
+
+        string message = Strings.FormatPingResult(
+            gateway,
+            result.Sent,
+            result.Received,
+            result.PacketLossPercent,
+            result.MinimumRoundtripTimeMilliseconds?.ToString(CultureInfo.CurrentCulture) ?? Strings.ValueUnavailable,
+            result.AverageRoundtripTimeMilliseconds?.ToString(CultureInfo.CurrentCulture) ?? Strings.ValueUnavailable,
+            result.MaximumRoundtripTimeMilliseconds?.ToString(CultureInfo.CurrentCulture) ?? Strings.ValueUnavailable,
+            result.ErrorCode?.ToString(CultureInfo.CurrentCulture) ?? "0");
+
+        ApplyStatusSeverity severity = !result.IsSuccessful
+            ? ApplyStatusSeverity.Error
+            : result.PacketLossPercent > 0 || result.AverageRoundtripTimeMilliseconds > 100
+                ? ApplyStatusSeverity.Warning
+                : ApplyStatusSeverity.Success;
+        return new ApplyStatusMessage(message, severity);
+    }
+
+    private static string FormatValues(IReadOnlyList<string> values) =>
+        values.Count == 0 ? Strings.ValueUnavailable : string.Join(", ", values);
 
     private static string FormatScaled(long bitsPerSecond, long unit, IFormatProvider formatProvider)
     {

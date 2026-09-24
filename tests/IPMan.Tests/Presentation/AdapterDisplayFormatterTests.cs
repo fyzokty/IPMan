@@ -1,6 +1,8 @@
 using System.Globalization;
 using IPMan.App.Presentation;
 using IPMan.App.Resources;
+using IPMan.App.ViewModels;
+using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
 using Xunit;
 
@@ -126,5 +128,37 @@ public sealed class AdapterDisplayFormatterTests
             expectedTime,
             AdapterDisplayFormatter.FormatRefreshTime(refreshedAtUtc, Culture),
             StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void FormatCopySummary_ListsIpv4FieldsAndExcludesIpv6()
+    {
+        NetworkAdapterSnapshot snapshot = TestData.Snapshot();
+
+        string text = AdapterDisplayFormatter.FormatCopySummary(snapshot);
+
+        Assert.Contains("Bağdaştırıcı adı: Ethernet", text, StringComparison.Ordinal);
+        Assert.Contains("192.168.1.50 (255.255.255.0)", text, StringComparison.Ordinal);
+        Assert.Contains("DNS sunucuları: 192.168.1.1", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("IPv6", text, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData(4, 4, 25, ApplyStatusSeverity.Success)]
+    [InlineData(4, 3, 25, ApplyStatusSeverity.Warning)]
+    [InlineData(4, 4, 101, ApplyStatusSeverity.Warning)]
+    [InlineData(4, 0, 0, ApplyStatusSeverity.Error)]
+    public void FormatGatewayPingResult_ClassifiesLossAndLatency(
+        int sent,
+        int received,
+        long average,
+        ApplyStatusSeverity expectedSeverity)
+    {
+        GatewayPingResult result = new(sent, received, average, average, average, 0);
+
+        ApplyStatusMessage message = AdapterDisplayFormatter.FormatGatewayPingResult("192.168.1.1", result);
+
+        Assert.Equal(expectedSeverity, message.Severity);
+        Assert.Contains("Hata kodu: 0", message.Text, StringComparison.Ordinal);
     }
 }
