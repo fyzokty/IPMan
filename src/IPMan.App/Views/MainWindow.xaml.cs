@@ -133,6 +133,9 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OnProfileMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e) =>
+        _viewModel.ProfilePanel?.BeginExplicitProfileSelection();
+
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
         if (!_isExiting && _settings.CloseToTray == true)

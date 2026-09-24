@@ -62,11 +62,11 @@ public sealed class ProfilePanelViewModelTests
     }
 
     [Fact]
-    public void ApplyOnExplicitSelection_WhenApplyFails_AllowsSelectingTheSameProfileAgain()
+    public void ApplyOnExplicitSelection_WhenAlreadySelectedProfileIsClicked_DoesNotApply()
     {
         FakeProfileCatalog catalog = new()
         {
-            Profiles = [TestData.Profile(profileId: "retry-profile")]
+            Profiles = [TestData.Profile(profileId: "selected-profile")]
         };
         using ProfilePanelViewModel viewModel = Create(catalog);
         ProfileListItemViewModel profile = viewModel.Groups[0].Profiles[0];
@@ -75,9 +75,38 @@ public sealed class ProfilePanelViewModelTests
         viewModel.SetApplyProfileOnSelection(true);
         viewModel.SelectedProfile = profile;
 
+        viewModel.BeginExplicitProfileSelection();
         viewModel.ApplyOnExplicitSelection(profile);
+
+        Assert.Equal(0, requests);
+    }
+
+    [Fact]
+    public void ApplyOnExplicitSelection_WhenApplyFails_AllowsSelectingTheSameProfileAgain()
+    {
+        FakeProfileCatalog catalog = new()
+        {
+            Profiles =
+            [
+                TestData.Profile(profileId: "first-profile", name: "First"),
+                TestData.Profile(profileId: "retry-profile", name: "Retry")
+            ]
+        };
+        using ProfilePanelViewModel viewModel = Create(catalog);
+        ProfileListItemViewModel first = viewModel.Groups[0].Profiles[0];
+        ProfileListItemViewModel retry = viewModel.Groups[0].Profiles[1];
+        int requests = 0;
+        viewModel.ExplicitProfileApplyRequested += (_, _) => requests++;
+        viewModel.SetApplyProfileOnSelection(true);
+        viewModel.SelectedProfile = first;
+
+        viewModel.BeginExplicitProfileSelection();
+        viewModel.SelectedProfile = retry;
+        viewModel.ApplyOnExplicitSelection(retry);
         viewModel.CompleteExplicitProfileApply(succeeded: false);
-        viewModel.ApplyOnExplicitSelection(profile);
+
+        viewModel.BeginExplicitProfileSelection();
+        viewModel.ApplyOnExplicitSelection(retry);
 
         Assert.Equal(2, requests);
     }

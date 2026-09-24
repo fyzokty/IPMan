@@ -548,6 +548,7 @@
                                                 <DataTemplate>
                                             <TextBlock Padding="4"
                                                        Tag="{Binding DataContext, ElementName=ProfilePanelRoot}"
+                                                       PreviewMouseLeftButtonDown="OnProfileMouseDown"
                                                        PreviewMouseLeftButtonUp="OnProfileMouseUp"
                                                        Text="{Binding Name}">
                                                 <TextBlock.ContextMenu>

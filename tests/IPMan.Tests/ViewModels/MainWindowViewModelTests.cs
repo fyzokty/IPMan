@@ -4,6 +4,7 @@ using IPMan.App.Resources;
 using IPMan.App.ViewModels;
 using IPMan.Application.Networking;
 using IPMan.Application.Profiles;
+using IPMan.Domain.Networking;
 using IPMan.Domain.Profiles;
 using IPMan.Tests.Fakes;
 using Xunit;
@@ -148,6 +149,28 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(2, harness.ViewModel.Adapters.Count);
         Assert.Equal("{USB}", harness.ViewModel.Adapters[1].Id.Value);
         Assert.Equal("{A}", harness.ViewModel.SelectedAdapter?.Id.Value);
+    }
+
+    [Fact]
+    public void Refresh_WhenVirtualAdapterInTheMiddleIsHidden_RemovesThatAdapterByIdentity()
+    {
+        using MainWindowHarness harness = MainWindowHarness.Create();
+        harness.ViewModel.Initialize();
+        NetworkAdapterSnapshot[] adapters =
+        [
+            TestData.Snapshot(id: "{A}", name: "Ethernet"),
+            TestData.Snapshot(id: "{V}", name: "VMware Virtual Ethernet"),
+            TestData.Snapshot(id: "{B}", name: "Wi-Fi")
+        ];
+        harness.Coordinator.PublishRefresh(adapters);
+
+        harness.ViewModel.SetShowVirtualAdapters(false);
+        harness.Coordinator.PublishRefresh(adapters);
+
+        Assert.Collection(
+            harness.ViewModel.Adapters,
+            adapter => Assert.Equal("{A}", adapter.Id.Value),
+            adapter => Assert.Equal("{B}", adapter.Id.Value));
     }
 
     [Fact]

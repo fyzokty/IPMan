@@ -23,8 +23,10 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     private bool _isRestoringSelection;
     private bool _isDisposed;
     private ProfileListItemViewModel? _previousSelectedProfile;
+    private string? _profileSelectedBeforeExplicitMouseClickId;
     private string? _lastAppliedProfileId;
     private string? _pendingProfileApplyId;
+    private string? _failedProfileApplyId;
     private bool _applyProfileOnSelection;
 
     /// <summary>Raised for an explicit mouse selection when immediate application is enabled.</summary>
@@ -88,11 +90,16 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     /// <summary>Enables immediate profile application for explicit mouse selection only.</summary>
     public void SetApplyProfileOnSelection(bool enabled) => _applyProfileOnSelection = enabled;
 
+    /// <summary>Records the selected profile before an explicit mouse selection changes it.</summary>
+    public void BeginExplicitProfileSelection() =>
+        _profileSelectedBeforeExplicitMouseClickId = SelectedProfile?.Id;
+
     /// <summary>Requests the standard apply flow for an explicitly clicked, changed profile.</summary>
     public void ApplyOnExplicitSelection(ProfileListItemViewModel? item)
     {
         if (!_applyProfileOnSelection || item is null || SelectedProfile?.Id != item.Id ||
-            item.Id == _lastAppliedProfileId || item.Id == _pendingProfileApplyId)
+            item.Id == _lastAppliedProfileId || item.Id == _pendingProfileApplyId ||
+            (item.Id == _profileSelectedBeforeExplicitMouseClickId && item.Id != _failedProfileApplyId))
         {
             return;
         }
@@ -112,6 +119,11 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
         if (succeeded)
         {
             _lastAppliedProfileId = _pendingProfileApplyId;
+            _failedProfileApplyId = null;
+        }
+        else
+        {
+            _failedProfileApplyId = _pendingProfileApplyId;
         }
 
         _pendingProfileApplyId = null;

@@ -260,6 +260,17 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
                 adapter.Id == SelectedAdapter?.Id)
             .ToArray();
         NetworkAdapterId? previouslySelectedId = SelectedAdapter?.Id;
+        HashSet<NetworkAdapterId> displayedAdapterIds = displayedAdapters
+            .Select(adapter => adapter.Id)
+            .ToHashSet();
+
+        for (int index = Adapters.Count - 1; index >= 0; index--)
+        {
+            if (!displayedAdapterIds.Contains(Adapters[index].Id))
+            {
+                Adapters.RemoveAt(index);
+            }
+        }
 
         for (int targetIndex = 0; targetIndex < displayedAdapters.Count; targetIndex++)
         {
@@ -278,12 +289,6 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             {
                 Adapters.Move(existingIndex, targetIndex);
             }
-        }
-
-        // Everything past the discovered set no longer exists in Windows.
-        while (Adapters.Count > displayedAdapters.Count)
-        {
-            Adapters.RemoveAt(Adapters.Count - 1);
         }
 
         RestoreSelection(previouslySelectedId);
