@@ -1,4 +1,5 @@
 using System.Management;
+using IPMan.Application.Logging;
 using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
 
@@ -15,26 +16,41 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
     private readonly IWmiNetworkAdapterSessionFactory _sessionFactory;
     private readonly IIpv4DefaultRouteManager _defaultRouteManager;
     private readonly IManualIpv4DnsWriter _manualDnsWriter;
+    private readonly ICriticalLogger _criticalLogger;
 
     public WmiNetworkAdapterConfigurator(IIpv4DefaultRouteManager defaultRouteManager)
         : this(
             new SystemWmiNetworkAdapterSessionFactory(),
             defaultRouteManager,
-            new WindowsManualIpv4DnsWriter())
+            new WindowsManualIpv4DnsWriter(),
+            new NullCriticalLogger())
+    {
+    }
+
+    /// <summary>Initializes the configurator and its critical diagnostics sink.</summary>
+    public WmiNetworkAdapterConfigurator(
+        IIpv4DefaultRouteManager defaultRouteManager,
+        ICriticalLogger criticalLogger)
+        : this(
+            new SystemWmiNetworkAdapterSessionFactory(),
+            defaultRouteManager,
+            new WindowsManualIpv4DnsWriter(),
+            criticalLogger)
     {
     }
 
     internal WmiNetworkAdapterConfigurator(
         IWmiNetworkAdapterSessionFactory sessionFactory,
         IIpv4DefaultRouteManager defaultRouteManager)
-        : this(sessionFactory, defaultRouteManager, new WindowsManualIpv4DnsWriter())
+        : this(sessionFactory, defaultRouteManager, new WindowsManualIpv4DnsWriter(), new NullCriticalLogger())
     {
     }
 
     internal WmiNetworkAdapterConfigurator(
         IWmiNetworkAdapterSessionFactory sessionFactory,
         IIpv4DefaultRouteManager defaultRouteManager,
-        IManualIpv4DnsWriter manualDnsWriter)
+        IManualIpv4DnsWriter manualDnsWriter,
+        ICriticalLogger? criticalLogger = null)
     {
         ArgumentNullException.ThrowIfNull(sessionFactory);
         ArgumentNullException.ThrowIfNull(defaultRouteManager);
@@ -42,6 +58,7 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         _sessionFactory = sessionFactory;
         _defaultRouteManager = defaultRouteManager;
         _manualDnsWriter = manualDnsWriter;
+        _criticalLogger = criticalLogger ?? new NullCriticalLogger();
     }
 
     /// <inheritdoc />
@@ -89,6 +106,7 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         }
         catch (ManagementException exception)
         {
+            LogNetworkException("WMI adapter resolution failed.", exception);
             return FailureBeforeMutation(NetworkMutationFailureKind.ManagementFailure, exception.Message);
         }
 
@@ -201,6 +219,7 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         }
         catch (ManagementException exception)
         {
+            LogNetworkException("WMI adapter resolution failed.", exception);
             return FailureBeforeMutation(NetworkMutationFailureKind.ManagementFailure, exception.Message);
         }
 
@@ -239,7 +258,7 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
             dns.TechnicalMessage);
     }
 
-    private static StepExecution Invoke(
+    private StepExecution Invoke(
         IWmiNetworkAdapterSession session,
         string methodName,
         IReadOnlyDictionary<string, object?>? parameters)
@@ -247,10 +266,11 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         try
         {
             uint code = session.Invoke(methodName, parameters);
-            return MapResult(code);
+            return MapResult(code, methodName);
         }
         catch (ManagementException exception)
         {
+            LogNetworkException($"WMI method {methodName} failed.", exception);
             return new StepExecution(
                 new NetworkMutationStepResult(NetworkMutationStepStatus.Failed),
                 NetworkMutationFailureKind.ManagementFailure,
@@ -258,7 +278,7 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         }
     }
 
-    private static StepExecution InvokeDnsReset(
+    private StepExecution InvokeDnsReset(
         IWmiNetworkAdapterSession session,
         IReadOnlyDictionary<string, object?> parameters)
     {
@@ -269,6 +289,7 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         }
         catch (ManagementException exception)
         {
+            LogNetworkException("WMI DNS reset failed.", exception);
             return new StepExecution(
                 new NetworkMutationStepResult(NetworkMutationStepStatus.Failed),
                 NetworkMutationFailureKind.ManagementFailure,
@@ -334,7 +355,7 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
             result.Status.ToString());
     }
 
-    private static StepExecution InvokeEnableStatic(
+    private StepExecution InvokeEnableStatic(
         IWmiNetworkAdapterSession session,
         IReadOnlyDictionary<string, object?> parameters,
         NetworkConfigurationMode previousMode)
@@ -351,10 +372,11 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
                         code));
             }
 
-            return MapResult(code);
+            return MapResult(code, EnableStaticMethod);
         }
         catch (ManagementException exception)
         {
+            LogNetworkException("WMI static IPv4 configuration failed.", exception);
             return new StepExecution(
                 new NetworkMutationStepResult(NetworkMutationStepStatus.Failed),
                 NetworkMutationFailureKind.ManagementFailure,
@@ -362,8 +384,16 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
         }
     }
 
-    private static StepExecution MapResult(uint code)
+    private StepExecution MapResult(uint code, string methodName)
     {
+        if (code is not 0 and not 1 && !IsExpectedWmiResult(code))
+        {
+            _criticalLogger.Log(new CriticalLogEntry(
+                CriticalLogCategory.NetworkApi,
+                $"WMI method {methodName} returned an unexpected error code.",
+                unchecked((int)code)));
+        }
+
         NetworkMutationStepResult result = code switch
         {
             0 => new NetworkMutationStepResult(NetworkMutationStepStatus.Succeeded, code),
@@ -378,9 +408,9 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
                 : NetworkMutationFailureKind.OperationalFailure);
     }
 
-    private static StepExecution MapDnsResetResult(uint code)
+    private StepExecution MapDnsResetResult(uint code)
     {
-        StepExecution execution = MapResult(code);
+        StepExecution execution = MapResult(code, SetDnsMethod);
 
         if (execution.Result.IsSuccessful)
         {
@@ -408,6 +438,19 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
             }
         };
     }
+
+    private void LogNetworkException(string message, Exception exception) =>
+        _criticalLogger.Log(new CriticalLogEntry(
+            CriticalLogCategory.NetworkApi,
+            message,
+            exception.HResult,
+            exception));
+
+    private static bool IsExpectedWmiResult(uint code) =>
+        code == 64 ||
+        code is >= 66 and <= 71 ||
+        code is >= 81 and <= 91 ||
+        code == 97;
 
     private static NetworkApplyResult FailureBeforeMutation(
         NetworkMutationFailureKind kind,

@@ -17,6 +17,15 @@ public static class AppStorageLayout
     /// <summary>Gets the operational recovery snapshot directory.</summary>
     public static string BackupDirectory { get; } = Path.Combine(LocalDataRoot, "Backup");
 
+    /// <summary>Gets the directory containing critical diagnostic logs.</summary>
+    public static string LogsDirectory { get; } = Path.Combine(LocalDataRoot, "logs");
+
+    /// <summary>Gets the rolling critical diagnostic log path.</summary>
+    public static string CriticalLogFile { get; } = Path.Combine(LogsDirectory, "ipman-critical.log");
+
+    /// <summary>Gets the marker used to detect an unclean application exit.</summary>
+    public static string SessionMarkerFile { get; } = Path.Combine(LocalDataRoot, "session.marker");
+
     private static string ResolveUserDataRoot()
     {
         string documents = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);

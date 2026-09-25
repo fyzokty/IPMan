@@ -377,6 +377,12 @@ public static class Strings
     public static string NotificationPromptTitle => Get(nameof(NotificationPromptTitle));
     public static string NotificationPromptMessage => Get(nameof(NotificationPromptMessage));
 
+    public static string UnexpectedShutdownNotification => Get(nameof(UnexpectedShutdownNotification));
+
+    public static string CriticalLogWriteFailedNotification => Get(nameof(CriticalLogWriteFailedNotification));
+
+    public static string UnhandledExceptionMessage => Get(nameof(UnhandledExceptionMessage));
+
     public static string FormatOperationNotification(string operation, string adapterName, string result) =>
         Format(Get("OperationNotification"), CultureInfo.CurrentCulture, operation, adapterName, result);
 

@@ -5,11 +5,13 @@ using IPMan.App.Services;
 using IPMan.App.ViewModels;
 using IPMan.App.Views;
 using IPMan.Application.Common;
+using IPMan.Application.Logging;
 using IPMan.Application.Networking;
 using IPMan.Application.Profiles;
 using IPMan.Application.Settings;
 using IPMan.Domain.Settings;
 using IPMan.Infrastructure.Common;
+using IPMan.Infrastructure.Logging;
 using IPMan.Infrastructure.Networking;
 using IPMan.Infrastructure.Profiles;
 using IPMan.Infrastructure.Settings;
@@ -32,6 +34,9 @@ public partial class App : System.Windows.Application
     private IActivationChannelServer? _activationChannelServer;
     private MainWindowActivationHandler? _activationHandler;
     private IProfileCatalog? _profileCatalog;
+    private bool _handlingUnhandledException;
+    private ICriticalLogger? _criticalLogger;
+    private int _loggingFailureNotified;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -73,6 +78,23 @@ public partial class App : System.Windows.Application
                 ValidateScopes = true
             });
 
+        DispatcherUnhandledException += OnDispatcherUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException += OnAppDomainUnhandledException;
+        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+        _criticalLogger = _serviceProvider.GetRequiredService<ICriticalLogger>();
+        _criticalLogger.WriteFailed += OnCriticalLoggerWriteFailed;
+        ISessionMarker sessionMarker = _serviceProvider.GetRequiredService<ISessionMarker>();
+        if (sessionMarker.TryConsumeStale())
+        {
+            _criticalLogger.Log(new(
+                CriticalLogCategory.UnexpectedShutdown,
+                "A previous session ended unexpectedly."));
+            _serviceProvider.GetRequiredService<TrayIconManager>().ShowSystemNotification(
+                IPMan.App.Resources.Strings.ApplicationName,
+                IPMan.App.Resources.Strings.UnexpectedShutdownNotification,
+                isError: true);
+        }
+
         ShutdownMode = ShutdownMode.OnLastWindowClose;
         IAppSettingsRepository settingsRepository = _serviceProvider.GetRequiredService<IAppSettingsRepository>();
         AppTheme theme = settingsRepository.LoadAsync(CancellationToken.None).GetAwaiter().GetResult().Theme;
@@ -97,7 +119,14 @@ public partial class App : System.Windows.Application
 
     protected override void OnExit(ExitEventArgs e)
     {
+        DispatcherUnhandledException -= OnDispatcherUnhandledException;
+        AppDomain.CurrentDomain.UnhandledException -= OnAppDomainUnhandledException;
+        TaskScheduler.UnobservedTaskException -= OnUnobservedTaskException;
         SessionEnding -= OnSessionEnding;
+        if (_criticalLogger is not null)
+        {
+            _criticalLogger.WriteFailed -= OnCriticalLoggerWriteFailed;
+        }
 
         if (_activationChannelServer is not null)
         {
@@ -127,6 +156,10 @@ public partial class App : System.Windows.Application
         // Logging sinks arrive in a later sprint; the null logger keeps the
         // infrastructure contracts satisfied without adding a logging provider.
         services.AddSingleton(typeof(ILogger<>), typeof(NullLogger<>));
+        services.AddSingleton<ICriticalLogger>(_ => new RollingCriticalFileLogger(
+            AppStorageLayout.CriticalLogFile,
+            typeof(App).Assembly.GetName().Version?.ToString() ?? "unknown"));
+        services.AddSingleton<ISessionMarker>(_ => new FileSessionMarker(AppStorageLayout.SessionMarkerFile));
 
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IDelayProvider, SystemDelayProvider>();
@@ -194,6 +227,72 @@ public partial class App : System.Windows.Application
         if (MainWindow is MainWindow window)
         {
             window.ExitWithoutPrompt();
+        }
+    }
+
+    private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        e.Handled = true;
+        if (_handlingUnhandledException)
+        {
+            Shutdown();
+            return;
+        }
+
+        _handlingUnhandledException = true;
+        try { _criticalLogger?.Log(new(CriticalLogCategory.Unhandled, "Unhandled dispatcher exception.", e.Exception.HResult, e.Exception)); }
+        catch (InvalidOperationException) { }
+        MessageBox.Show(
+            IPMan.App.Resources.Strings.UnhandledExceptionMessage,
+            IPMan.App.Resources.Strings.ApplicationName,
+            MessageBoxButton.OK,
+            MessageBoxImage.Error);
+        Shutdown();
+    }
+
+    private void OnAppDomainUnhandledException(object? sender, UnhandledExceptionEventArgs e)
+    {
+        if (e.ExceptionObject is Exception exception)
+        {
+            try { _criticalLogger?.Log(new(CriticalLogCategory.Unhandled, "Unhandled application exception.", exception.HResult, exception)); }
+            catch (InvalidOperationException) { }
+        }
+    }
+
+    private void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        try { _criticalLogger?.Log(new(CriticalLogCategory.Unhandled, "Unobserved task exception.", e.Exception.HResult, e.Exception)); }
+        catch (InvalidOperationException) { }
+        e.SetObserved();
+    }
+
+    private void OnCriticalLoggerWriteFailed(object? sender, EventArgs e)
+    {
+        if (Interlocked.Exchange(ref _loggingFailureNotified, 1) != 0)
+        {
+            return;
+        }
+
+        try
+        {
+            _ = Dispatcher.BeginInvoke(() =>
+            {
+                try
+                {
+                    _serviceProvider?.GetRequiredService<TrayIconManager>().ShowSystemNotification(
+                        IPMan.App.Resources.Strings.ApplicationName,
+                        IPMan.App.Resources.Strings.CriticalLogWriteFailedNotification,
+                        isError: true);
+                }
+                catch (Exception)
+                {
+                    // A notification failure must not affect the running application.
+                }
+            });
+        }
+        catch (InvalidOperationException)
+        {
+            // The dispatcher may already be shutting down.
         }
     }
 

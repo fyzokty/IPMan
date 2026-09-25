@@ -1,5 +1,6 @@
 using System.Text.Json;
 using IPMan.Application.Settings;
+using IPMan.Application.Logging;
 using IPMan.Domain.Settings;
 using IPMan.Infrastructure.Common;
 
@@ -10,12 +11,13 @@ public sealed class JsonAppSettingsRepository : IAppSettingsRepository
 {
     private readonly string _settingsFilePath;
     private readonly AppSettingsJsonCodec _codec = new();
+    private readonly ICriticalLogger _criticalLogger;
 
     /// <summary>Gets whether the most recent load could not read a present settings file.</summary>
     public bool LastLoadFailed { get; private set; }
 
     /// <summary>Initializes a settings repository with an explicit document path.</summary>
-    public JsonAppSettingsRepository(AppSettingsRepositoryOptions options)
+    public JsonAppSettingsRepository(AppSettingsRepositoryOptions options, ICriticalLogger? criticalLogger = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         if (string.IsNullOrWhiteSpace(options.SettingsFilePath))
@@ -24,6 +26,7 @@ public sealed class JsonAppSettingsRepository : IAppSettingsRepository
         }
 
         _settingsFilePath = Path.GetFullPath(options.SettingsFilePath);
+        _criticalLogger = criticalLogger ?? new NullCriticalLogger();
     }
 
     /// <inheritdoc />
@@ -69,19 +72,22 @@ public sealed class JsonAppSettingsRepository : IAppSettingsRepository
             LastLoadFailed = false;
             return AppSettings.Default;
         }
-        catch (JsonException)
+        catch (JsonException exception)
         {
+            _criticalLogger.Log(new(CriticalLogCategory.Json, "Settings JSON could not be read.", exception.HResult, exception));
             LastLoadFailed = true;
             TryPreserveInvalidDocument();
             return AppSettings.Default;
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException exception)
         {
+            _criticalLogger.Log(new(CriticalLogCategory.Json, "Settings file could not be read.", exception.HResult, exception));
             LastLoadFailed = true;
             return AppSettings.Default;
         }
-        catch (IOException)
+        catch (IOException exception)
         {
+            _criticalLogger.Log(new(CriticalLogCategory.Json, "Settings file could not be read.", exception.HResult, exception));
             LastLoadFailed = true;
             return AppSettings.Default;
         }
@@ -104,16 +110,19 @@ public sealed class JsonAppSettingsRepository : IAppSettingsRepository
                 cancellationToken).ConfigureAwait(false);
             return SettingsSaveResult.Success();
         }
-        catch (JsonException)
+        catch (JsonException exception)
         {
+            _criticalLogger.Log(new(CriticalLogCategory.SettingsWrite, "Settings could not be written.", exception.HResult, exception));
             return SettingsSaveResult.Failed(SettingsSaveStatus.InvalidContent);
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException exception)
         {
+            _criticalLogger.Log(new(CriticalLogCategory.SettingsWrite, "Settings could not be written.", exception.HResult, exception));
             return SettingsSaveResult.Failed(SettingsSaveStatus.AccessDenied);
         }
-        catch (IOException)
+        catch (IOException exception)
         {
+            _criticalLogger.Log(new(CriticalLogCategory.SettingsWrite, "Settings could not be written.", exception.HResult, exception));
             return SettingsSaveResult.Failed(SettingsSaveStatus.IoFailure);
         }
     }

@@ -8,6 +8,7 @@ using IPMan.App.Services;
 using IPMan.App.ViewModels;
 using IPMan.Application.Settings;
 using IPMan.Application.Common;
+using IPMan.Application.Logging;
 using IPMan.Domain.Settings;
 
 namespace IPMan.App.Views;
@@ -26,9 +27,11 @@ public partial class MainWindow : Window
     private readonly WindowsThemeService _themeService;
     private readonly OperationNotificationService _operationNotificationService;
     private readonly IUiDispatcher _uiDispatcher;
+    private readonly ISessionMarker _sessionMarker;
     private AppSettings _settings;
     private bool _isHidingToTray;
     private bool _isExiting;
+    private bool _isSessionEnding;
     private SettingsWindow? _settingsWindow;
 
     /// <summary>Creates the main window and restores the user-scoped preferences.</summary>
@@ -40,7 +43,8 @@ public partial class MainWindow : Window
         SettingsViewModel settingsViewModel,
         WindowsThemeService themeService,
         OperationNotificationService operationNotificationService,
-        IUiDispatcher uiDispatcher)
+        IUiDispatcher uiDispatcher,
+        ISessionMarker sessionMarker)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(settingsRepository);
@@ -50,6 +54,7 @@ public partial class MainWindow : Window
         ArgumentNullException.ThrowIfNull(themeService);
         ArgumentNullException.ThrowIfNull(operationNotificationService);
         ArgumentNullException.ThrowIfNull(uiDispatcher);
+        ArgumentNullException.ThrowIfNull(sessionMarker);
 
         _viewModel = viewModel;
         _settingsRepository = settingsRepository;
@@ -59,6 +64,7 @@ public partial class MainWindow : Window
         _themeService = themeService;
         _operationNotificationService = operationNotificationService;
         _uiDispatcher = uiDispatcher;
+        _sessionMarker = sessionMarker;
         _settings = _settingsRepository.LoadAsync(CancellationToken.None).GetAwaiter().GetResult();
         _viewModel.SetLastSelectedAdapterId(_settings.LastSelectedAdapterId);
         _viewModel.SetShowVirtualAdapters(_settings.ShowVirtualAdapters);
@@ -97,6 +103,7 @@ public partial class MainWindow : Window
     /// <summary>Closes without prompts during Windows session ending.</summary>
     internal void ExitWithoutPrompt()
     {
+        _isSessionEnding = true;
         _isExiting = true;
         Close();
     }
@@ -190,6 +197,10 @@ public partial class MainWindow : Window
         }
 
         _trayIconManager.Hide();
+        if (!_isSessionEnding)
+        {
+            _sessionMarker.Delete();
+        }
         _viewModel.Actions.PropertyChanged -= OnActionsPropertyChanged;
         PersistSettings();
     }
@@ -237,6 +248,7 @@ public partial class MainWindow : Window
     private void OnContentRendered(object? sender, EventArgs e)
     {
         ContentRendered -= OnContentRendered;
+        _sessionMarker.Create();
         if (_settings.NotificationPromptShown)
         {
             return;

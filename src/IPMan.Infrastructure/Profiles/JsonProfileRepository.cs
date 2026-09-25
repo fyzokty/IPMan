@@ -1,4 +1,5 @@
 using System.Text.Json;
+using IPMan.Application.Logging;
 using IPMan.Application.Profiles;
 using IPMan.Domain.Profiles;
 using IPMan.Infrastructure.Common;
@@ -10,9 +11,10 @@ public sealed class JsonProfileRepository : IProfileRepository
 {
     private readonly string _profilesDirectory;
     private readonly ProfileJsonCodec _codec = new();
+    private readonly ICriticalLogger _criticalLogger;
 
     /// <summary>Initializes a profile repository with an explicit storage directory.</summary>
-    public JsonProfileRepository(ProfileRepositoryOptions options)
+    public JsonProfileRepository(ProfileRepositoryOptions options, ICriticalLogger? criticalLogger = null)
     {
         ArgumentNullException.ThrowIfNull(options);
         if (string.IsNullOrWhiteSpace(options.ProfilesDirectory))
@@ -21,6 +23,7 @@ public sealed class JsonProfileRepository : IProfileRepository
         }
 
         _profilesDirectory = Path.GetFullPath(options.ProfilesDirectory);
+        _criticalLogger = criticalLogger ?? new NullCriticalLogger();
     }
 
     /// <inheritdoc />
@@ -102,20 +105,24 @@ public sealed class JsonProfileRepository : IProfileRepository
 
             return ProfileSaveResult.Success(finalProfile);
         }
-        catch (ProfileJsonException)
+        catch (ProfileJsonException exception)
         {
+            Log(CriticalLogCategory.ProfileWrite, "Profile JSON could not be written.", exception);
             return ProfileSaveResult.Failed(ProfileSaveStatus.InvalidContent);
         }
-        catch (JsonException)
+        catch (JsonException exception)
         {
+            Log(CriticalLogCategory.ProfileWrite, "Profile JSON could not be written.", exception);
             return ProfileSaveResult.Failed(ProfileSaveStatus.InvalidContent);
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException exception)
         {
+            Log(CriticalLogCategory.ProfileWrite, "Profile could not be written.", exception);
             return ProfileSaveResult.Failed(ProfileSaveStatus.AccessDenied);
         }
-        catch (IOException)
+        catch (IOException exception)
         {
+            Log(CriticalLogCategory.ProfileWrite, "Profile could not be written.", exception);
             return ProfileSaveResult.Failed(ProfileSaveStatus.IoFailure);
         }
     }
@@ -189,16 +196,24 @@ public sealed class JsonProfileRepository : IProfileRepository
                 _ => ProfileImportResult.Failed(ProfileImportStatus.InvalidContent)
             };
         }
-        catch (JsonException)
+        catch (ProfileJsonException exception)
         {
+            Log(CriticalLogCategory.Json, "Imported profile JSON could not be read.", exception);
             return ProfileImportResult.Failed(ProfileImportStatus.InvalidContent);
         }
-        catch (UnauthorizedAccessException)
+        catch (JsonException exception)
         {
+            Log(CriticalLogCategory.Json, "Imported profile JSON could not be read.", exception);
+            return ProfileImportResult.Failed(ProfileImportStatus.InvalidContent);
+        }
+        catch (UnauthorizedAccessException exception)
+        {
+            Log(CriticalLogCategory.Json, "Imported profile JSON could not be read.", exception);
             return ProfileImportResult.Failed(ProfileImportStatus.AccessDenied);
         }
-        catch (IOException)
+        catch (IOException exception)
         {
+            Log(CriticalLogCategory.Json, "Imported profile JSON could not be read.", exception);
             return ProfileImportResult.Failed(ProfileImportStatus.IoFailure);
         }
     }
@@ -260,12 +275,14 @@ public sealed class JsonProfileRepository : IProfileRepository
         {
             filePaths = Directory.GetFiles(_profilesDirectory, "*.json", SearchOption.TopDirectoryOnly);
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException exception)
         {
+            Log(CriticalLogCategory.Json, "Profile directory could not be read.", exception);
             return ProfileScanResult.DirectoryFailure(_profilesDirectory);
         }
-        catch (IOException)
+        catch (IOException exception)
         {
+            Log(CriticalLogCategory.Json, "Profile directory could not be read.", exception);
             return ProfileScanResult.DirectoryFailure(_profilesDirectory);
         }
 
@@ -290,20 +307,24 @@ public sealed class JsonProfileRepository : IProfileRepository
             }
             catch (ProfileJsonException exception)
             {
+                Log(CriticalLogCategory.Json, "Profile JSON could not be read.", exception);
                 problems.Add(new NetworkProfileProblem(filePath, exception.FailureKind));
             }
-            catch (JsonException)
+            catch (JsonException exception)
             {
+                Log(CriticalLogCategory.Json, "Profile JSON could not be read.", exception);
                 problems.Add(new NetworkProfileProblem(
                     filePath,
                     ProfileLoadFailureKind.MalformedJson));
             }
-            catch (UnauthorizedAccessException)
+            catch (UnauthorizedAccessException exception)
             {
+                Log(CriticalLogCategory.Json, "Profile JSON could not be read.", exception);
                 problems.Add(new NetworkProfileProblem(filePath, ProfileLoadFailureKind.ReadFailure));
             }
-            catch (IOException)
+            catch (IOException exception)
             {
+                Log(CriticalLogCategory.Json, "Profile JSON could not be read.", exception);
                 problems.Add(new NetworkProfileProblem(filePath, ProfileLoadFailureKind.ReadFailure));
             }
         }
@@ -342,6 +363,9 @@ public sealed class JsonProfileRepository : IProfileRepository
         shortId = shortId[..Math.Min(8, shortId.Length)];
         return Path.Combine(_profilesDirectory, $"{baseName}-{shortId}.json");
     }
+
+    private void Log(CriticalLogCategory category, string message, Exception exception) =>
+        _criticalLogger.Log(new CriticalLogEntry(category, message, exception.HResult, exception));
 
     private sealed record StoredProfile(string FilePath, NetworkProfile Profile);
 

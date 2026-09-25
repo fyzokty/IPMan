@@ -471,4 +471,7 @@
   <data name="NotificationHistoryClear" xml:space="preserve"><value>Temizle</value></data>
   <data name="NotificationPromptTitle" xml:space="preserve"><value>Windows bildirimleri</value></data>
   <data name="NotificationPromptMessage" xml:space="preserve"><value>İşlem sonuçları için Windows bildirimleri gösterilsin mi?</value></data>
+  <data name="UnexpectedShutdownNotification" xml:space="preserve"><value>Uygulama önceki oturumda beklenmedik şekilde kapandı.</value></data>
+  <data name="CriticalLogWriteFailedNotification" xml:space="preserve"><value>Tanılama günlüğü yazılamadı.</value></data>
+  <data name="UnhandledExceptionMessage" xml:space="preserve"><value>Beklenmeyen bir hata nedeniyle uygulama kapatılacak.</value></data>
 </root>
