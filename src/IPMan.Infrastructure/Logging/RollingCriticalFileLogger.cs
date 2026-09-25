@@ -36,8 +36,14 @@ public sealed class RollingCriticalFileLogger : ICriticalLogger
                 File.AppendAllText(_path, Format(entry, _version), new UTF8Encoding(false));
             }
         }
-        catch (IOException) { WriteFailed?.Invoke(this, EventArgs.Empty); }
-        catch (UnauthorizedAccessException) { WriteFailed?.Invoke(this, EventArgs.Empty); }
+        catch (IOException)
+        {
+            NotifyWriteFailed();
+        }
+        catch (UnauthorizedAccessException)
+        {
+            NotifyWriteFailed();
+        }
     }
 
     /// <summary>Formats one diagnostic record.</summary>
@@ -59,14 +65,38 @@ public sealed class RollingCriticalFileLogger : ICriticalLogger
 
     private void RotateIfNeeded()
     {
-        if (!File.Exists(_path) || new FileInfo(_path).Length < MaximumLength) return;
+        if (!File.Exists(_path) || new FileInfo(_path).Length < MaximumLength)
+        {
+            return;
+        }
+
         string archive3 = _path + ".3";
-        if (File.Exists(archive3)) File.Delete(archive3);
+        if (File.Exists(archive3))
+        {
+            File.Delete(archive3);
+        }
+
         for (int index = 2; index >= 1; index--)
         {
             string source = _path + "." + index;
-            if (File.Exists(source)) File.Move(source, _path + "." + (index + 1));
+            if (File.Exists(source))
+            {
+                File.Move(source, _path + "." + (index + 1), overwrite: true);
+            }
         }
-        File.Move(_path, _path + ".1");
+
+        File.Move(_path, _path + ".1", overwrite: true);
+    }
+
+    private void NotifyWriteFailed()
+    {
+        try
+        {
+            WriteFailed?.Invoke(this, EventArgs.Empty);
+        }
+        catch (Exception)
+        {
+            // Diagnostics must not affect the caller when a notification subscriber fails.
+        }
     }
 }

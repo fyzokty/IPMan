@@ -99,6 +99,28 @@ public sealed class TrayIconManager : IDisposable
         }
     }
 
+    /// <summary>Shows an operating-system notification that is not tied to an adapter.</summary>
+    public void ShowSystemNotification(string title, string text, bool isError)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(title);
+        ArgumentException.ThrowIfNullOrWhiteSpace(text);
+
+        bool wasVisible = _notifyIcon.Visible;
+        _notificationAdapterId = null;
+        _restoreVisibilityAfterNotification = !wasVisible;
+        try
+        {
+            _notifyIcon.Visible = true;
+            _notifyIcon.ShowBalloonTip(3000, title, text, isError ? ToolTipIcon.Error : ToolTipIcon.Info);
+        }
+        catch (InvalidOperationException)
+        {
+            // Windows can reject a notification when notifications are unavailable.
+            _restoreVisibilityAfterNotification = false;
+            _notifyIcon.Visible = wasVisible;
+        }
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {
