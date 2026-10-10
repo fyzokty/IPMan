@@ -7,7 +7,14 @@
     <RootNamespace>IPMan.App</RootNamespace>
     <AssemblyName>IPMan</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>..\..\assets\logos\IPMan.ico</ApplicationIcon>
+    <PublishSingleFile>false</PublishSingleFile>
+    <CopyDebugSymbolFilesFromPackages>false</CopyDebugSymbolFilesFromPackages>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\..\LICENSE" Link="LICENSE" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
 
   <ItemGroup>
     <Using Remove="System.Windows.Forms" />

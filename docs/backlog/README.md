@@ -16,7 +16,7 @@ Sıra, uygulama sırasıdır. Tüm maddeler 1.0 kapsamındadır.
 | 07 | [Kritik hata günlüğü ve çökme işareti](07-gunluk-ve-cokme.md) | tamamlandı |
 | 08 | [Tanılama paneli](08-tanilama-paneli.md) | tamamlandı |
 | 09 | [İlk açılışta yapılandırma yedeği](09-ilk-acilis-yedegi.md) | tamamlandı |
-| 10 | [Dağıtım: taşınabilir paket ve kurulum](10-dagitim.md) | yapılacak |
+| 10 | [Dağıtım: taşınabilir paket ve kurulum](10-dagitim.md) | devam ediyor |
 | 11 | [Gerçek bağdaştırıcıda doğrulama](11-gercek-dogrulama.md) | yapılacak |
 
 ## Kaynaklar

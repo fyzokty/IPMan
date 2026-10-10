@@ -1,5 +1,12 @@
 <Project>
   <PropertyGroup>
+    <Version>1.0.0</Version>
+    <!-- The SDK derives numeric AssemblyVersion/FileVersion from Version. -->
+    <InformationalVersion>$(Version)</InformationalVersion>
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <Product>IPMan</Product>
+    <Company>IPMan Project Owner</Company>
+    <Copyright>Copyright (c) 2026 IPMan Project Owner</Copyright>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
