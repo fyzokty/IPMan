@@ -12,6 +12,8 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
     private const string EnableDhcpMethod = "EnableDHCP";
     private const string SetGatewaysMethod = "SetGateways";
     private const string SetDnsMethod = "SetDNSServerSearchOrder";
+    private const ushort MinimumGatewayMetric = 1;
+    private const ushort MaximumGatewayMetric = 9999;
 
     private readonly IWmiNetworkAdapterSessionFactory _sessionFactory;
     private readonly IIpv4DefaultRouteManager _defaultRouteManager;
@@ -468,14 +470,21 @@ public sealed class WmiNetworkAdapterConfigurator : INetworkAdapterConfigurator
 
         bool hasGateway = plan.Configuration.Gateway is not null;
 
+        // SetGateways documents GatewayCostMetric as 1..9999; 0 is how Windows
+        // reports an automatic metric and is not a documented input, so a written
+        // gateway never carries it. A preserved gateway is never written: its
+        // metric (0 included) is the observed value used only for verification,
+        // and preservation is only valid when the adapter was already static,
+        // because EnableStatic drops a DHCP-provided gateway.
         bool gatewayPlanIsValid = plan.GatewayMode switch
         {
             GatewayMutationMode.Set => hasGateway &&
-                plan.GatewayMetric is >= 1 and <= 9999,
+                plan.GatewayMetric is >= MinimumGatewayMetric and <= MaximumGatewayMetric,
             GatewayMutationMode.Clear or GatewayMutationMode.LeaveAbsent =>
                 !hasGateway && plan.GatewayMetric is null,
             GatewayMutationMode.LeaveUnchanged => hasGateway &&
-                plan.GatewayMetric is >= 1 and <= 9999,
+                plan.GatewayMetric is not null &&
+                plan.PreviousMode == NetworkConfigurationMode.Static,
             _ => false
         };
 

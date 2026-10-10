@@ -1,5 +1,6 @@
 using IPMan.App.Resources;
 using IPMan.App.ViewModels;
+using IPMan.Application.Logging;
 using IPMan.Application.Networking;
 using IPMan.Tests.Fakes;
 using Xunit;
@@ -225,6 +226,67 @@ public sealed class AdapterActionsViewModelTests
     }
 
     [Fact]
+    public async Task ApplyStatic_WhenServiceThrowsUnexpectedly_LogsShowsErrorAndReleasesBusy()
+    {
+        using ActionsContext context = CreateContext();
+        ArgumentException defect = new("Gateway mutation mode does not match the configuration.", "plan");
+        context.StaticApply.Failure = defect;
+        bool? completed = null;
+        context.Actions.ApplyCompleted += (_, succeeded) => completed = succeeded;
+
+        await context.Actions.ApplyStaticCommand.ExecuteAsync(null);
+
+        AssertUnexpectedFailureHandled(context, defect);
+        Assert.False(completed);
+        AssertConfigurationRefreshRequested(context);
+        Assert.True(context.Actions.ApplyStaticCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public async Task ApplyDhcp_WhenServiceThrowsUnexpectedly_LogsShowsErrorAndReleasesBusy()
+    {
+        using ActionsContext context = CreateContext();
+        context.Confirmation.Answer = true;
+        context.Adapter.Update(TestData.Snapshot(id: "{A}", mode: IPMan.Domain.Networking.NetworkConfigurationMode.Static));
+        context.Actions.Attach(context.Adapter);
+        InvalidOperationException defect = new("defect");
+        context.DhcpApply.Failure = defect;
+
+        await context.Actions.ApplyDhcpCommand.ExecuteAsync(null);
+
+        AssertUnexpectedFailureHandled(context, defect);
+        AssertConfigurationRefreshRequested(context);
+    }
+
+    [Fact]
+    public async Task RestoreLast_WhenServiceThrowsUnexpectedly_LogsShowsErrorAndReleasesBusy()
+    {
+        using ActionsContext context = CreateContext();
+        context.Confirmation.Answer = true;
+        InvalidOperationException defect = new("defect");
+        context.RecoveryRestore.Failure = defect;
+
+        await context.Actions.RestoreLastCommand.ExecuteAsync(null);
+
+        AssertUnexpectedFailureHandled(context, defect);
+        AssertConfigurationRefreshRequested(context);
+    }
+
+    [Fact]
+    public async Task ApplyStatic_WhenServiceIsCancelled_KeepsCancellationSemanticsWithoutLogging()
+    {
+        using ActionsContext context = CreateContext();
+        context.StaticApply.Failure = new OperationCanceledException();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => context.Actions.ApplyStaticCommand.ExecuteAsync(null));
+
+        Assert.False(context.Actions.IsBusy);
+        Assert.Empty(context.CriticalLogger.Entries);
+        Assert.NotEqual(Strings.ActionUnexpectedFailure, context.Actions.StatusMessage);
+    }
+
+    [Fact]
     public void WithoutCurrentAdapter_AllCommandsAreDisabled()
     {
         using ActionsContext context = CreateContext(attachAdapter: false);
@@ -273,12 +335,16 @@ public sealed class AdapterActionsViewModelTests
         FakeRecoveryRestoreService recoveryRestore = new();
         FakeUserConfirmationService confirmation = new();
         FakeAdapterRefreshCoordinator refreshCoordinator = new();
+        FakeCriticalLogger criticalLogger = new();
         AdapterActionsViewModel actions = new(
             staticApply,
             dhcpApply,
             recoveryRestore,
             confirmation,
-            refreshCoordinator);
+            refreshCoordinator,
+            quickActionService: null,
+            clipboardService: null,
+            criticalLogger: criticalLogger);
         AdapterViewModel adapter = new(
             TestData.Snapshot(id: "{A}"),
             new FakeClipboardService(),
@@ -296,7 +362,18 @@ public sealed class AdapterActionsViewModelTests
             dhcpApply,
             recoveryRestore,
             confirmation,
-            refreshCoordinator);
+            refreshCoordinator,
+            criticalLogger);
+    }
+
+    private static void AssertUnexpectedFailureHandled(ActionsContext context, Exception defect)
+    {
+        Assert.False(context.Actions.IsBusy);
+        Assert.Equal(Strings.ActionUnexpectedFailure, context.Actions.StatusMessage);
+        Assert.Equal(ApplyStatusSeverity.Error, context.Actions.StatusSeverity);
+        CriticalLogEntry entry = Assert.Single(context.CriticalLogger.Entries);
+        Assert.Equal(CriticalLogCategory.Unhandled, entry.Category);
+        Assert.Same(defect, entry.Exception);
     }
 
     private static void AssertConfigurationRefreshRequested(ActionsContext context) =>
@@ -311,7 +388,8 @@ public sealed class AdapterActionsViewModelTests
         FakeDhcpApplyService DhcpApply,
         FakeRecoveryRestoreService RecoveryRestore,
         FakeUserConfirmationService Confirmation,
-        FakeAdapterRefreshCoordinator RefreshCoordinator) : IDisposable
+        FakeAdapterRefreshCoordinator RefreshCoordinator,
+        FakeCriticalLogger CriticalLogger) : IDisposable
     {
         public void Dispose() => Actions.Dispose();
     }

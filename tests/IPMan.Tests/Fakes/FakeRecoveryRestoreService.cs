@@ -11,12 +11,20 @@ public sealed class FakeRecoveryRestoreService : IRecoveryRestoreService
 
     public List<RecoveryRestoreRequest> Requests { get; } = new();
 
+    public Exception? Failure { get; set; }
+
     public Task<RecoveryRestoreResult> RestoreLatestAsync(
         RecoveryRestoreRequest request,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         Requests.Add(request);
+
+        if (Failure is not null)
+        {
+            return Task.FromException<RecoveryRestoreResult>(Failure);
+        }
+
         return Task.FromResult(QueuedResults.Count > 0 ? QueuedResults.Dequeue() : Result);
     }
 }

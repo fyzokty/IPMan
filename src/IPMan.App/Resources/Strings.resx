@@ -247,6 +247,9 @@
   <data name="ApplyMutationFailed" xml:space="preserve">
     <value>Windows ayarları kabul etmedi. Yapılandırma değişmedi.</value>
   </data>
+  <data name="ActionUnexpectedFailure" xml:space="preserve">
+    <value>İşlem beklenmeyen bir hata nedeniyle tamamlanamadı. Ayrıntılar tanılama günlüğüne yazıldı; bağdaştırıcının güncel ayarlarını kontrol edin.</value>
+  </data>
   <data name="ApplyPartialFailure" xml:space="preserve">
     <value>İşlem yarıda kaldı. Adaptör karma durumda olabilir; "Son Yapılandırmayı Geri Yükle" ile eski duruma dönebilirsiniz.</value>
   </data>
