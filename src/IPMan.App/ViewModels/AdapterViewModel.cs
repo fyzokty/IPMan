@@ -58,7 +58,11 @@ public sealed partial class AdapterViewModel : ObservableObject
     /// <summary>Stable Windows identity of the adapter this tab represents.</summary>
     public NetworkAdapterId Id { get; }
 
-    /// <summary>The most recently read Windows state for quick actions.</summary>
+    /// <summary>
+    /// The most recently read Windows state for quick actions. Change
+    /// notification is raised only after every derived value has been updated,
+    /// so observers always see a consistent tab.
+    /// </summary>
     public NetworkAdapterSnapshot Snapshot { get; private set; } = null!;
 
     public AdapterDetailsViewModel Details { get; }
@@ -103,6 +107,7 @@ public sealed partial class AdapterViewModel : ObservableObject
                 nameof(snapshot));
         }
 
+        bool snapshotChanged = Snapshot != snapshot;
         Snapshot = snapshot;
 
         DisplayName = snapshot.Name;
@@ -113,5 +118,10 @@ public sealed partial class AdapterViewModel : ObservableObject
 
         Details.Update(snapshot);
         Draft.UpdateCurrentValues(snapshot);
+
+        if (snapshotChanged)
+        {
+            OnPropertyChanged(nameof(Snapshot));
+        }
     }
 }
