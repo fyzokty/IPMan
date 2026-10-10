@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+
+<html class="light" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Tanılama - IPMan</title>
+<!-- Google Fonts: Inter & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            background: '#F3F3F3',
+            surface: '#FFFFFF',
+            outline: '#D1D1D1',
+            'on-surface': '#1B1B1B',
+            'on-surface-variant': '#5D5D5D',
+            primary: '#0F6CBD',
+            'on-primary': '#FFFFFF',
+            focus: '#005FB8',
+            hover: '#E8F1FB',
+            disabled: '#E5E5E5',
+            success: '#107C10',
+            'success-container': '#DFF6DD',
+            warning: '#B8860B',
+            'warning-container': '#FFF4CE',
+            error: '#A80000',
+            'error-container': '#FDE7E9',
+            info: '#0F6CBD',
+            'info-container': '#EFF6FC',
+            connected: '#107C10',
+            disconnected: '#6B6968'
+          },
+          borderRadius: {
+            DEFAULT: "0.125rem",
+            lg: "0.25rem",
+            xl: "0.5rem",
+            full: "0.75rem"
+          },
+          fontFamily: {
+            headline: ["Inter", "sans-serif"],
+            display: ["Inter", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+            label: ["Inter", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .fluent-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .fluent-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .fluent-scroll::-webkit-scrollbar-thumb {
+      background: #D1D1D1;
+      border-radius: 4px;
+    }
+    .fluent-scroll::-webkit-scrollbar-thumb:hover {
+      background: #A0A0A0;
+    }
+  </style>
+</head>
+<body class="bg-[#EAEAEA] text-on-surface font-body h-screen w-screen flex items-center justify-center m-0 select-none overflow-hidden relative">
+<!-- Desktop App Background Canvas (Simulating IPMan Native Host Window Behind the Modal) -->
+<div class="absolute inset-4 md:inset-8 bg-background border border-outline rounded-xl shadow-2xl flex flex-col overflow-hidden opacity-60 filter blur-[1px] pointer-events-none">
+<!-- TopNavBar (Shared Component Anchor Execution) -->
+<header class="bg-background select-none border-b border-outline flex justify-between items-center w-full px-3 h-10 shrink-0">
+<div class="flex items-center gap-3">
+<span class="font-headline text-subtitle font-semibold text-on-surface flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="router">router</span>
+          IPMan - Ağ Yöneticisi
+        </span>
+</div>
+<nav class="hidden md:flex items-center gap-6 text-sm">
+<span class="border-b-2 border-primary text-primary font-semibold pb-1 cursor-default">Ethernet 1</span>
+<span class="text-on-surface-variant hover:text-on-surface pb-1 cursor-default">Wi-Fi 6</span>
+<span class="text-on-surface-variant hover:text-on-surface pb-1 cursor-default">Sanal Adaptör (vEthernet)</span>
+</nav>
+<div class="flex items-center">
+<div class="w-10 h-10 flex items-center justify-center hover:bg-hover text-on-surface"><span class="material-symbols-outlined text-sm" data-icon="minimize">minimize</span></div>
+<div class="w-10 h-10 flex items-center justify-center hover:bg-hover text-on-surface"><span class="material-symbols-outlined text-sm" data-icon="check_box_outline_blank">check_box_outline_blank</span></div>
+<div class="w-10 h-10 flex items-center justify-center hover:bg-[#C42B1C] hover:text-white"><span class="material-symbols-outlined text-sm" data-icon="close">close</span></div>
+</div>
+</header>
+<!-- Background Body Section with Mock SideNav -->
+<div class="flex flex-1 overflow-hidden">
+<!-- SideNavBar Anchor Mock -->
+<aside class="flex flex-col justify-between h-full p-3 w-[280px] shrink-0 bg-surface border-r border-outline">
+<div class="space-y-4">
+<div class="px-2">
+<p class="font-headline text-subtitle font-semibold text-on-surface">Kayıtlı Profiller</p>
+<p class="text-xs text-on-surface-variant">Hızlı Yapılandırma</p>
+</div>
+<div class="space-y-1 text-sm">
+<div class="bg-hover text-primary font-semibold border-l-[3px] border-primary pl-2 py-1.5 rounded-r-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-base" data-icon="apartment">apartment</span>
+<span>Ofis Ağı</span>
+</div>
+<div class="text-on-surface-variant pl-3 py-1.5 flex items-center gap-2">
+<span class="material-symbols-outlined text-base" data-icon="precision_manufacturing">precision_manufacturing</span>
+<span>Saha PLC Lab</span>
+</div>
+<div class="text-on-surface-variant pl-3 py-1.5 flex items-center gap-2">
+<span class="material-symbols-outlined text-base" data-icon="tune">tune</span>
+<span>Statik Test</span>
+</div>
+<div class="text-on-surface-variant pl-3 py-1.5 flex items-center gap-2">
+<span class="material-symbols-outlined text-base" data-icon="router">router</span>
+<span>Varsayılan DHCP</span>
+</div>
+</div>
+</div>
+</aside>
+<main class="flex-1 p-6 bg-background"></main>
+</div>
+</div>
+<!-- Modal Backdrop Overlay -->
+<div class="absolute inset-0 bg-black/20 backdrop-blur-[2px] z-10 transition-opacity"></div>
+<!-- NATIVE WINDOWS 11 MODAL DIALOG: TANILAMA (620px x 460px) -->
+<section aria-labelledby="dialog-title" aria-modal="true" class="relative z-20 w-[620px] max-w-[95vw] bg-surface border border-outline rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.22)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150" role="dialog">
+<!-- 1. Window Titlebar Chrome -->
+<header class="h-9 px-3 bg-[#F9F9F9] border-b border-outline flex items-center justify-between select-none">
+<div class="flex items-center gap-2 text-on-surface text-xs font-semibold tracking-wide">
+<span class="material-symbols-outlined text-primary text-[15px]" data-icon="build">build</span>
+<span id="dialog-title">Tanılama</span>
+</div>
+<div class="flex items-center -mr-3">
+<button aria-label="Kapat" class="h-9 w-11 flex items-center justify-center text-on-surface hover:bg-[#C42B1C] hover:text-white transition-colors duration-150" id="close-x-btn">
+<span class="material-symbols-outlined text-sm" data-icon="close">close</span>
+</button>
+</div>
+</header>
+<!-- Dialog Interior Canvas -->
+<div class="p-5 flex flex-col flex-1 bg-surface space-y-3">
+<!-- 2. Header & Intro -->
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-info-container text-info flex items-center justify-center shrink-0 border border-[#CEE5FD]">
+<span class="material-symbols-outlined text-lg" data-icon="troubleshoot">troubleshoot</span>
+</div>
+<div>
+<h1 class="text-sm font-semibold text-on-surface leading-tight">Sistem ve Uygulama Tanılama Raporu</h1>
+<p class="text-xs text-on-surface-variant mt-0.5">Bağdaştırıcı durumu, profil bütünlüğü ve yerel ortam yapılandırması.</p>
+</div>
+</div>
+<!-- Timestamp Pill -->
+<div class="text-[11px] font-mono text-on-surface-variant bg-background px-2 py-1 rounded border border-outline shrink-0">
+          10.10.2026 14:35:12
+        </div>
+</div>
+<!-- 4. Status banner / inline notification (Copied to clipboard Fluent style banner) -->
+<div class="flex items-center justify-between px-3 py-2 bg-success-container border border-[#BCE8BC] rounded-lg text-xs transition-all duration-200" id="toast-banner" role="status">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-success text-[17px]" data-icon="check_circle">check_circle</span>
+<span class="font-medium text-[#0E600E]">Panoya kopyalandı</span>
+<span class="text-[#357535] text-[11px] ml-1">Rapor metni sistem panosuna aktarıldı.</span>
+</div>
+<button class="text-[#0E600E] hover:bg-black/5 rounded p-0.5 inline-flex items-center" id="dismiss-toast" title="Bildirimi kapat">
+<span class="material-symbols-outlined text-sm" data-icon="close">close</span>
+</button>
+</div>
+<!-- 3. Read-only Fluent Key-Value Diagnostic Container -->
+<div class="border border-outline rounded-lg bg-[#FAFBFB] overflow-hidden flex flex-col flex-1">
+<div class="fluent-scroll overflow-y-auto max-h-[220px] divide-y divide-[#EBEBEB] text-xs font-body select-text">
+<!-- Row 1: Windows Sürümü -->
+<div class="flex items-center justify-between px-3.5 py-2 hover:bg-[#F2F6FA] transition-colors">
+<span class="text-on-surface-variant font-normal shrink-0 w-44">Windows sürümü</span>
+<span class="font-mono text-on-surface text-right font-medium truncate select-all">Windows 11 Pro · 24H2, derleme 26100.2033, X64</span>
+</div>
+<!-- Row 2: Uygulama sürümü -->
+<div class="flex items-center justify-between px-3.5 py-2 hover:bg-[#F2F6FA] transition-colors">
+<span class="text-on-surface-variant font-normal shrink-0 w-44">Uygulama sürümü</span>
+<span class="font-mono text-on-surface text-right select-all">1.0.0</span>
+</div>
+<!-- Row 3: Yönetici olarak çalışıyor -->
+<div class="flex items-center justify-between px-3.5 py-2 hover:bg-[#F2F6FA] transition-colors">
+<span class="text-on-surface-variant font-normal shrink-0 w-44">Yönetici olarak çalışıyor</span>
+<div class="flex items-center gap-1.5 justify-end">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-success-container text-success border border-[#C5ECC5]">
+<span class="material-symbols-outlined text-[13px]" data-icon="verified_user">verified_user</span>
+                Evet
+              </span>
+</div>
+</div>
+<!-- Row 4: Bağdaştırıcı sayısı -->
+<div class="flex items-center justify-between px-3.5 py-2 hover:bg-[#F2F6FA] transition-colors">
+<span class="text-on-surface-variant font-normal shrink-0 w-44">Bağdaştırıcı sayısı</span>
+<span class="font-mono text-on-surface text-right select-all">3</span>
+</div>
+<!-- Row 5: Profil klasörü -->
+<div class="flex items-center justify-between px-3.5 py-2 hover:bg-[#F2F6FA] transition-colors">
+<span class="text-on-surface-variant font-normal shrink-0 w-44">Profil klasörü</span>
+<span class="font-mono text-[#0E4A7D] text-right truncate max-w-[340px] select-all" title="C:\Users\ali\Documents\IPMan\Profiles">
+              C:\Users\ali\Documents\IPMan\Profiles
+            </span>
+</div>
+<!-- Row 6: Profil klasörü durumu -->
+<div class="flex items-center justify-between px-3.5 py-2 hover:bg-[#F2F6FA] transition-colors">
+<span class="text-on-surface-variant font-normal shrink-0 w-44">Profil klasörü durumu</span>
+<span class="font-body text-on-surface text-right inline-flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-connected"></span>
+              Mevcut
+            </span>
+</div>
+<!-- Row 7: Geçerli profil sayısı -->
+<div class="flex items-center justify-between px-3.5 py-2 hover:bg-[#F2F6FA] transition-colors">
+<span class="text-on-surface-variant font-normal shrink-0 w-44">Geçerli profil sayısı</span>
+<span class="font-mono text-on-surface text-right select-all font-medium">5</span>
+</div>
+<!-- Row 8: Bozuk profil sayısı (Warning Highlighting) -->
+<div class="flex items-center justify-between px-3.5 py-2 bg-[#FFFDF5] hover:bg-[#FFF9E6] transition-colors">
+<span class="text-on-surface-variant font-normal shrink-0 w-44">Bozuk profil sayısı</span>
+<div class="flex items-center gap-1.5 justify-end">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold bg-warning-container text-[#875F00] border border-[#F5E296]">
+<span class="material-symbols-outlined text-[13px]" data-icon="warning">warning</span>
+                1
+              </span>
+</div>
+</div>
+<!-- Row 9: Kritik günlük dosyası -->
+<div class="flex items-center justify-between px-3.5 py-2 hover:bg-[#F2F6FA] transition-colors">
+<span class="text-on-surface-variant font-normal shrink-0 w-44">Kritik günlük dosyası</span>
+<span class="font-mono text-on-surface-variant text-right truncate max-w-[340px] text-[11px] select-all" title="C:\Users\ali\AppData\Local\IPMan\logs\ipman-critical.log (henüz oluşturulmadı)">
+              C:\Users\ali\AppData\Local\IPMan\logs\ipman-critical.log <span class="text-neutral-400 font-sans">(henüz oluşturulmadı)</span>
+</span>
+</div>
+<!-- Row 10: Oluşturulma zamanı -->
+<div class="flex items-center justify-between px-3.5 py-2 hover:bg-[#F2F6FA] transition-colors">
+<span class="text-on-surface-variant font-normal shrink-0 w-44">Oluşturulma zamanı</span>
+<span class="font-mono text-on-surface text-right select-all">10.10.2026 14:35:12</span>
+</div>
+</div>
+</div>
+</div>
+<!-- 5. Footer Dialog Actions (Standard Windows 11 Flow & Order) -->
+<footer class="h-14 px-5 bg-background border-t border-outline flex items-center justify-between select-none">
+<div class="text-[11px] text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px] text-on-surface-variant" data-icon="info">info</span>
+<span>Salt okunur veri alanı</span>
+</div>
+<div class="flex items-center gap-2">
+<!-- Yenile Action Button -->
+<button class="h-8 px-3 rounded bg-surface border border-outline hover:bg-hover active:bg-disabled text-on-surface text-xs font-normal inline-flex items-center gap-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-focus" id="refresh-btn">
+<span class="material-symbols-outlined text-sm" data-icon="refresh">refresh</span>
+<span>Yenile</span>
+</button>
+<!-- Kopyala Action Button -->
+<button class="h-8 px-3 rounded bg-surface border border-outline hover:bg-hover active:bg-disabled text-on-surface text-xs font-normal inline-flex items-center gap-1.5 transition-colors focus:outline-none focus:ring-2 focus:ring-focus" id="copy-btn">
+<span class="material-symbols-outlined text-sm" data-icon="content_copy">content_copy</span>
+<span>Kopyala</span>
+</button>
+<!-- Primary Action Button: Tamam -->
+<button class="h-8 min-w-[76px] px-4 rounded bg-primary hover:bg-[#0E5FA6] active:bg-[#0B4D86] text-on-primary text-xs font-medium inline-flex items-center justify-center transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-focus" id="ok-btn">
+<span>Tamam</span>
+</button>
+</div>
+</footer>
+</section>
+<!-- Interactive Desktop Micro-behaviors -->
+<script>
+    const toastBanner = document.getElementById('toast-banner');
+    const dismissToastBtn = document.getElementById('dismiss-toast');
+    const copyBtn = document.getElementById('copy-btn');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const okBtn = document.getElementById('ok-btn');
+    const closeXBtn = document.getElementById('close-x-btn');
+
+    // Dismiss banner
+    dismissToastBtn?.addEventListener('click', () => {
+      toastBanner.classList.add('opacity-0', '-translate-y-1');
+      setTimeout(() => {
+        toastBanner.style.display = 'none';
+      }, 200);
+    });
+
+    // Copy action interaction
+    copyBtn?.addEventListener('click', () => {
+      toastBanner.style.display = 'flex';
+      setTimeout(() => {
+        toastBanner.classList.remove('opacity-0', '-translate-y-1');
+      }, 10);
+    });
+
+    // Refresh subtle rotation
+    refreshBtn?.addEventListener('click', () => {
+      const icon = refreshBtn.querySelector('.material-symbols-outlined');
+      if (icon) {
+        icon.classList.add('animate-spin');
+        setTimeout(() => icon.classList.remove('animate-spin'), 600);
+      }
+    });
+
+    // Close actions
+    [okBtn, closeXBtn].forEach(btn => {
+      btn?.addEventListener('click', () => {
+        // Visual feedback for native close
+        const dialog = document.querySelector('section[role="dialog"]');
+        if (dialog) {
+          dialog.classList.add('scale-95', 'opacity-0');
+          setTimeout(() => {
+            dialog.classList.remove('scale-95', 'opacity-0');
+          }, 350);
+        }
+      });
+    });
+  </script>
+</body></html>

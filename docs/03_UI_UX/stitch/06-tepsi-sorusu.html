@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+
+<html class="h-full select-none" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IPMan - Tepsi Davranışı</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            background: '#F3F3F3',
+            surface: '#FFFFFF',
+            outline: '#D1D1D1',
+            'on-surface': '#1B1B1B',
+            'on-surface-variant': '#5D5D5D',
+            primary: '#0F6CBD',
+            'on-primary': '#FFFFFF',
+            focus: '#005FB8',
+            hover: '#E8F1FB',
+            disabled: '#E5E5E5',
+            success: '#107C10',
+            'success-container': '#DFF6DD',
+            warning: '#B8860B',
+            'warning-container': '#FFF4CE',
+            error: '#A80000',
+            'error-container': '#FDE7E9',
+            info: '#0F6CBD',
+            'info-container': '#EFF6FC',
+            connected: '#107C10',
+            disconnected: '#6B6968'
+          },
+          borderRadius: {
+            "DEFAULT": "0.125rem",
+            "control": "4px",
+            "card": "8px",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          fontFamily: {
+            headline: ["Inter", "sans-serif"],
+            display: ["Inter", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+            label: ["Inter", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      font-size: 18px;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .material-symbols-fill {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    }
+    /* Windows 11 Fluent Acrylic / Mica Glass Simulation */
+    .mica-backdrop {
+      background: radial-gradient(circle at 80% 20%, rgba(220, 235, 252, 0.7) 0%, rgba(243, 243, 243, 0.95) 60%),
+                  radial-gradient(circle at 20% 80%, rgba(230, 240, 250, 0.6) 0%, rgba(240, 243, 246, 0.8) 100%);
+    }
+  </style>
+</head>
+<body class="h-full bg-[#E5E9EE] font-body text-on-surface antialiased overflow-hidden flex flex-col justify-between relative selection:bg-hover select-none">
+<!-- Windows 11 Desktop Background Atmosphere -->
+<div class="absolute inset-0 pointer-events-none overflow-hidden z-0">
+<div class="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-blue-100/40 blur-3xl"></div>
+<div class="absolute top-[30%] -right-[15%] w-[60vw] h-[60vw] rounded-full bg-slate-200/50 blur-3xl"></div>
+<!-- Desktop Watermark Pattern / Grid Dots -->
+<div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(#1B1B1B 1px, transparent 1px); background-size: 24px 24px;"></div>
+</div>
+<!-- Background App Window (IPMan - Main Inactive Frame to establish authentic Desktop context) -->
+<main class="relative z-10 flex-1 flex items-center justify-center p-6">
+<div class="w-[960px] h-[580px] bg-background/90 backdrop-blur-md rounded-xl border border-outline/70 shadow-xl flex flex-col overflow-hidden pointer-events-none opacity-40 filter blur-[0.5px]">
+<!-- App Header Bar -->
+<div class="flex justify-between items-center w-full px-3 h-10 border-b border-outline bg-surface/80">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary" data-icon="router">router</span>
+<span class="font-headline text-xs font-semibold text-on-surface">IPMan - Ağ Yöneticisi</span>
+</div>
+<div class="flex items-center gap-5 text-xs text-on-surface-variant font-medium">
+<span class="border-b-2 border-primary text-primary font-semibold pb-1">Ethernet 1</span>
+<span>Wi-Fi 6</span>
+<span>Sanal Adaptör (vEthernet)</span>
+</div>
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-xs text-on-surface-variant" data-icon="minimize">minimize</span>
+<span class="material-symbols-outlined text-xs text-on-surface-variant" data-icon="check_box_outline_blank">check_box_outline_blank</span>
+<span class="material-symbols-outlined text-xs text-on-surface-variant" data-icon="close">close</span>
+</div>
+</div>
+<!-- App Shell Placeholder -->
+<div class="flex flex-1 overflow-hidden">
+<aside class="w-[240px] border-r border-outline bg-surface/50 p-3 flex flex-col justify-between">
+<div class="space-y-1">
+<div class="text-[11px] font-semibold text-on-surface-variant px-2 py-1">Kayıtlı Profiller</div>
+<div class="px-2.5 py-1.5 text-xs rounded bg-hover text-primary font-medium flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="apartment">apartment</span>
+              Ofis Ağı
+            </div>
+<div class="px-2.5 py-1.5 text-xs text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="precision_manufacturing">precision_manufacturing</span>
+              Saha PLC Lab
+            </div>
+</div>
+<div class="text-xs text-on-surface-variant flex items-center gap-2 px-2">
+<span class="material-symbols-outlined text-sm" data-icon="settings">settings</span>
+            Ayarlar
+          </div>
+</aside>
+<section class="flex-1 p-6 bg-surface/40 flex flex-col gap-4">
+<div class="h-6 w-48 bg-outline/40 rounded"></div>
+<div class="grid grid-cols-2 gap-4">
+<div class="h-28 bg-white/60 border border-outline/50 rounded-card"></div>
+<div class="h-28 bg-white/60 border border-outline/50 rounded-card"></div>
+</div>
+</section>
+</div>
+</div>
+<!-- Active Native Windows 11 Dialog Modal -->
+<div aria-labelledby="dialog-title" aria-modal="true" class="absolute z-30 w-[440px] bg-surface rounded-xl border border-outline/80 shadow-[0_20px_50px_rgba(0,0,0,0.18)] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150" role="dialog">
+<!-- Native Title Bar (32px) -->
+<div class="h-8 px-3.5 bg-surface flex items-center justify-between border-b border-neutral-100 select-none">
+<div class="flex items-center space-x-2">
+<!-- Small 16px IPMan App Logo -->
+<div class="w-4 h-4 rounded-sm bg-primary/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined !text-[13px] leading-none" data-icon="router">router</span>
+</div>
+<span class="text-xs font-semibold text-on-surface tracking-tight" id="dialog-title">Tepsi davranışı</span>
+</div>
+<!-- Standard Windows 11 Window Controls (Close Button with Red Hover) -->
+<button aria-label="Kapat" class="-mr-2 h-8 w-10 flex items-center justify-center text-neutral-500 hover:bg-[#E81123] hover:text-white transition-colors duration-150" type="button">
+<span class="material-symbols-outlined !text-[14px]" data-icon="close">close</span>
+</button>
+</div>
+<!-- Dialog Body Content -->
+<div class="px-6 pt-5 pb-4 flex gap-4 items-start">
+<!-- Blue Fluent Info / Tray Icon (36x36px) -->
+<div class="w-9 h-9 rounded-full bg-info-container text-primary flex items-center justify-center shrink-0 border border-primary/20 shadow-xs">
+<span class="material-symbols-outlined material-symbols-fill !text-[20px]" data-icon="info">info</span>
+</div>
+<!-- Dialog Text Info -->
+<div class="flex-1 pt-0.5">
+<h2 class="text-sm font-semibold text-on-surface leading-snug">
+            Pencere kapatıldığında veya küçültüldüğünde sistem tepsisine gönderilsin mi?
+          </h2>
+<p class="text-xs text-on-surface-variant mt-2 leading-relaxed">
+            Bu tercihi daha sonra Ayarlar penceresinden değiştirebilirsiniz.
+          </p>
+<!-- Checkbox Option -->
+<div class="mt-4 flex items-center">
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="w-4 h-4 rounded-control border-outline text-primary focus:ring-focus focus:ring-offset-0 focus:ring-1 transition cursor-pointer" type="checkbox"/>
+<span class="text-xs text-on-surface group-hover:text-black select-none">Bir daha sorma</span>
+</label>
+</div>
+</div>
+</div>
+<!-- Dialog Action Bar / Footer -->
+<div class="bg-background px-6 py-3.5 border-t border-outline/60 flex items-center justify-end gap-2">
+<!-- Secondary Button: Hayır, çık -->
+<button class="px-4 py-1.5 bg-surface hover:bg-hover active:bg-disabled border border-outline rounded-control text-xs font-medium text-on-surface shadow-xs transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-focus" type="button">
+          Hayır, çık
+        </button>
+<!-- Primary Button: Evet, tepsiye gönder -->
+<button class="px-4 py-1.5 bg-primary hover:bg-[#0d5ca0] active:bg-[#0b4d86] text-on-primary rounded-control text-xs font-semibold shadow-xs transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-focus" type="button">
+          Evet, tepsiye gönder
+        </button>
+</div>
+</div>
+</main>
+<!-- Bottom Taskbar Anchor & Flyout Context Menu Section -->
+<footer class="relative z-40 w-full">
+<!-- Right-click Context Menu above Tray Icon -->
+<div class="absolute right-6 bottom-14 min-w-[210px] bg-surface/95 backdrop-blur-md border border-outline/80 rounded-card shadow-2xl p-1.5 flex flex-col text-xs z-50 select-none animate-in fade-in slide-in-from-bottom-2 duration-150">
+<!-- Item 1 (Disabled Header) -->
+<div class="px-3 py-1.5 border-b border-outline/50 mb-1 flex items-center justify-between text-[11px] font-semibold text-on-surface-variant/80">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined !text-[13px] text-primary" data-icon="router">router</span>
+<span>IPMan · Sürüm 1.0.0</span>
+</div>
+<span class="w-1.5 h-1.5 rounded-full bg-connected" title="Aktif"></span>
+</div>
+<!-- Item 2: Aç -->
+<button class="w-full text-left font-medium text-on-surface px-3 py-1.5 hover:bg-hover hover:text-primary rounded-control cursor-pointer flex items-center justify-between group transition-colors" type="button">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined !text-[15px] text-on-surface-variant group-hover:text-primary" data-icon="open_in_new">open_in_new</span>
+<span>Aç</span>
+</div>
+<span class="text-[10px] text-on-surface-variant font-mono">Enter</span>
+</button>
+<!-- Sub-menu Item: Profil Değiştir (Fluent utility) -->
+<button class="w-full text-left font-normal text-on-surface px-3 py-1.5 hover:bg-hover rounded-control cursor-pointer flex items-center justify-between text-xs transition-colors" type="button">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined !text-[15px] text-on-surface-variant" data-icon="tune">tune</span>
+<span>Hızlı Profil Seç</span>
+</div>
+<span class="material-symbols-outlined !text-[14px] text-on-surface-variant" data-icon="chevron_right">chevron_right</span>
+</button>
+<!-- Item 3: Separator Line -->
+<div class="my-1 border-t border-outline/50"></div>
+<!-- Item 4: Çıkış -->
+<button class="w-full text-left font-medium text-error px-3 py-1.5 hover:bg-error-container rounded-control cursor-pointer flex items-center gap-2 transition-colors" type="button">
+<span class="material-symbols-outlined !text-[15px] text-error" data-icon="logout">logout</span>
+<span>Çıkış</span>
+</button>
+</div>
+<!-- Windows 11 Taskbar Shell (Docked at bottom, height 48px) -->
+<div class="h-12 w-full bg-[#F3F3F3]/95 backdrop-blur-lg border-t border-[#D1D1D1] px-4 flex items-center justify-between select-none">
+<!-- Left side: Windows Start + Taskbar Widgets -->
+<div class="flex items-center space-x-1.5">
+<!-- Start Button -->
+<button aria-label="Başlat" class="w-9 h-9 rounded-control hover:bg-[#E5E5E5] flex items-center justify-center transition-colors" type="button">
+<svg class="w-4 h-4 text-[#0078D4]" fill="currentColor" viewbox="0 0 24 24">
+<path d="M2.5 2.5h8.5v8.5H2.5zm10.5 0h8.5v8.5H13zm-10.5 10.5h8.5v8.5H2.5zm10.5 0h8.5v8.5H13z"></path>
+</svg>
+</button>
+<!-- Search Button -->
+<button aria-label="Ara" class="w-9 h-9 rounded-control hover:bg-[#E5E5E5] flex items-center justify-center transition-colors text-neutral-700" type="button">
+<span class="material-symbols-outlined !text-[18px]" data-icon="search">search</span>
+</button>
+<!-- Running IPMan Taskbar Icon Indicator -->
+<div class="relative w-9 h-9 rounded-control bg-[#E8F1FB] border-b-2 border-primary flex items-center justify-center text-primary transition-colors">
+<span class="material-symbols-outlined !text-[18px]" data-icon="router">router</span>
+<span class="absolute bottom-0 w-3 h-[2px] bg-primary rounded-full"></span>
+</div>
+</div>
+<!-- Right Side: Windows 11 Notification Area / System Tray -->
+<div class="flex items-center space-x-1">
+<!-- Overflow chevron (Hidden Icons) -->
+<button aria-label="Gizli simgeleri göster" class="h-9 px-1.5 rounded-control hover:bg-[#E5E5E5] flex items-center justify-center transition-colors text-on-surface-variant" type="button">
+<span class="material-symbols-outlined !text-[16px]" data-icon="expand_less">expand_less</span>
+</button>
+<!-- System Tray Icons Cluster -->
+<div class="flex items-center px-1 space-x-1">
+<!-- Highlighted IPMan Tray Icon (Active / Context Menu Target) -->
+<button aria-label="IPMan Tepsi Simgesi" class="relative w-8 h-8 rounded-control bg-hover border border-primary/40 flex items-center justify-center text-primary shadow-xs transition-colors" type="button">
+<span class="material-symbols-outlined !text-[16px]" data-icon="router">router</span>
+<!-- Online status green pip -->
+<span class="absolute top-1 right-1 w-1.5 h-1.5 bg-connected rounded-full ring-1 ring-surface"></span>
+</button>
+<!-- Wi-Fi / Ethernet Icon -->
+<button aria-label="Ağ Bağlantısı" class="w-8 h-8 rounded-control hover:bg-[#E5E5E5] flex items-center justify-center transition-colors text-on-surface-variant" type="button">
+<span class="material-symbols-outlined !text-[16px]" data-icon="wifi">wifi</span>
+</button>
+<!-- Sound Icon -->
+<button aria-label="Ses" class="w-8 h-8 rounded-control hover:bg-[#E5E5E5] flex items-center justify-center transition-colors text-on-surface-variant" type="button">
+<span class="material-symbols-outlined !text-[16px]" data-icon="volume_up">volume_up</span>
+</button>
+<!-- Battery / Power -->
+<button aria-label="Pil Durumu" class="w-8 h-8 rounded-control hover:bg-[#E5E5E5] flex items-center justify-center transition-colors text-on-surface-variant" type="button">
+<span class="material-symbols-outlined !text-[16px]" data-icon="battery_full">battery_full</span>
+</button>
+</div>
+<!-- Thin Taskbar Divider -->
+<div class="h-5 w-[1px] bg-outline mx-1"></div>
+<!-- Clock & Date Display -->
+<div class="px-2 py-1 rounded-control hover:bg-[#E5E5E5] flex flex-col items-end justify-center cursor-default transition-colors">
+<span class="text-[11px] font-medium leading-none text-on-surface font-mono">14:32</span>
+<span class="text-[10px] text-on-surface-variant leading-tight mt-0.5 font-mono">24.10.2024</span>
+</div>
+<!-- Notification Center Bell -->
+<button aria-label="Bildirimler" class="w-8 h-8 rounded-control hover:bg-[#E5E5E5] flex items-center justify-center transition-colors text-on-surface-variant relative" type="button">
+<span class="material-symbols-outlined !text-[16px]" data-icon="notifications">notifications</span>
+<span class="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-full"></span>
+</button>
+<!-- Windows Show Desktop line peek -->
+<div class="w-1.5 h-9 hover:bg-[#D1D1D1] cursor-pointer ml-0.5"></div>
+</div>
+</div>
+</footer>
+</body></html>

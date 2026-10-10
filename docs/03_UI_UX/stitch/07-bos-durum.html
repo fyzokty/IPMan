@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IPMan - Ağ Yöneticisi</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            background: '#F3F3F3',
+            surface: '#FFFFFF',
+            outline: '#D1D1D1',
+            'on-surface': '#1B1B1B',
+            'on-surface-variant': '#5D5D5D',
+            primary: '#0F6CBD',
+            'on-primary': '#FFFFFF',
+            focus: '#005FB8',
+            hover: '#E8F1FB',
+            disabled: '#E5E5E5',
+            success: '#107C10',
+            'success-container': '#DFF6DD',
+            warning: '#B8860B',
+            'warning-container': '#FFF4CE',
+            error: '#A80000',
+            'error-container': '#FDE7E9',
+            info: '#0F6CBD',
+            'info-container': '#EFF6FC',
+            connected: '#107C10',
+            disconnected: '#6B6968'
+          },
+          borderRadius: {
+            DEFAULT: "0.125rem",
+            control: "4px",
+            card: "8px",
+            lg: "0.25rem",
+            xl: "0.5rem",
+            full: "0.75rem"
+          },
+          fontFamily: {
+            headline: ["Inter", "sans-serif"],
+            display: ["Inter", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+            label: ["Inter", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 16px;
+      line-height: 1;
+      display: inline-block;
+      text-transform: none;
+      letter-spacing: normal;
+      word-wrap: normal;
+      white-space: nowrap;
+      direction: ltr;
+      vertical-align: middle;
+      font-feature-settings: 'liga';
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* Native Windows 11 App container styles */
+    body {
+      background-color: #E2E2E2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      padding: 24px;
+      user-select: none;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI Variable", "Segoe UI", sans-serif;
+    }
+
+    .mica-window {
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.16), 0 2px 6px rgba(0, 0, 0, 0.08);
+      border: 1px solid rgba(0, 0, 0, 0.14);
+    }
+
+    .flyout-shadow {
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14), 0 1px 3px rgba(0, 0, 0, 0.08);
+    }
+  </style>
+</head>
+<body class="min-h-screen text-on-surface">
+<!-- Desktop App Window (1280x800 aspect ratio) -->
+<div class="mica-window w-[1280px] h-[800px] bg-background rounded-card flex flex-col relative overflow-hidden">
+<!-- Title Bar / Header Strip -->
+<header class="h-10 bg-background flex items-center justify-between border-b border-outline/60 select-none px-3 relative z-30 shrink-0">
+<!-- Left: App Identity -->
+<div class="flex items-center space-x-2">
+<div class="w-5 h-5 rounded-control bg-primary flex items-center justify-center text-on-primary shadow-xs">
+<span class="material-symbols-outlined text-[14px]">router</span>
+</div>
+<div class="flex items-baseline space-x-2">
+<span class="text-xs font-semibold text-on-surface tracking-tight">IPMan - Ağ Yöneticisi</span>
+<span class="text-[11px] text-on-surface-variant hidden sm:inline">Ağ bağdaştırıcısı yapılandırması</span>
+</div>
+</div>
+<!-- Right: Window Actions & Notifications -->
+<div class="flex items-center space-x-1 -mr-1">
+<!-- Notification Button (Active/Open Flyout State) -->
+<button class="relative h-7 px-2.5 rounded-control bg-hover text-primary hover:bg-hover flex items-center justify-center transition-colors" id="notifButton">
+<span class="material-symbols-outlined text-[16px]">notifications</span>
+<!-- Active Notification Badge -->
+<span class="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-primary rounded-full"></span>
+</button>
+<!-- Settings Button -->
+<button class="h-7 w-7 rounded-control text-on-surface-variant hover:text-on-surface hover:bg-hover flex items-center justify-center transition-colors" title="Ayarlar">
+<span class="material-symbols-outlined text-[16px]">settings</span>
+</button>
+<!-- Window System Controls (Windows 11 caption buttons) -->
+<div class="flex items-center ml-2 border-l border-outline/40 pl-1 h-10 -my-1">
+<button class="w-10 h-10 hover:bg-hover text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[14px]">minimize</span>
+</button>
+<button class="w-10 h-10 hover:bg-hover text-on-surface-variant hover:text-on-surface flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[13px]">check_box_outline_blank</span>
+</button>
+<button class="w-10 h-10 hover:bg-[#C42B1C] hover:text-white text-on-surface-variant flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[15px]">close</span>
+</button>
+</div>
+</div>
+<!-- Notifications Flyout / Popover (Opened State) -->
+<div class="absolute top-10 right-28 w-80 bg-surface rounded-card border border-outline flyout-shadow z-50 p-0 text-left animate-in fade-in slide-in-from-top-1 duration-150" id="notificationsFlyout">
+<!-- Header -->
+<div class="px-3 py-2.5 border-b border-outline/60 flex items-center justify-between">
+<div class="flex items-center space-x-1.5">
+<span class="text-xs font-semibold text-on-surface">Bildirimler</span>
+<span class="text-[10px] bg-hover text-primary font-medium px-1.5 py-0.5 rounded-full">2</span>
+</div>
+<button class="text-[11px] text-primary hover:underline font-medium focus:outline-none">Temizle</button>
+</div>
+<!-- Entries List -->
+<div class="divide-y divide-outline/40 max-h-72 overflow-y-auto">
+<!-- Entry 1: Success -->
+<div class="p-3 hover:bg-hover/50 transition-colors flex items-start space-x-2.5">
+<div class="w-6 h-6 rounded-full bg-success-container text-success flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="text-xs font-medium text-on-surface truncate">Yapılandırma uygula: Ethernet</span>
+<span class="text-[10px] text-on-surface-variant font-mono shrink-0 ml-1">14:31</span>
+</div>
+<div class="flex items-center space-x-1.5 mt-0.5">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-success"></span>
+<span class="text-[11px] text-success font-medium">Başarılı</span>
+</div>
+</div>
+</div>
+<!-- Entry 2: Error -->
+<div class="p-3 hover:bg-hover/50 transition-colors flex items-start space-x-2.5">
+<div class="w-6 h-6 rounded-full bg-error-container text-error flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">error</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between">
+<span class="text-xs font-medium text-on-surface truncate">DHCP'ye al: Wi-Fi</span>
+<span class="text-[10px] text-on-surface-variant font-mono shrink-0 ml-1">14:12</span>
+</div>
+<div class="flex items-center space-x-1.5 mt-0.5">
+<span class="inline-block w-1.5 h-1.5 rounded-full bg-error"></span>
+<span class="text-[11px] text-error font-medium">Başarısız</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Workspace (Sidebar + Primary Viewport) -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Left Sidebar: Kayıtlı Profiller (Empty State) -->
+<aside class="w-[280px] bg-surface border-r border-outline flex flex-col shrink-0 select-none">
+<!-- Sidebar Header -->
+<div class="p-3 pb-2 border-b border-outline/50 space-y-2.5">
+<div class="flex items-center justify-between">
+<div>
+<h2 class="text-xs font-semibold text-on-surface uppercase tracking-wider">Kayıtlı Profiller</h2>
+<p class="text-[11px] text-on-surface-variant">Hızlı Yapılandırma</p>
+</div>
+<button class="h-6 px-2 text-[11px] font-medium bg-primary text-on-primary rounded-control hover:bg-focus transition-colors flex items-center space-x-1 shadow-xs">
+<span class="material-symbols-outlined text-[12px]">add</span>
+<span>Yeni</span>
+</button>
+</div>
+<!-- Search Box -->
+<div class="relative">
+<span class="material-symbols-outlined absolute left-2 top-1/2 -translate-y-1/2 text-on-surface-variant text-[14px]">search</span>
+<input class="w-full h-7 pl-7 pr-7 bg-background text-xs text-on-surface placeholder:text-on-surface-variant border border-outline rounded-control focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all font-body" placeholder="Profil ara..." type="text"/>
+<button class="absolute right-1.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface text-[12px] flex items-center">
+<span class="material-symbols-outlined text-[13px]">close</span>
+</button>
+</div>
+</div>
+<!-- Sidebar Content: Empty State -->
+<div class="flex-1 p-4 flex flex-col items-center justify-center text-center">
+<div class="w-12 h-12 rounded-full bg-background border border-outline/60 flex items-center justify-center text-on-surface-variant mb-3">
+<span class="material-symbols-outlined text-[24px]">folder_off</span>
+</div>
+<h3 class="text-xs font-semibold text-on-surface mb-1">Kayıtlı profil bulunamadı</h3>
+<p class="text-[11px] text-on-surface-variant leading-relaxed max-w-[190px] mb-4">
+            Yeni bir profil ekleyerek başlayabilirsiniz.
+          </p>
+<button class="h-7 px-3 text-xs font-medium text-primary bg-hover hover:bg-primary/20 border border-primary/20 rounded-control transition-colors flex items-center space-x-1.5">
+<span class="material-symbols-outlined text-[14px]">add_circle</span>
+<span>Yeni Profil Ekle</span>
+</button>
+</div>
+<!-- Sidebar Bottom Utility / Disabled Import -->
+<div class="p-2 border-t border-outline/50 bg-background/50 flex items-center justify-between">
+<button class="flex-1 h-6 text-[11px] text-on-surface-variant/60 flex items-center justify-center space-x-1.5 cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-[13px]">file_download</span>
+<span>Profil İçe Aktar</span>
+</button>
+<div class="h-3 w-px bg-outline/60"></div>
+<button class="flex-1 h-6 text-[11px] text-on-surface-variant/60 flex items-center justify-center space-x-1.5 cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-[13px]">tune</span>
+<span>Yedekle</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 bg-background flex flex-col overflow-hidden relative">
+<!-- Adapter Tabs Bar (Windows 11 Tab Control) -->
+<div class="h-9 bg-background px-3 flex items-center space-x-1 border-b border-outline/60 shrink-0">
+<div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-t-control border-b-2 border-outline/40 text-on-surface-variant text-xs">
+<span class="w-2 h-2 rounded-full bg-disconnected"></span>
+<span>Ethernet 1</span>
+</div>
+<div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-t-control border-b-2 border-outline/40 text-on-surface-variant text-xs">
+<span class="w-2 h-2 rounded-full bg-disconnected"></span>
+<span>Wi-Fi 6</span>
+</div>
+<div class="flex items-center space-x-1.5 px-3 py-1.5 rounded-t-control border-b-2 border-outline/40 text-on-surface-variant text-xs">
+<span class="w-2 h-2 rounded-full bg-disconnected"></span>
+<span>Sanal Adaptör (vEthernet)</span>
+</div>
+</div>
+<!-- Fluent InfoBar (Warning Strip) -->
+<div class="bg-warning-container text-on-surface border-l-4 border-warning px-4 py-2.5 flex items-center justify-between text-xs shrink-0 shadow-xs">
+<div class="flex items-center space-x-2.5">
+<span class="material-symbols-outlined text-warning text-[18px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+<span class="font-normal text-on-surface leading-tight">
+              Bağdaştırıcı bilgileri yenilenemedi. Görüntülenen değerler son başarılı okumaya aittir.
+            </span>
+</div>
+<button class="h-6 px-2.5 bg-surface text-on-surface hover:bg-hover border border-outline rounded-control flex items-center space-x-1 text-[11px] font-medium transition-colors ml-4 shrink-0 shadow-xs">
+<span class="material-symbols-outlined text-[12px]">refresh</span>
+<span>Yeniden Dene</span>
+</button>
+</div>
+<!-- Center Empty State Graphic & Actions -->
+<div class="flex-1 flex flex-col items-center justify-center p-8 text-center overflow-y-auto">
+<!-- Fluent Modern Illustration Container -->
+<div class="w-28 h-28 rounded-2xl bg-surface border border-outline/80 shadow-xs flex items-center justify-center relative mb-6">
+<!-- Decorative concentric ring -->
+<div class="absolute inset-2 rounded-xl border border-dashed border-outline/60"></div>
+<!-- Network Disconnect Iconography -->
+<div class="relative flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[54px] text-disconnected/80">lan</span>
+<!-- Red Error / Disconnect badge overlay -->
+<div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-error-container border-2 border-surface flex items-center justify-center text-error shadow-xs">
+<span class="material-symbols-outlined text-[13px] font-bold">close</span>
+</div>
+</div>
+</div>
+<!-- Headline -->
+<h1 class="text-xl font-semibold text-on-surface tracking-tight mb-2">
+            Yönetilebilir ağ bağdaştırıcısı bulunamadı
+          </h1>
+<!-- Subtext Description -->
+<p class="text-xs text-on-surface-variant max-w-md leading-relaxed mb-6 font-body">
+            Windows şu anda görüntülenebilecek bir bağdaştırıcı bildirmiyor. Bir bağdaştırıcı takıldığında liste otomatik yenilenir.
+          </p>
+<!-- Helpful Action Buttons (Fluent Style) -->
+<div class="flex items-center space-x-3">
+<!-- Secondary Button -->
+<button class="h-8 px-4 text-xs font-medium text-on-surface bg-surface hover:bg-hover active:bg-disabled border border-outline rounded-control shadow-xs flex items-center space-x-1.5 transition-colors">
+<span class="material-symbols-outlined text-[14px]">settings_ethernet</span>
+<span>Ağ Ayarlarını Aç</span>
+</button>
+<!-- Primary Blue Fluent Button -->
+<button class="h-8 px-4 text-xs font-medium text-on-primary bg-primary hover:bg-focus active:opacity-90 rounded-control shadow-xs flex items-center space-x-1.5 transition-colors">
+<span class="material-symbols-outlined text-[14px]">sync</span>
+<span>Bağdaştırıcıları Tara</span>
+</button>
+</div>
+<!-- Helpful Technical Hint / Diagnosis Pill -->
+<div class="mt-8 px-3 py-1.5 bg-surface/80 border border-outline/60 rounded-control inline-flex items-center space-x-2 text-[11px] text-on-surface-variant">
+<span class="material-symbols-outlined text-[13px] text-info">info</span>
+<span>İpucu: Aygıt Yöneticisi'nde devre dışı bırakılmış donanımları kontrol edin.</span>
+</div>
+</div>
+</main>
+</div>
+<!-- Bottom Status Bar (Fluent 28px Strip) -->
+<footer class="h-7 bg-surface border-t border-outline flex items-center justify-between px-3 text-[11px] text-on-surface-variant select-none shrink-0 z-20">
+<!-- Left: Privileges -->
+<div class="flex items-center space-x-2">
+<div class="flex items-center space-x-1 text-on-surface">
+<span class="material-symbols-outlined text-[13px] text-success">verified_user</span>
+<span class="font-medium">Yönetici: Evet</span>
+</div>
+<div class="h-3 w-px bg-outline/80"></div>
+<span class="text-on-surface-variant">Hizmet: Çalışıyor</span>
+</div>
+<!-- Center: Selection Status -->
+<div class="flex items-center space-x-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-disconnected"></span>
+<span class="text-on-surface-variant">Seçili bağdaştırıcı yok</span>
+</div>
+<!-- Right: Meta Information -->
+<div class="flex items-center space-x-2.5 font-mono text-[10px]">
+<span>Son yenileme: —</span>
+<div class="h-3 w-px bg-outline/80"></div>
+<span class="font-body text-[11px]">Sürüm 1.0.0</span>
+</div>
+</footer>
+</div>
+</body></html>

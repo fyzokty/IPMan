@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="tr" class="h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPMan - Ayarlar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Segoe+UI+Variable+Text:wght@400;500;600;700&family=Segoe+UI:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Segoe UI Variable Text"', '"Segoe UI"', 'system-ui', 'sans-serif'],
+          },
+          colors: {
+            win: {
+              bg: '#f3f3f3',
+              card: '#ffffff',
+              border: '#e5e5e5',
+              borderLight: '#ebebeb',
+              subtleText: '#616161',
+              text: '#1f1f1f',
+              accent: '#0067c0',
+              accentHover: '#1873c4',
+              accentActive: '#005fb8',
+              hoverBg: '#eaeaea',
+              btnSecondary: '#fbfbfb',
+              btnBorder: '#d1d1d1',
+              warningBg: '#fff9e6',
+              warningBorder: '#ffe180',
+              warningText: '#7a5200',
+              warningIcon: '#9c6b00',
+            }
+          },
+          boxShadow: {
+            'window': '0 24px 48px -8px rgba(0, 0, 0, 0.28), 0 4px 16px -2px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.14)',
+            'btn': '0 1px 2px rgba(0, 0, 0, 0.06)',
+            'input': 'inset 0 1px 1px rgba(0,0,0,0.04)',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #c8c8c8;
+      border-radius: 9999px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #a0a0a0;
+    }
+    /* Fluent Radio Style */
+    .fluent-radio {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid #6b6b6b;
+      border-radius: 50%;
+      outline: none;
+      background-color: #ffffff;
+      display: inline-grid;
+      place-content: center;
+      transition: all 0.12s ease-in-out;
+      cursor: pointer;
+    }
+    .fluent-radio::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      transform: scale(0);
+      transition: 0.12s transform ease-in-out;
+      background-color: #ffffff;
+    }
+    .fluent-radio:hover {
+      border-color: #1f1f1f;
+    }
+    .fluent-radio:checked {
+      background-color: #0067c0;
+      border-color: #0067c0;
+    }
+    .fluent-radio:checked::before {
+      transform: scale(1);
+    }
+    /* Fluent Checkbox Style */
+    .fluent-checkbox {
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border: 1.5px solid #6b6b6b;
+      border-radius: 4px;
+      outline: none;
+      background-color: #ffffff;
+      cursor: pointer;
+      display: inline-grid;
+      place-content: center;
+      transition: all 0.12s ease-in-out;
+      position: relative;
+    }
+    .fluent-checkbox:hover {
+      border-color: #1f1f1f;
+    }
+    .fluent-checkbox:checked {
+      background-color: #0067c0;
+      border-color: #0067c0;
+    }
+    .fluent-checkbox:checked::after {
+      content: '';
+      position: absolute;
+      left: 5px;
+      top: 2px;
+      width: 5px;
+      height: 9px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+  </style>
+</head>
+<body class="bg-neutral-800/60 h-screen w-screen flex items-center justify-center p-4 antialiased overflow-hidden backdrop-blur-sm">
+
+  <!-- Windows 11 Native Modal Dialog Frame (~460x570) -->
+  <div class="w-[460px] h-[570px] bg-[#f8f9fa] rounded-lg shadow-window flex flex-col border border-black/15 overflow-hidden text-win-text select-none">
+    
+    <!-- Title Bar (Native Windows 11 Header) -->
+    <header class="h-9 min-h-[36px] bg-[#ececec] flex items-center justify-between pl-3 pr-0 border-b border-black/10 shrink-0">
+      <div class="flex items-center space-x-2">
+        <!-- App / Dialog Icon -->
+        <div class="w-4 h-4 rounded-[3px] bg-[#0067c0] flex items-center justify-center text-white shadow-xs">
+          <span class="material-symbols-outlined text-[12px] leading-none">settings</span>
+        </div>
+        <span class="text-[12.5px] font-semibold text-[#1e1e1e] tracking-tight">Ayarlar</span>
+      </div>
+
+      <!-- Window Control: Close Button only (Modal pattern) -->
+      <div class="flex items-stretch h-full">
+        <button class="w-11 h-full flex items-center justify-center text-[#555555] hover:bg-[#e81123] hover:text-white transition-colors duration-100 group" title="Kapat" aria-label="Kapat">
+          <svg class="w-2.5 h-2.5 stroke-current stroke-[1.6]" viewBox="0 0 10 10">
+            <line x1="1" y1="1" x2="9" y2="9"></line>
+            <line x1="9" y1="1" x2="1" y2="9"></line>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Content Body (Scrollable settings list) -->
+    <main class="flex-1 overflow-y-auto custom-scroll p-4 space-y-4 bg-[#f9f9fb]">
+
+      <!-- 5. Yellow Warning Strip (Demo: Warning Example) -->
+      <div class="flex items-start gap-2.5 p-2.5 bg-[#fff8e1] border border-[#f5c660] rounded-md text-[#6c4800] text-[12px] leading-snug shadow-xs transition-all animate-fadeIn">
+        <span class="material-symbols-outlined text-[17px] text-[#b27b00] shrink-0 mt-[1px]">warning</span>
+        <div class="flex-1">
+          <p class="font-medium text-[#7d5300]">settings.json yazılamıyor, ayarlarınız şu an kaydedilemiyor</p>
+          <p class="text-[11px] text-[#936402] mt-0.5">Yazma izinlerini kontrol edin veya uygulamayı yönetici olarak başlatın.</p>
+        </div>
+        <button class="text-[#936402] hover:text-[#573a00] p-0.5 rounded hover:bg-black/5" title="Kapat">
+          <span class="material-symbols-outlined text-[14px]">close</span>
+        </button>
+      </div>
+
+      <!-- 1. Section: Tema -->
+      <section class="bg-white border border-[#e5e5e7] rounded-lg p-3 shadow-xs">
+        <div class="flex items-center justify-between mb-2">
+          <div class="flex items-center space-x-1.5">
+            <h2 class="text-[13px] font-semibold text-[#1c1c1c]">Tema</h2>
+            <div class="relative group cursor-help">
+              <span class="material-symbols-outlined text-[15px] text-[#717171] group-hover:text-[#0067c0] transition-colors">info</span>
+              <!-- Tooltip -->
+              <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
+                <div class="bg-[#2b2b2b] text-white text-[11px] px-2.5 py-1 rounded shadow-md whitespace-nowrap">
+                  Uygulama arayüzünün görünüm temasını belirler
+                </div>
+                <div class="w-1.5 h-1.5 bg-[#2b2b2b] rotate-45 -mt-0.5"></div>
+              </div>
+            </div>
+          </div>
+          <span class="text-[11px] text-[#717171]">Görünüm</span>
+        </div>
+
+        <div class="grid grid-cols-3 gap-2">
+          <!-- Sistem -->
+          <label class="flex items-center gap-2 p-2 rounded-md border border-[#0067c0] bg-[#f0f6fc] cursor-pointer transition-all hover:bg-[#e6f1fc]">
+            <input type="radio" name="theme" value="system" class="fluent-radio" checked>
+            <div class="flex flex-col">
+              <span class="text-[12px] font-medium text-[#1c1c1c]">Sistem</span>
+            </div>
+          </label>
+
+          <!-- Açık -->
+          <label class="flex items-center gap-2 p-2 rounded-md border border-[#e5e5e7] bg-white cursor-pointer transition-all hover:bg-[#f6f6f8]">
+            <input type="radio" name="theme" value="light" class="fluent-radio">
+            <div class="flex flex-col">
+              <span class="text-[12px] font-medium text-[#1c1c1c]">Açık</span>
+            </div>
+          </label>
+
+          <!-- Koyu -->
+          <label class="flex items-center gap-2 p-2 rounded-md border border-[#e5e5e7] bg-white cursor-pointer transition-all hover:bg-[#f6f6f8]">
+            <input type="radio" name="theme" value="dark" class="fluent-radio">
+            <div class="flex flex-col">
+              <span class="text-[12px] font-medium text-[#1c1c1c]">Koyu</span>
+            </div>
+          </label>
+        </div>
+      </section>
+
+      <!-- 2. Section: Kapatma davranışı -->
+      <section class="bg-white border border-[#e5e5e7] rounded-lg p-3 shadow-xs">
+        <div class="flex items-center space-x-1.5 mb-2.5">
+          <h2 class="text-[13px] font-semibold text-[#1c1c1c]">Kapatma davranışı</h2>
+          <div class="relative group cursor-help">
+            <span class="material-symbols-outlined text-[15px] text-[#717171] group-hover:text-[#0067c0] transition-colors">info</span>
+            <!-- Tooltip -->
+            <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
+              <div class="bg-[#2b2b2b] text-white text-[11px] px-2.5 py-1 rounded shadow-md whitespace-nowrap">
+                Pencere kapatma düğmesine basıldığında ne yapılacağını belirler
+              </div>
+              <div class="w-1.5 h-1.5 bg-[#2b2b2b] rotate-45 -mt-0.5"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-1.5">
+          <label class="flex items-center justify-between p-1.5 px-2 rounded-md hover:bg-[#f4f4f6] cursor-pointer">
+            <span class="text-[12px] text-[#2c2c2c]">İlk kapatmada sor</span>
+            <input type="radio" name="close_action" value="ask" class="fluent-radio" checked>
+          </label>
+          <label class="flex items-center justify-between p-1.5 px-2 rounded-md hover:bg-[#f4f4f6] cursor-pointer">
+            <span class="text-[12px] text-[#2c2c2c]">Tepsiye küçült</span>
+            <input type="radio" name="close_action" value="tray" class="fluent-radio">
+          </label>
+          <label class="flex items-center justify-between p-1.5 px-2 rounded-md hover:bg-[#f4f4f6] cursor-pointer">
+            <span class="text-[12px] text-[#2c2c2c]">Uygulamadan çık</span>
+            <input type="radio" name="close_action" value="exit" class="fluent-radio">
+          </label>
+        </div>
+      </section>
+
+      <!-- 3. Section: Windows ve tepsi bildirimlerini göster -->
+      <section class="bg-white border border-[#e5e5e7] rounded-lg p-3 shadow-xs">
+        <div class="flex items-center space-x-1.5 mb-2">
+          <h2 class="text-[13px] font-semibold text-[#1c1c1c]">Windows ve tepsi bildirimlerini göster</h2>
+          <div class="relative group cursor-help">
+            <span class="material-symbols-outlined text-[15px] text-[#717171] group-hover:text-[#0067c0] transition-colors">info</span>
+            <!-- Tooltip -->
+            <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover:flex flex-col items-center z-30 pointer-events-none">
+              <div class="bg-[#2b2b2b] text-white text-[11px] px-2.5 py-1 rounded shadow-md whitespace-nowrap">
+                Ağ profili değişiklikleri ve uyarı mesajlarının bildirim sıklığı
+              </div>
+              <div class="w-1.5 h-1.5 bg-[#2b2b2b] rotate-45 -mt-0.5"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="relative">
+          <select class="w-full h-8 px-2.5 pr-8 bg-white border border-[#cecece] rounded-md text-[12px] text-[#1c1c1c] appearance-none focus:outline-none focus:border-[#0067c0] focus:ring-1 focus:ring-[#0067c0] cursor-pointer hover:bg-[#fafafa]">
+            <option value="never">Kapalı</option>
+            <option value="unfocused" selected>Yalnızca pencere odakta değilken</option>
+            <option value="always">Her zaman</option>
+          </select>
+          <span class="material-symbols-outlined text-[16px] text-[#616161] absolute right-2 top-2 pointer-events-none">expand_more</span>
+        </div>
+      </section>
+
+      <!-- 4. Section: Checkboxes (Diğer Seçenekler) -->
+      <section class="bg-white border border-[#e5e5e7] rounded-lg p-3 shadow-xs space-y-2.5">
+        
+        <!-- Checkbox 1 -->
+        <label class="flex items-start justify-between cursor-pointer group">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-[12px] text-[#2c2c2c] group-hover:text-black">Profil seçilince hemen uygula</span>
+            <div class="relative group/tip cursor-help">
+              <span class="material-symbols-outlined text-[14px] text-[#787878] group-hover/tip:text-[#0067c0] transition-colors">info</span>
+              <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover/tip:flex flex-col items-center z-30 pointer-events-none">
+                <div class="bg-[#2b2b2b] text-white text-[11px] px-2.5 py-1 rounded shadow-md whitespace-nowrap">
+                  Onay beklemeden ağ bağdaştırıcısını yeni IP ile hemen yapılandırır
+                </div>
+                <div class="w-1.5 h-1.5 bg-[#2b2b2b] rotate-45 -mt-0.5"></div>
+              </div>
+            </div>
+          </div>
+          <input type="checkbox" class="fluent-checkbox">
+        </label>
+
+        <div class="h-px bg-[#f0f0f2]"></div>
+
+        <!-- Checkbox 2 -->
+        <label class="flex items-start justify-between cursor-pointer group">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-[12px] text-[#2c2c2c] group-hover:text-black">Sanal bağdaştırıcıları göster</span>
+            <div class="relative group/tip cursor-help">
+              <span class="material-symbols-outlined text-[14px] text-[#787878] group-hover/tip:text-[#0067c0] transition-colors">info</span>
+              <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover/tip:flex flex-col items-center z-30 pointer-events-none">
+                <div class="bg-[#2b2b2b] text-white text-[11px] px-2.5 py-1 rounded shadow-md whitespace-nowrap">
+                  Hyper-V, VirtualBox ve VMware sanal ağ adaptörlerini listeler
+                </div>
+                <div class="w-1.5 h-1.5 bg-[#2b2b2b] rotate-45 -mt-0.5"></div>
+              </div>
+            </div>
+          </div>
+          <input type="checkbox" class="fluent-checkbox" checked>
+        </label>
+
+        <div class="h-px bg-[#f0f0f2]"></div>
+
+        <!-- Checkbox 3 -->
+        <label class="flex items-start justify-between cursor-pointer group">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-[12px] text-[#2c2c2c] group-hover:text-black">Son pencere durumunu hatırla</span>
+            <div class="relative group/tip cursor-help">
+              <span class="material-symbols-outlined text-[14px] text-[#787878] group-hover/tip:text-[#0067c0] transition-colors">info</span>
+              <div class="absolute left-1/2 -translate-x-1/2 bottom-full mb-1 hidden group-hover/tip:flex flex-col items-center z-30 pointer-events-none">
+                <div class="bg-[#2b2b2b] text-white text-[11px] px-2.5 py-1 rounded shadow-md whitespace-nowrap">
+                  Uygulama açıldığında önceki pencere konumu ve boyutunu geri yükler
+                </div>
+                <div class="w-1.5 h-1.5 bg-[#2b2b2b] rotate-45 -mt-0.5"></div>
+              </div>
+            </div>
+          </div>
+          <input type="checkbox" class="fluent-checkbox" checked>
+        </label>
+
+      </section>
+
+    </main>
+
+    <!-- 6. Footer Button Row (Windows 11 Dialog Footer, right-aligned) -->
+    <footer class="h-13 min-h-[52px] bg-[#f0f0f2] border-t border-[#dfdfdf] px-4 flex items-center justify-between shrink-0">
+      <button type="button" class="px-3 py-1.5 text-[12px] font-normal text-[#2b2b2b] bg-[#fbfbfb] hover:bg-[#f3f3f3] active:bg-[#ebebeb] border border-[#cecece] rounded shadow-btn transition-colors">
+        Tanılama…
+      </button>
+
+      <div class="flex items-center space-x-2">
+        <button type="button" class="px-3 py-1.5 text-[12px] font-normal text-[#2b2b2b] bg-[#fbfbfb] hover:bg-[#f3f3f3] active:bg-[#ebebeb] border border-[#cecece] rounded shadow-btn transition-colors">
+          Varsayılanlara dön
+        </button>
+
+        <button type="button" class="px-5 py-1.5 text-[12px] font-semibold text-white bg-[#0067c0] hover:bg-[#1873c4] active:bg-[#005fb8] rounded shadow-btn transition-colors">
+          Tamam
+        </button>
+      </div>
+    </footer>
+
+  </div>
+
+</body>
+</html>
