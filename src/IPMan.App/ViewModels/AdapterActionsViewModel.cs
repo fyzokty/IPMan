@@ -135,23 +135,15 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             return;
         }
 
-        if (CurrentAdapter is not null)
-        {
-            CurrentAdapter.Draft.PropertyChanged -= OnDraftPropertyChanged;
-        }
-
+        Unsubscribe(CurrentAdapter);
         CurrentAdapter = adapter;
-
-        if (CurrentAdapter is not null)
-        {
-            CurrentAdapter.Draft.PropertyChanged += OnDraftPropertyChanged;
-        }
+        Subscribe(CurrentAdapter);
 
         ClearStatusCore();
         NotifyCommandsCanExecuteChanged();
     }
 
-    /// <summary>Releases the selected draft subscription.</summary>
+    /// <summary>Releases the selected adapter and draft subscriptions.</summary>
     public void Dispose()
     {
         if (_isDisposed)
@@ -160,11 +152,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         }
 
         _isDisposed = true;
-
-        if (CurrentAdapter is not null)
-        {
-            CurrentAdapter.Draft.PropertyChanged -= OnDraftPropertyChanged;
-        }
+        Unsubscribe(CurrentAdapter);
     }
 
     /// <summary>Shows the concise completion notice for an explicitly selected profile.</summary>
@@ -707,6 +695,42 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         string description = $"{snapshot.Name} {snapshot.Description}";
         return description.Contains("loopback", StringComparison.OrdinalIgnoreCase) ||
             description.Contains("tunnel", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// <summary>
+    /// Mode, gateway and connection dependent actions read the selected
+    /// adapter's snapshot, which a refresh replaces in place on the same tab
+    /// ViewModel. Observing it keeps those actions and their disabled reasons
+    /// current after DHCP/static transitions and link changes.
+    /// </summary>
+    private void Subscribe(AdapterViewModel? adapter)
+    {
+        if (adapter is null)
+        {
+            return;
+        }
+
+        adapter.PropertyChanged += OnAdapterPropertyChanged;
+        adapter.Draft.PropertyChanged += OnDraftPropertyChanged;
+    }
+
+    private void Unsubscribe(AdapterViewModel? adapter)
+    {
+        if (adapter is null)
+        {
+            return;
+        }
+
+        adapter.PropertyChanged -= OnAdapterPropertyChanged;
+        adapter.Draft.PropertyChanged -= OnDraftPropertyChanged;
+    }
+
+    private void OnAdapterPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName is nameof(AdapterViewModel.Snapshot) or null or "")
+        {
+            NotifyCommandsCanExecuteChanged();
+        }
     }
 
     private void OnDraftPropertyChanged(object? sender, PropertyChangedEventArgs e) =>

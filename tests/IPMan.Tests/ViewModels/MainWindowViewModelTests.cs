@@ -539,6 +539,66 @@ public sealed class MainWindowViewModelTests
         Assert.False(panel.SaveCommand.CanExecute(null));
     }
 
+    [Fact]
+    public async Task DhcpApply_FollowedByRefresh_UpdatesActionsDetailsAndDraftForTheSelectedAdapter()
+    {
+        using MainWindowHarness harness = MainWindowHarness.Create();
+        harness.ViewModel.Initialize();
+        harness.Coordinator.PublishRefresh(TestData.Snapshot(
+            id: "{A}",
+            mode: NetworkConfigurationMode.Static,
+            ipv4Address: "192.168.1.50"));
+        AdapterViewModel selected = harness.ViewModel.SelectedAdapter!;
+        harness.Confirmation.Answer = true;
+        Assert.True(harness.Actions.ApplyDhcpCommand.CanExecute(null));
+
+        await harness.Actions.ApplyDhcpCommand.ExecuteAsync(null);
+        harness.Coordinator.PublishRefresh(
+            NetworkChangeReason.ConfigurationApplied,
+            TestData.Snapshot(id: "{A}", mode: NetworkConfigurationMode.Dhcp, ipv4Address: "192.168.1.77"));
+
+        Assert.Same(selected, harness.ViewModel.SelectedAdapter);
+        Assert.False(harness.Actions.ApplyDhcpCommand.CanExecute(null));
+        Assert.True(harness.Actions.RenewIpCommand.CanExecute(null));
+        Assert.Equal(string.Empty, harness.Actions.RenewIpDisabledReason);
+        Assert.Equal(Strings.ModeDhcp, selected.Details.ConfigurationMode);
+        Assert.Equal("192.168.1.77", selected.Details.Ipv4Address);
+        Assert.Equal("192.168.1.77", selected.Draft.Ipv4Address);
+    }
+
+    [Fact]
+    public void Refresh_FromDhcpToStatic_ReenablesDhcpAndDisablesRenewal()
+    {
+        using MainWindowHarness harness = MainWindowHarness.Create();
+        harness.ViewModel.Initialize();
+        harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}", mode: NetworkConfigurationMode.Dhcp));
+
+        harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}", mode: NetworkConfigurationMode.Static));
+
+        Assert.True(harness.Actions.ApplyDhcpCommand.CanExecute(null));
+        Assert.False(harness.Actions.RenewIpCommand.CanExecute(null));
+        Assert.Equal(Strings.QuickActionDhcpRequired, harness.Actions.RenewIpDisabledReason);
+        Assert.Equal(Strings.ModeStatic, harness.ViewModel.SelectedAdapter!.Details.ConfigurationMode);
+    }
+
+    [Fact]
+    public void Refresh_WhenSelectedAdapterDisconnects_DisablesQuickActionsAndUpdatesStatusBar()
+    {
+        using MainWindowHarness harness = MainWindowHarness.Create();
+        harness.ViewModel.Initialize();
+        harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}", name: "Ethernet"));
+        Assert.True(harness.Actions.PingGatewayCommand.CanExecute(null));
+
+        harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}", name: "Ethernet", isConnected: false));
+
+        Assert.False(harness.Actions.PingGatewayCommand.CanExecute(null));
+        Assert.False(harness.Actions.RenewIpCommand.CanExecute(null));
+        Assert.Equal(Strings.QuickActionAdapterInactive, harness.Actions.PingGatewayDisabledReason);
+        Assert.Equal(
+            Strings.FormatSelectedAdapter("Ethernet", AdapterDisplayFormatter.FormatConnectionState(false)),
+            harness.ViewModel.StatusBar.SelectedAdapterState);
+    }
+
     private static ProfilePanelViewModel CreateProfilePanel(
         TestProfileCatalog catalog,
         FakeUserConfirmationService? confirmation = null) => new(
