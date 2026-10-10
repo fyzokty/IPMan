@@ -19,7 +19,8 @@ adapter (02); settings window behind the gear (03); follow-Windows / light / dar
 (04); quick actions — copy network info, gateway ping, DNS flush, IP renew (05);
 Windows toast notifications for adapter-changing outcomes, switchable in settings (06);
 critical-only log under `%LocalAppData%\IPMan\logs\` and an unclean-exit marker that
-starts after the first change (07).
+starts after the first change (07); a diagnostics window behind settings with a
+copyable plain-text report (08).
 Profiles / settings: one JSON file per profile under `Documents\IPMan\Profiles\`,
 settings in `Documents\IPMan\settings.json`; recovery snapshots stay in
 `%LocalAppData%\IPMan\Backup\` (ADR-015 supersedes ADR-012).
@@ -32,10 +33,9 @@ i18n: `Strings.resx`, single language (Turkish).
 
 # Next
 Order and details live in `docs/backlog/`:
-1. 08 — diagnostics panel
-2. 09 — silent first-run configuration backup
-3. 10 — portable package and installer
-4. 11 — real-adapter verification on an isolated VM (can run in parallel)
+1. 09 — silent first-run configuration backup
+2. 10 — portable package and installer
+3. 11 — real-adapter verification on an isolated VM (can run in parallel)
 
 # Constraints
 - Destructive network tests are opt-in and must run only on an isolated VM adapter

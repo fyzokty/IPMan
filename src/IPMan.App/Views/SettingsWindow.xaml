@@ -42,6 +42,7 @@
             <CheckBox Content="{x:Static res:Strings.SettingsRememberWindow}" IsChecked="{Binding RememberWindowState}" Margin="0,0,0,6" />
             <TextBlock Text="ⓘ" ToolTip="{x:Static res:Strings.SettingsHelpRememberWindow}" Margin="0,0,0,16" />
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="{x:Static res:Strings.SettingsDiagnostics}" Command="{Binding OpenDiagnosticsCommand}" Margin="0,0,8,0" />
                 <Button Content="{x:Static res:Strings.SettingsReset}" Command="{Binding ResetToDefaultsCommand}" Margin="0,0,8,0" />
                 <Button Content="{x:Static res:Strings.CommandOk}" Click="OnCloseClicked" IsDefault="True" />
             </StackPanel>

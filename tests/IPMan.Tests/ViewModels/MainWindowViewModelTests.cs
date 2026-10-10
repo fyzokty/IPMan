@@ -173,6 +173,42 @@ public sealed class MainWindowViewModelTests
             adapter => Assert.Equal("{B}", adapter.Id.Value));
     }
 
+    [Theory]
+    [InlineData(false, 2)]
+    [InlineData(true, 3)]
+    public void DiagnosticsAdapterCount_UsesTheVisibleListIncludingTheSelectedVirtualAdapter(bool selectVirtual, int expected)
+    {
+        using MainWindowHarness harness = MainWindowHarness.Create();
+        harness.ViewModel.Initialize();
+        NetworkAdapterSnapshot[] adapters =
+        [
+            TestData.Snapshot(id: "{A}", name: "Ethernet"),
+            TestData.Snapshot(id: "{V}", name: "VMware Virtual Ethernet"),
+            TestData.Snapshot(id: "{B}", name: "Wi-Fi")
+        ];
+        harness.Coordinator.PublishRefresh(adapters);
+        if (selectVirtual)
+        {
+            harness.ViewModel.SelectedAdapter = harness.ViewModel.Adapters[1];
+        }
+
+        harness.ViewModel.SetShowVirtualAdapters(false);
+        harness.Coordinator.PublishRefresh(adapters);
+        FakeDiagnosticsSources sources = new();
+        using FakeProfileCatalog profiles = new();
+        DiagnosticsViewModel diagnostics = new(
+            sources, sources, sources, () => harness.ViewModel.Adapters.Count,
+            profiles, sources, new FakeClipboardService());
+
+        diagnostics.RefreshCommand.Execute(null);
+
+        Assert.Equal(expected, harness.ViewModel.Adapters.Count);
+        Assert.Contains($"{Strings.DiagnosticsAdapterCount}: {expected}", diagnostics.ReportText, StringComparison.Ordinal);
+        harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}"));
+        diagnostics.RefreshCommand.Execute(null);
+        Assert.Contains($"{Strings.DiagnosticsAdapterCount}: 1", diagnostics.ReportText, StringComparison.Ordinal);
+    }
+
     [Fact]
     public void WhenTheSelectedAdapterDisappears_AValidRemainingAdapterIsSelected()
     {

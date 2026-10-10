@@ -7,6 +7,9 @@ namespace IPMan.App.Presentation;
 public interface IApplicationVersionProvider
 {
     string Version { get; }
+
+    /// <summary>Gets the complete version, including prerelease and build metadata.</summary>
+    string InformationalVersion => Version;
 }
 
 public sealed class AssemblyApplicationVersionProvider : IApplicationVersionProvider
@@ -14,6 +17,9 @@ public sealed class AssemblyApplicationVersionProvider : IApplicationVersionProv
     private readonly Lazy<string> _version = new(ReadVersion);
 
     public string Version => _version.Value;
+
+    public string InformationalVersion => typeof(AssemblyApplicationVersionProvider).Assembly
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? Version;
 
     private static string ReadVersion()
     {
