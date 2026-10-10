@@ -10,6 +10,10 @@ namespace IPMan.Application.Networking;
 /// </summary>
 public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
 {
+    private const ushort DefaultGatewayMetric = 1;
+    private const ushort MinimumGatewayMetric = 1;
+    private const ushort MaximumGatewayMetric = 9999;
+
     private readonly INetworkConfigurationPreflightService _preflightService;
     private readonly IRecoverySnapshotRepository _recoveryRepository;
     private readonly INetworkAdapterConfigurator _configurator;
@@ -215,7 +219,7 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
         StaticIpv4MutationPlan plan = new(
             desired,
             Ipv4AddressMutationIsRequired(current, desired),
-            GetGatewayMutationMode(current, desired),
+            GetGatewayMutationMode(recovery, desired),
             GetGatewayMetric(recovery, desired),
             GetDnsMutationMode(recovery, desired),
             current.Mode);
@@ -474,21 +478,29 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
     }
 
     private static GatewayMutationMode GetGatewayMutationMode(
-        NetworkAdapterSnapshot current,
+        NetworkAdapterRecoverySnapshot current,
         StaticIpv4Configuration desired)
     {
         if (desired.Gateway is null)
         {
-            return current.Ipv4Gateways.Count == 0
+            return current.Adapter.Ipv4Gateways.Count == 0
                 ? GatewayMutationMode.LeaveAbsent
                 : GatewayMutationMode.Clear;
         }
 
-        return current.Ipv4Gateways.Count == 1 &&
-            string.Equals(current.Ipv4Gateways[0], desired.Gateway, StringComparison.Ordinal)
-                ? GatewayMutationMode.LeaveUnchanged
-                : GatewayMutationMode.Set;
+        return GatewayCanBeLeftUnchanged(current, desired)
+            ? GatewayMutationMode.LeaveUnchanged
+            : GatewayMutationMode.Set;
     }
+
+    // Only a gateway that is already part of the static configuration survives
+    // EnableStatic. A DHCP-provided (or unknown-source) gateway is dropped when the
+    // adapter leaves DHCP, so the same address must still be written explicitly.
+    private static bool GatewayCanBeLeftUnchanged(
+        NetworkAdapterRecoverySnapshot current,
+        StaticIpv4Configuration desired) =>
+        current.Adapter.Mode == NetworkConfigurationMode.Static &&
+        GatewayAddressIsUnchanged(current, desired);
 
     private static bool Ipv4AddressMutationIsRequired(
         NetworkAdapterSnapshot current,
@@ -507,9 +519,16 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
     private static bool CanPlanGatewayMutation(
         NetworkAdapterRecoverySnapshot current,
         StaticIpv4Configuration desired) =>
-        !GatewayAddressIsUnchanged(current, desired) ||
+        !GatewayCanBeLeftUnchanged(current, desired) ||
         current.Ipv4Gateways[0].Metric.HasValue;
 
+    /// <summary>
+    /// Selects the metric carried by the plan. A preserved gateway carries its
+    /// observed metric only for verification; 0 there means Windows automatic
+    /// metric and is never written. A written gateway must carry a metric that
+    /// SetGateways documents (1..9999): the observed explicit metric of the same
+    /// address is preserved, otherwise the approved default is used.
+    /// </summary>
     private static ushort? GetGatewayMetric(
         NetworkAdapterRecoverySnapshot current,
         StaticIpv4Configuration desired)
@@ -519,9 +538,15 @@ public sealed class StaticIpv4ApplyService : IStaticIpv4ApplyService
             return null;
         }
 
-        return GatewayAddressIsUnchanged(current, desired)
-            ? current.Ipv4Gateways[0].Metric
-            : (ushort)1;
+        if (GatewayCanBeLeftUnchanged(current, desired))
+        {
+            return current.Ipv4Gateways[0].Metric;
+        }
+
+        return GatewayAddressIsUnchanged(current, desired) &&
+            current.Ipv4Gateways[0].Metric is ushort observed and >= MinimumGatewayMetric and <= MaximumGatewayMetric
+                ? observed
+                : DefaultGatewayMetric;
     }
 
     private static bool GatewayAddressIsUnchanged(

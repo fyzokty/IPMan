@@ -198,6 +198,9 @@ public static class Strings
     /// <summary>Gets the mutation failure message.</summary>
     public static string ApplyMutationFailed => Get(nameof(ApplyMutationFailed));
 
+    /// <summary>Gets the message for an action that stopped on an unexpected error.</summary>
+    public static string ActionUnexpectedFailure => Get(nameof(ActionUnexpectedFailure));
+
     /// <summary>Gets the partial failure message.</summary>
     public static string ApplyPartialFailure => Get(nameof(ApplyPartialFailure));
 
