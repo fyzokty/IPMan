@@ -29,6 +29,7 @@ never overwriting it or exposing it to restore and retention (09, ADR-017).
 CI: GitHub Actions, `windows-latest`, Release build + full suite on push to `main`
 and on PRs. Destructive tests stay skipped — no `IPMAN_*` in CI.
 Elevation: whole app runs `requireAdministrator`, helper split rejected (ADR-013).
+Distribution: win-x64 self-contained portable zip and Inno Setup installer tooling added; tagged CI creates a draft Release, pending CI and clean Windows verification (10).
 Single instance: `Local\` mutex + admin-only pipe activation; mutation serialized
 machine-wide by a `Global\` mutex (ADR-011, ADR-014).
 i18n: `Strings.resx`, single language (Turkish).

@@ -1,0 +1,108 @@
+name: Release packages
+
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    paths:
+      - 'installer/**'
+      - 'tools/release/**'
+      - '.github/workflows/release.yml'
+      - 'Directory.Build.props'
+      - 'src/IPMan.App/IPMan.App.csproj'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Resolve version
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          if ($env:EVENT_NAME -eq 'push' -and $env:REF_TYPE -eq 'tag') {
+            if ($env:REF_NAME -cnotmatch '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$') {
+              throw "Geçersiz sürüm etiketi: $env:REF_NAME. Beklenen biçim: vX.Y.Z."
+            }
+            $version = $env:REF_NAME.Substring(1)
+          } else {
+            $version = "0.0.0-ci.$env:RUN_NUMBER"
+          }
+          "RELEASE_VERSION=$version" >> $env:GITHUB_ENV
+
+      - name: Build (Release)
+        run: dotnet build IPMan.sln -c Release -p:Version=$env:RELEASE_VERSION
+
+      # Never add IPMAN_* opt-in variables or invoke tools/host-lab here:
+      # both can arm code paths that mutate a real network adapter.
+      - name: Test (Release)
+        run: dotnet test IPMan.sln -c Release --no-build -p:Version=$env:RELEASE_VERSION
+
+      - name: Ensure Inno Setup 6 is available
+        run: |
+          $iscc = Get-Command ISCC.exe -CommandType Application -ErrorAction SilentlyContinue
+          $installed = $null -ne $iscc
+          foreach ($programFiles in @(${env:ProgramFiles(x86)}, $env:ProgramFiles)) {
+            if ($programFiles -and (Test-Path -LiteralPath (Join-Path $programFiles 'Inno Setup 6/ISCC.exe'))) {
+              $installed = $true
+            }
+          }
+          if (-not $installed) {
+            choco install innosetup -y --no-progress
+            if ($LASTEXITCODE -ne 0) { throw 'Inno Setup kurulamadı.' }
+          }
+
+      - name: Publish and package
+        run: ./tools/release/build-release.ps1 -Version $env:RELEASE_VERSION -OutputDirectory ./artifacts/release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: IPMan-${{ env.RELEASE_VERSION }}-win-x64
+          path: |
+            artifacts/release/IPMan-${{ env.RELEASE_VERSION }}-win-x64-portable.zip
+            artifacts/release/IPMan-${{ env.RELEASE_VERSION }}-win-x64-setup.exe
+          if-no-files-found: error
+          retention-days: 14
+
+  draft-release:
+    if: github.event_name == 'push' && github.ref_type == 'tag'
+    needs: package
+    runs-on: windows-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/release
+          merge-multiple: true
+
+      - name: Create draft release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          $version = $env:RELEASE_TAG.Substring(1)
+          gh release create $env:RELEASE_TAG --draft --verify-tag --title "IPMan $version" --generate-notes `
+            "artifacts/release/IPMan-$version-win-x64-portable.zip" `
+            "artifacts/release/IPMan-$version-win-x64-setup.exe"
+          if ($LASTEXITCODE -ne 0) { throw 'Taslak GitHub Release oluşturulamadı.' }
