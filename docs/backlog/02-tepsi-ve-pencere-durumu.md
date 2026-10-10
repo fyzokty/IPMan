@@ -1,6 +1,6 @@
 # 02 — Sistem tepsisi ve pencere durumu
 
-- **Durum:** yapılacak
+- **Durum:** tamamlandı
 - **Bağımlılık:** 01
 - **Gereksinimler:** PR-019, PR-020 · AC-018
 
