@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Documents;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -10,6 +11,7 @@ using IPMan.App.Services;
 using IPMan.App.ViewModels;
 using IPMan.App.Views;
 using IPMan.Application.Networking;
+using IPMan.Domain.Networking;
 using IPMan.Domain.Profiles;
 using IPMan.Domain.Settings;
 using IPMan.Tests.Fakes;
@@ -18,7 +20,7 @@ using Xunit;
 namespace IPMan.Tests.Presentation;
 
 [Collection(WpfTestCollectionDefinition.Name)]
-public sealed class WindowXamlSmokeTests
+public sealed partial class WindowXamlSmokeTests
 {
     [Theory]
     [InlineData("Light")]
@@ -46,6 +48,12 @@ public sealed class WindowXamlSmokeTests
             ReferenceEquals(element.DataContext, adapter) && element.Text == adapter.DisplayName);
         Assert.Contains(Descendants(mainContent).OfType<TextBox>(), element =>
             ReferenceEquals(element.DataContext, adapter.Draft));
+        TextBlock profileGuidance = Assert.Single(Descendants(mainContent).OfType<TextBlock>(), element =>
+            ReferenceEquals(element.DataContext, adapter.Draft) &&
+            BindingOperations.GetBinding(element, TextBlock.TextProperty)?.Path.Path == nameof(AdapterDraftViewModel.ProfileGuidance));
+        Border guidanceBand = Assert.IsType<Border>(VisualTreeHelper.GetParent(VisualTreeHelper.GetParent(profileGuidance)));
+        Assert.Equal(Visibility.Collapsed, guidanceBand.Visibility);
+        Assert.Equal(new Size(), guidanceBand.DesiredSize);
         Assert.Contains(Descendants(mainContent).OfType<TextBlock>(), element =>
             ReferenceEquals(element.DataContext, profile) && element.Text == profile.Name);
         TextBlock problemText = Assert.Single(Descendants(mainContent).OfType<TextBlock>(),
@@ -201,26 +209,31 @@ public sealed class WindowXamlSmokeTests
             ProblemItems = [new NetworkProfileProblem(@"C:\window-smoke\broken.json", ProfileLoadFailureKind.MalformedJson)]
         };
 
-        internal WindowFixture(string theme)
+        internal WindowFixture(string theme, IReadOnlyList<NetworkProfile>? profiles = null,
+            NetworkAdapterSnapshot[]? adapters = null)
         {
+            if (profiles is not null)
+            {
+                _catalog.ProfileItems = profiles;
+            }
             SettingsRepository = new FakeWindowSettingsRepository(AppSettings.Default with
             {
                 Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light,
+                ShowVirtualAdapters = true,
                 // Inline error layout must not invoke the tray/modal fallback for a hidden window.
                 NotificationMode = NotificationMode.Always
             });
             FakeDiagnosticsSources sources = new();
             Notifications = new OperationNotificationService(SettingsRepository, sources);
             Notifications.Report(Strings.CommandApply, TestData.Snapshot().Id.Value, "Ethernet", true);
-            FakeAdapterRefreshCoordinator coordinator = new();
             AdapterActionsViewModel actions = new(new FakeStaticIpv4ApplyService(), new FakeDhcpApplyService(),
-                new FakeRecoveryRestoreService(), Confirmation, coordinator);
+                new FakeRecoveryRestoreService(), Confirmation, Coordinator);
             FakeWindowProfileDialogs dialogs = new();
             Profiles = new ProfilePanelViewModel(_catalog, dialogs, dialogs, Confirmation, Dispatcher);
-            Main = new MainWindowViewModel(coordinator, Dispatcher, new FakeClipboardService(), sources,
+            Main = new MainWindowViewModel(Coordinator, Dispatcher, new FakeClipboardService(), sources,
                 sources, sources, actions, new StaticIpv4ConfigurationValidator(), Profiles, Notifications);
             Main.Initialize();
-            coordinator.PublishRefresh(TestData.Snapshot());
+            Coordinator.PublishRefresh(adapters ?? [TestData.Snapshot()]);
             Settings = new SettingsViewModel(SettingsRepository, Confirmation, Theme);
             Diagnostics = new DiagnosticsViewModel(sources, sources, sources, () => Main.Adapters.Count,
                 _catalog, sources, new FakeClipboardService());
@@ -228,6 +241,7 @@ public sealed class WindowXamlSmokeTests
         }
 
         internal FakeUiDispatcher Dispatcher { get; } = new();
+        internal FakeAdapterRefreshCoordinator Coordinator { get; } = new();
         internal FakeUserConfirmationService Confirmation { get; } = new();
         internal TrayIconManager Tray { get; } = FakeWindowServices.CreateTray();
         internal WindowsThemeService Theme { get; } = FakeWindowServices.CreateTheme();

@@ -132,7 +132,7 @@
         <!-- Tab content: current configuration on the left, editable draft on the right. -->
         <DataTemplate x:Key="AdapterTabContentTemplate" DataType="{x:Type vm:AdapterViewModel}">
             <Grid>
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,20,0,80">
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,16,0,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -149,10 +149,10 @@
                             <DockPanel Margin="0,0,0,12">
                                 <TextBlock Style="{StaticResource IconStyle}"
                                            Text="&#xE9D9;"
-                                           Margin="0,0,8,12"
+                                           Margin="0,0,8,0"
                                            DockPanel.Dock="Left" />
                                 <TextBlock Style="{StaticResource SectionHeaderStyle}"
-                                           Text="{x:Static res:Strings.CurrentConfigurationHeader}" />
+                                           Text="{x:Static res:Strings.CurrentConfigurationHeader}" Margin="0" VerticalAlignment="Center" />
                             </DockPanel>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -321,8 +321,9 @@
                             </Grid>
                         </StackPanel>
                     </Border>
-                    <!-- Configuration draft (edit only; nothing is written to Windows) -->
+                    <!-- Configuration draft and network actions. -->
                     <Border Grid.Column="2" Style="{StaticResource CardStyle}" VerticalAlignment="Stretch">
+                        <Grid>
                         <StackPanel DataContext="{Binding Draft}">
                             <DockPanel Margin="0,0,0,12">
                                 <Button Command="{Binding GetCurrentValuesCommand}"
@@ -330,7 +331,7 @@
                                         DockPanel.Dock="Right"
                                         FontSize="12"
                                         Padding="4,4"
-                                        Margin="8,0,0,8">
+                                        Margin="8,0,0,0">
                                     <Button.Style>
                                         <Style TargetType="Button" BasedOn="{StaticResource SubtleButtonStyle}">
                                             <Setter Property="IsEnabled" Value="True" />
@@ -345,19 +346,40 @@
                                 </Button>
                                 <TextBlock Style="{StaticResource IconStyle}"
                                            Text="&#xE713;"
-                                           Margin="0,0,8,12"
+                                           Margin="0,0,8,0"
                                            DockPanel.Dock="Left" />
                                 <TextBlock Style="{StaticResource SectionHeaderStyle}"
-                                           Text="{x:Static res:Strings.DraftConfigurationHeader}" />
+                                           Text="{x:Static res:Strings.DraftConfigurationHeader}" Margin="0" VerticalAlignment="Center" />
                             </DockPanel>
-                            <TextBlock Margin="0,0,0,14"
-                                       Foreground="{DynamicResource SecondaryTextBrush}"
-                                       Text="{x:Static res:Strings.DraftConfigurationHint}"
-                                       TextWrapping="Wrap" />
-                            <TextBlock Margin="0,0,0,10"
-                                       Foreground="{DynamicResource SecondaryTextBrush}"
-                                       Text="{Binding ProfileGuidance}"
-                                       TextWrapping="Wrap" />
+                            <Border Padding="8,6" Margin="0,0,0,10"
+                                    Background="{DynamicResource InfoBackgroundBrush}"
+                                    BorderBrush="{DynamicResource InfoBorderBrush}"
+                                    BorderThickness="1" CornerRadius="4">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding ProfileGuidance}" Value="">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                            <DataTrigger Binding="{Binding ProfileGuidance}" Value="{x:Null}">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Style="{StaticResource IconStyle}" Text="&#xE946;"
+                                               Foreground="{DynamicResource InfoBorderBrush}"
+                                               VerticalAlignment="Top" Margin="0,1,8,0" />
+                                    <TextBlock Grid.Column="1" Text="{Binding ProfileGuidance}"
+                                               Foreground="{DynamicResource PrimaryTextBrush}"
+                                               FontSize="12" TextWrapping="Wrap" />
+                                </Grid>
+                            </Border>
                             <Grid>
                                 <Grid.Style>
                                     <Style TargetType="Grid">
@@ -370,168 +392,213 @@
                                         </Style.Triggers>
                                     </Style>
                                 </Grid.Style>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
-                                </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
                                     <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="Auto" />
                                 </Grid.RowDefinitions>
-                                <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,8,4">
-                                    <TextBox x:Name="Ipv4AddressBox"
-                                             Style="{StaticResource DraftIpv4DifferentStyle}"
-                                             AutomationProperties.Name="{x:Static res:Strings.FieldIpv4Address}"
-                                             Text="{Binding Ipv4Address, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Style="{StaticResource FieldErrorTextStyle}"
-                                               AutomationProperties.LiveSetting="Polite"
-                                               Text="{Binding Ipv4AddressError}" />
+                                <StackPanel Grid.Row="0" Margin="0">
+                                    <Grid Margin="0,0,0,4" Height="20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Static res:Strings.FieldIpv4Address}" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{x:Static res:Strings.DraftDifferentHint}"
+                                                   FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource WarningBorderBrush}"
+                                                   ToolTip="{Binding SelectedItem.Details.Ipv4Address, RelativeSource={RelativeSource AncestorType=TabControl}}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding IsIpv4AddressDifferentFromWindows}" Value="True" />
+                                                                <Condition Binding="{Binding Ipv4AddressError.Length}" Value="0" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="1" Style="{StaticResource FieldErrorTextStyle}"
+                                                   HorizontalAlignment="Stretch" TextAlignment="Right" VerticalAlignment="Center"
+                                                   AutomationProperties.LiveSetting="Polite" Text="{Binding Ipv4AddressError}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBox x:Name="Ipv4AddressBox" Style="{StaticResource DraftIpv4DifferentStyle}"
+                                                 AutomationProperties.Name="{x:Static res:Strings.FieldIpv4Address}"
+                                                 Text="{Binding Ipv4Address, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Button Style="{StaticResource CopyButtonStyle}" HorizontalAlignment="Right" Margin="0,0,2,0"
+                                                Command="{Binding CopyFieldCommand}" motion:CopyFeedback.Result="{Binding CopySucceeded}"
+                                                CommandParameter="{x:Static vm:DraftField.Ipv4Address}" Content="{x:Static res:Strings.CommandCopy}"
+                                                AutomationProperties.Name="{x:Static res:Strings.FieldIpv4Address}" />
+                                    </Grid>
                                 </StackPanel>
-                                <Button Grid.Row="1"
-                                        Grid.Column="1"
-                                        Style="{StaticResource CopyButtonStyle}"
-                                        Command="{Binding CopyFieldCommand}"
-                                        motion:CopyFeedback.Result="{Binding CopySucceeded}"
-                                        CommandParameter="{x:Static vm:DraftField.Ipv4Address}"
-                                        Content="{x:Static res:Strings.CommandCopy}"
-                                        AutomationProperties.Name="{x:Static res:Strings.FieldIpv4Address}" />
-                                <StackPanel Grid.Row="3" Grid.Column="0" Margin="0,0,8,4">
-                                    <TextBox Style="{StaticResource DraftSubnetDifferentStyle}"
-                                             AutomationProperties.Name="{x:Static res:Strings.FieldSubnetMask}"
-                                             Text="{Binding SubnetMask, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Style="{StaticResource FieldErrorTextStyle}"
-                                               AutomationProperties.LiveSetting="Polite"
-                                               Text="{Binding SubnetMaskError}" />
+                                <StackPanel Grid.Row="1" Margin="0,12,0,0">
+                                    <Grid Margin="0,0,0,4" Height="20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Static res:Strings.FieldSubnetMask}" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{x:Static res:Strings.DraftDifferentHint}"
+                                                   FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource WarningBorderBrush}"
+                                                   ToolTip="{Binding SelectedItem.Details.SubnetMask, RelativeSource={RelativeSource AncestorType=TabControl}}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding IsSubnetMaskDifferentFromWindows}" Value="True" />
+                                                                <Condition Binding="{Binding SubnetMaskError.Length}" Value="0" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="1" Style="{StaticResource FieldErrorTextStyle}"
+                                                   HorizontalAlignment="Stretch" TextAlignment="Right" VerticalAlignment="Center"
+                                                   AutomationProperties.LiveSetting="Polite" Text="{Binding SubnetMaskError}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBox Style="{StaticResource DraftSubnetDifferentStyle}"
+                                                 AutomationProperties.Name="{x:Static res:Strings.FieldSubnetMask}"
+                                                 Text="{Binding SubnetMask, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Button Style="{StaticResource CopyButtonStyle}" HorizontalAlignment="Right" Margin="0,0,2,0"
+                                                Command="{Binding CopyFieldCommand}" motion:CopyFeedback.Result="{Binding CopySucceeded}"
+                                                CommandParameter="{x:Static vm:DraftField.SubnetMask}" Content="{x:Static res:Strings.CommandCopy}"
+                                                AutomationProperties.Name="{x:Static res:Strings.FieldSubnetMask}" />
+                                    </Grid>
                                 </StackPanel>
-                                <Button Grid.Row="3"
-                                        Grid.Column="1"
-                                        Style="{StaticResource CopyButtonStyle}"
-                                        Command="{Binding CopyFieldCommand}"
-                                        motion:CopyFeedback.Result="{Binding CopySucceeded}"
-                                        CommandParameter="{x:Static vm:DraftField.SubnetMask}"
-                                        Content="{x:Static res:Strings.CommandCopy}"
-                                        AutomationProperties.Name="{x:Static res:Strings.FieldSubnetMask}" />
-                                <StackPanel Grid.Row="5" Grid.Column="0" Margin="0,0,8,4">
-                                    <TextBox Style="{StaticResource DraftGatewayDifferentStyle}"
-                                             AutomationProperties.Name="{x:Static res:Strings.FieldGateway}"
-                                             Text="{Binding Gateway, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Style="{StaticResource FieldErrorTextStyle}"
-                                               AutomationProperties.LiveSetting="Polite"
-                                               Text="{Binding GatewayError}" />
+                                <StackPanel Grid.Row="2" Margin="0,12,0,0">
+                                    <Grid Margin="0,0,0,4" Height="20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Static res:Strings.FieldGateway}" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{x:Static res:Strings.DraftDifferentHint}"
+                                                   FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource WarningBorderBrush}"
+                                                   ToolTip="{Binding SelectedItem.Details.Gateway, RelativeSource={RelativeSource AncestorType=TabControl}}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding IsGatewayDifferentFromWindows}" Value="True" />
+                                                                <Condition Binding="{Binding GatewayError.Length}" Value="0" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="1" Style="{StaticResource FieldErrorTextStyle}"
+                                                   HorizontalAlignment="Stretch" TextAlignment="Right" VerticalAlignment="Center"
+                                                   AutomationProperties.LiveSetting="Polite" Text="{Binding GatewayError}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBox Style="{StaticResource DraftGatewayDifferentStyle}"
+                                                 AutomationProperties.Name="{x:Static res:Strings.FieldGateway}"
+                                                 Text="{Binding Gateway, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Button Style="{StaticResource CopyButtonStyle}" HorizontalAlignment="Right" Margin="0,0,2,0"
+                                                Command="{Binding CopyFieldCommand}" motion:CopyFeedback.Result="{Binding CopySucceeded}"
+                                                CommandParameter="{x:Static vm:DraftField.Gateway}" Content="{x:Static res:Strings.CommandCopy}"
+                                                AutomationProperties.Name="{x:Static res:Strings.FieldGateway}" />
+                                    </Grid>
                                 </StackPanel>
-                                <Button Grid.Row="5"
-                                        Grid.Column="1"
-                                        Style="{StaticResource CopyButtonStyle}"
-                                        Command="{Binding CopyFieldCommand}"
-                                        motion:CopyFeedback.Result="{Binding CopySucceeded}"
-                                        CommandParameter="{x:Static vm:DraftField.Gateway}"
-                                        Content="{x:Static res:Strings.CommandCopy}"
-                                        AutomationProperties.Name="{x:Static res:Strings.FieldGateway}" />
-                                <StackPanel Grid.Row="7" Grid.Column="0" Margin="0,0,8,4">
-                                    <TextBox Style="{StaticResource DraftPrimaryDnsDifferentStyle}"
-                                             AutomationProperties.Name="{x:Static res:Strings.FieldPrimaryDns}"
-                                             Text="{Binding PrimaryDns, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Style="{StaticResource FieldErrorTextStyle}"
-                                               AutomationProperties.LiveSetting="Polite"
-                                               Text="{Binding PrimaryDnsError}" />
+                                <StackPanel Grid.Row="3" Margin="0,12,0,0">
+                                    <Grid Margin="0,0,0,4" Height="20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Static res:Strings.FieldPrimaryDns}" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{x:Static res:Strings.DraftDifferentHint}"
+                                                   FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource WarningBorderBrush}"
+                                                   ToolTip="{Binding SelectedItem.Details.PrimaryDns, RelativeSource={RelativeSource AncestorType=TabControl}}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding IsPrimaryDnsDifferentFromWindows}" Value="True" />
+                                                                <Condition Binding="{Binding PrimaryDnsError.Length}" Value="0" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="1" Style="{StaticResource FieldErrorTextStyle}"
+                                                   HorizontalAlignment="Stretch" TextAlignment="Right" VerticalAlignment="Center"
+                                                   AutomationProperties.LiveSetting="Polite" Text="{Binding PrimaryDnsError}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBox Style="{StaticResource DraftPrimaryDnsDifferentStyle}"
+                                                 AutomationProperties.Name="{x:Static res:Strings.FieldPrimaryDns}"
+                                                 Text="{Binding PrimaryDns, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Button Style="{StaticResource CopyButtonStyle}" HorizontalAlignment="Right" Margin="0,0,2,0"
+                                                Command="{Binding CopyFieldCommand}" motion:CopyFeedback.Result="{Binding CopySucceeded}"
+                                                CommandParameter="{x:Static vm:DraftField.PrimaryDns}" Content="{x:Static res:Strings.CommandCopy}"
+                                                AutomationProperties.Name="{x:Static res:Strings.FieldPrimaryDns}" />
+                                    </Grid>
                                 </StackPanel>
-                                <Button Grid.Row="7"
-                                        Grid.Column="1"
-                                        Style="{StaticResource CopyButtonStyle}"
-                                        Command="{Binding CopyFieldCommand}"
-                                        motion:CopyFeedback.Result="{Binding CopySucceeded}"
-                                        CommandParameter="{x:Static vm:DraftField.PrimaryDns}"
-                                        Content="{x:Static res:Strings.CommandCopy}"
-                                        AutomationProperties.Name="{x:Static res:Strings.FieldPrimaryDns}" />
-                                <StackPanel Grid.Row="9" Grid.Column="0" Margin="0,0,8,4">
-                                    <TextBox Style="{StaticResource DraftSecondaryDnsDifferentStyle}"
-                                             AutomationProperties.Name="{x:Static res:Strings.FieldSecondaryDns}"
-                                             Text="{Binding SecondaryDns, UpdateSourceTrigger=PropertyChanged}" />
-                                    <TextBlock Style="{StaticResource FieldErrorTextStyle}"
-                                               AutomationProperties.LiveSetting="Polite"
-                                               Text="{Binding SecondaryDnsError}" />
+                                <StackPanel Grid.Row="4" Margin="0,12,0,0">
+                                    <Grid Margin="0,0,0,4" Height="20">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{x:Static res:Strings.FieldSecondaryDns}" VerticalAlignment="Center" Foreground="{DynamicResource PrimaryTextBrush}" />
+                                        <TextBlock Grid.Column="1" Text="{x:Static res:Strings.DraftDifferentHint}"
+                                                   FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource WarningBorderBrush}"
+                                                   ToolTip="{Binding SelectedItem.Details.SecondaryDns, RelativeSource={RelativeSource AncestorType=TabControl}}">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding IsSecondaryDnsDifferentFromWindows}" Value="True" />
+                                                                <Condition Binding="{Binding SecondaryDnsError.Length}" Value="0" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Grid.Column="1" Style="{StaticResource FieldErrorTextStyle}"
+                                                   HorizontalAlignment="Stretch" TextAlignment="Right" VerticalAlignment="Center"
+                                                   AutomationProperties.LiveSetting="Polite" Text="{Binding SecondaryDnsError}" />
+                                    </Grid>
+                                    <Grid>
+                                        <TextBox Style="{StaticResource DraftSecondaryDnsDifferentStyle}"
+                                                 AutomationProperties.Name="{x:Static res:Strings.FieldSecondaryDns}"
+                                                 Text="{Binding SecondaryDns, UpdateSourceTrigger=PropertyChanged}" />
+                                        <Button Style="{StaticResource CopyButtonStyle}" HorizontalAlignment="Right" Margin="0,0,2,0"
+                                                Command="{Binding CopyFieldCommand}" motion:CopyFeedback.Result="{Binding CopySucceeded}"
+                                                CommandParameter="{x:Static vm:DraftField.SecondaryDns}" Content="{x:Static res:Strings.CommandCopy}"
+                                                AutomationProperties.Name="{x:Static res:Strings.FieldSecondaryDns}" />
+                                    </Grid>
                                 </StackPanel>
-                                <Button Grid.Row="9"
-                                        Grid.Column="1"
-                                        Style="{StaticResource CopyButtonStyle}"
-                                        Command="{Binding CopyFieldCommand}"
-                                        motion:CopyFeedback.Result="{Binding CopySucceeded}"
-                                        CommandParameter="{x:Static vm:DraftField.SecondaryDns}"
-                                        Content="{x:Static res:Strings.CommandCopy}"
-                                        AutomationProperties.Name="{x:Static res:Strings.FieldSecondaryDns}" />
-                                <DockPanel Grid.Row="0" Grid.ColumnSpan="2">
-                                    <TextBlock Text="{x:Static res:Strings.DraftDifferentHint}"
-                                               FontSize="12"
-                                               Foreground="{DynamicResource WarningBorderBrush}"
-                                               Margin="0,8,0,4"
-                                               Visibility="{Binding IsIpv4AddressDifferentFromWindows, Converter={StaticResource BooleanToHidden}}"
-                                               ToolTip="{Binding SelectedItem.Details.Ipv4Address, RelativeSource={RelativeSource AncestorType=TabControl}}"
-                                               DockPanel.Dock="Right" />
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                               Text="{x:Static res:Strings.FieldIpv4Address}"
-                                               Margin="0,8,8,4"
-                                               Foreground="{DynamicResource PrimaryTextBrush}" />
-                                </DockPanel>
-                                <DockPanel Grid.Row="2" Grid.ColumnSpan="2">
-                                    <TextBlock Text="{x:Static res:Strings.DraftDifferentHint}"
-                                               FontSize="12"
-                                               Foreground="{DynamicResource WarningBorderBrush}"
-                                               Margin="0,8,0,4"
-                                               Visibility="{Binding IsSubnetMaskDifferentFromWindows, Converter={StaticResource BooleanToHidden}}"
-                                               ToolTip="{Binding SelectedItem.Details.SubnetMask, RelativeSource={RelativeSource AncestorType=TabControl}}"
-                                               DockPanel.Dock="Right" />
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                               Text="{x:Static res:Strings.FieldSubnetMask}"
-                                               Margin="0,8,8,4"
-                                               Foreground="{DynamicResource PrimaryTextBrush}" />
-                                </DockPanel>
-                                <DockPanel Grid.Row="4" Grid.ColumnSpan="2">
-                                    <TextBlock Text="{x:Static res:Strings.DraftDifferentHint}"
-                                               FontSize="12"
-                                               Foreground="{DynamicResource WarningBorderBrush}"
-                                               Margin="0,8,0,4"
-                                               Visibility="{Binding IsGatewayDifferentFromWindows, Converter={StaticResource BooleanToHidden}}"
-                                               ToolTip="{Binding SelectedItem.Details.Gateway, RelativeSource={RelativeSource AncestorType=TabControl}}"
-                                               DockPanel.Dock="Right" />
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                               Text="{x:Static res:Strings.FieldGateway}"
-                                               Margin="0,8,8,4"
-                                               Foreground="{DynamicResource PrimaryTextBrush}" />
-                                </DockPanel>
-                                <DockPanel Grid.Row="6" Grid.ColumnSpan="2">
-                                    <TextBlock Text="{x:Static res:Strings.DraftDifferentHint}"
-                                               FontSize="12"
-                                               Foreground="{DynamicResource WarningBorderBrush}"
-                                               Margin="0,8,0,4"
-                                               Visibility="{Binding IsPrimaryDnsDifferentFromWindows, Converter={StaticResource BooleanToHidden}}"
-                                               ToolTip="{Binding SelectedItem.Details.PrimaryDns, RelativeSource={RelativeSource AncestorType=TabControl}}"
-                                               DockPanel.Dock="Right" />
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                               Text="{x:Static res:Strings.FieldPrimaryDns}"
-                                               Margin="0,8,8,4"
-                                               Foreground="{DynamicResource PrimaryTextBrush}" />
-                                </DockPanel>
-                                <DockPanel Grid.Row="8" Grid.ColumnSpan="2">
-                                    <TextBlock Text="{x:Static res:Strings.DraftDifferentHint}"
-                                               FontSize="12"
-                                               Foreground="{DynamicResource WarningBorderBrush}"
-                                               Margin="0,8,0,4"
-                                               Visibility="{Binding IsSecondaryDnsDifferentFromWindows, Converter={StaticResource BooleanToHidden}}"
-                                               ToolTip="{Binding SelectedItem.Details.SecondaryDns, RelativeSource={RelativeSource AncestorType=TabControl}}"
-                                               DockPanel.Dock="Right" />
-                                    <TextBlock Style="{StaticResource FieldLabelStyle}"
-                                               Text="{x:Static res:Strings.FieldSecondaryDns}"
-                                               Margin="0,8,8,4"
-                                               Foreground="{DynamicResource PrimaryTextBrush}" />
-                                </DockPanel>
                             </Grid>
                             <WrapPanel Margin="0,12,0,0">
                                 <Button Style="{StaticResource PrimaryActionButtonStyle}"
@@ -542,7 +609,9 @@
                                         Content="{x:Static res:Strings.CommandUseDhcp}" />
                                 <Button Style="{StaticResource SecondaryActionButtonStyle}"
                                         Command="{Binding DataContext.Actions.RestoreLastCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                        Content="{x:Static res:Strings.CommandRestoreLast}" />
+                                        Content="{x:Static res:Strings.CommandRestoreLastCompact}"
+                                        AutomationProperties.Name="{x:Static res:Strings.CommandRestoreLast}"
+                                        ToolTip="{x:Static res:Strings.CommandRestoreLast}" />
                             </WrapPanel>
                             <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,4,0,8" />
                             <TextBlock Text="{x:Static res:Strings.QuickActionsHeader}"
@@ -566,7 +635,9 @@
                                         HorizontalContentAlignment="Left" />
                                 <Button Style="{StaticResource SecondaryActionButtonStyle}"
                                         Command="{Binding DataContext.Actions.FlushDnsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                        Content="{x:Static res:Strings.CommandFlushDns}"
+                                        Content="{x:Static res:Strings.CommandFlushDnsCompact}"
+                                        AutomationProperties.Name="{x:Static res:Strings.CommandFlushDns}"
+                                        ToolTip="{x:Static res:Strings.CommandFlushDns}"
                                         FontSize="12"
                                         HorizontalContentAlignment="Left" />
                                 <Button Style="{StaticResource SecondaryActionButtonStyle}"
@@ -577,21 +648,20 @@
                                         FontSize="12"
                                         HorizontalContentAlignment="Left" />
                             </UniformGrid>
-                            <ProgressBar Height="3"
-                                         Margin="0,4,0,8"
-                                         Visibility="{Binding DataContext.Actions.IsBusy, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToHidden}}"
-                                         IsIndeterminate="{Binding DataContext.Actions.IsBusy, RelativeSource={RelativeSource AncestorType=Window}}" />
                         </StackPanel>
+                        <ProgressBar Height="3" VerticalAlignment="Top" Margin="-16,-16,-16,0"
+                                     Visibility="{Binding DataContext.Actions.IsBusy, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToVisibility}}"
+                                     IsIndeterminate="{Binding DataContext.Actions.IsBusy, RelativeSource={RelativeSource AncestorType=Window}}" />
+                        </Grid>
                     </Border>
 
                 </Grid>
             </ScrollViewer>
+                <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,8" Panel.ZIndex="2">
                     <Border AutomationProperties.LiveSetting="Assertive"
-                            Visibility="{Binding DataContext.Actions.HasStatusMessage, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToHidden}}"
+                            Visibility="{Binding DataContext.Actions.HasStatusMessage, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToVisibility}}"
                             Style="{StaticResource ResultBannerStyle}"
-                            VerticalAlignment="Bottom"
-                            Margin="20,0,20,8"
-                            Panel.ZIndex="2">
+                            Margin="0">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -635,6 +705,7 @@
                             </TextBlock>
                         </Grid>
                     </Border>
+                </StackPanel>
             </Grid>
         </DataTemplate>
     </Window.Resources>
@@ -668,7 +739,7 @@
                             Style="{StaticResource IconButtonStyle}"
                             AutomationProperties.Name="{x:Static res:Strings.NotificationHistory}"
                             ToolTip="{x:Static res:Strings.NotificationHistory}">
-                        <TextBlock Style="{StaticResource IconStyle}" Text="&#xE7F4;" />
+                        <TextBlock Style="{StaticResource IconStyle}" Text="&#xEA8F;" />
                     </Button>
                     <Button ToolTip="{x:Static res:Strings.SettingsTitle}"
                             Click="OnSettingsClicked"
@@ -702,7 +773,7 @@
                                            Text="{x:Static res:Strings.NotificationHistoryEmpty}">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Hidden" />
+                                            <Setter Property="Visibility" Value="Collapsed" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding NotificationHistory.Count}" Value="0">
                                                     <Setter Property="Visibility" Value="Visible" />
@@ -807,31 +878,31 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="96" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <!-- Inline refresh failure: never modal, never clears the last valid state. -->
             <StackPanel Grid.Row="0" Grid.Column="2">
-                <Border Height="42" Margin="20,6,20,0"
+                <Border Margin="20,8,20,0"
                         Padding="12,8"
                         Background="{DynamicResource WarningBackgroundBrush}"
                         BorderBrush="{DynamicResource WarningBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="4"
                         motion:FluentMotion.Entrance="True"
-                        Visibility="{Binding HasRefreshError, Converter={StaticResource BooleanToHidden}}">
+                        Visibility="{Binding HasRefreshError, Converter={StaticResource BooleanToVisibility}}">
                     <TextBlock Foreground="{DynamicResource PrimaryTextBrush}"
                                Text="{Binding RefreshErrorText}"
                                ToolTip="{Binding RefreshErrorText}"
                                TextWrapping="Wrap" />
                 </Border>
-                <Border Height="42" Margin="20,6,20,0"
+                <Border Margin="20,8,20,0"
                         Padding="8,4"
                         Background="{DynamicResource ErrorBackgroundBrush}"
                         BorderBrush="{DynamicResource ErrorBorderBrush}"
                         BorderThickness="1"
                         motion:FluentMotion.Entrance="True"
-                        Visibility="{Binding SettingsWarningVisible, Converter={StaticResource BooleanToHidden}}">
+                        Visibility="{Binding SettingsWarningVisible, Converter={StaticResource BooleanToVisibility}}">
                     <TextBlock Foreground="{DynamicResource ErrorTextBrush}"
                                Text="{Binding SettingsWarningText}"
                                ToolTip="{Binding SettingsWarningText}"
@@ -848,23 +919,25 @@
                     CornerRadius="0"
                     BorderThickness="0,0,1,0"
                     Padding="12">
+                <Grid>
                 <DockPanel LastChildFill="True">
                     <StackPanel DockPanel.Dock="Top">
                         <TextBlock Style="{StaticResource SectionHeaderStyle}"
                                    Text="{x:Static res:Strings.ProfilePanelHeader}" />
                         <Grid Margin="0,0,0,12">
-                            <TextBox Margin="0"
+                            <TextBox Margin="0" Height="32" Padding="32,4,8,4"
                                      AutomationProperties.Name="{x:Static res:Strings.ProfileSearchPlaceholder}"
                                      Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                                      ToolTip="{x:Static res:Strings.ProfileSearchPlaceholder}" />
+                            <TextBlock Style="{StaticResource IconStyle}" Text="&#xE721;" Margin="10,0,0,0" HorizontalAlignment="Left" IsHitTestVisible="False" />
                             <TextBlock Text="{x:Static res:Strings.ProfileSearchPlaceholder}"
-                                       Margin="10,0"
+                                       Margin="32,0,8,0"
                                        VerticalAlignment="Center"
                                        Foreground="{DynamicResource SecondaryTextBrush}"
                                        IsHitTestVisible="False">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Hidden" />
+                                        <Setter Property="Visibility" Value="Collapsed" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding SearchText}" Value="">
                                                 <Setter Property="Visibility" Value="Visible" />
@@ -876,16 +949,44 @@
                         </Grid>
                     </StackPanel>
                     <StackPanel DockPanel.Dock="Bottom">
-                        <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,12,0,16" />
+                        <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,12,0,12" />
                         <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="{x:Static res:Strings.ProfileSaveHeader}" />
-                        <TextBox Margin="0,8,0,4"
-                                 AutomationProperties.Name="{x:Static res:Strings.ProfileNameLabel}"
-                                 Text="{Binding NewProfileName, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="{x:Static res:Strings.ProfileNameLabel}" />
-                        <TextBox Margin="0,0,0,4"
-                                 AutomationProperties.Name="{x:Static res:Strings.ProfileDescriptionLabel}"
-                                 Text="{Binding NewProfileDescription, UpdateSourceTrigger=PropertyChanged}"
-                                 ToolTip="{x:Static res:Strings.ProfileDescriptionLabel}" />
+                        <Grid Margin="0,0,0,8">
+                            <TextBox Height="32" AutomationProperties.Name="{x:Static res:Strings.ProfileNameLabel}"
+                                     Text="{Binding NewProfileName, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="{x:Static res:Strings.ProfileNameLabel}" />
+                            <TextBlock Text="{x:Static res:Strings.ProfileNameLabel}" Margin="10,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource SecondaryTextBrush}" IsHitTestVisible="False">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding NewProfileName}" Value="">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                        <Grid Margin="0,0,0,8">
+                            <TextBox Height="32" AutomationProperties.Name="{x:Static res:Strings.ProfileDescriptionLabel}"
+                                     Text="{Binding NewProfileDescription, UpdateSourceTrigger=PropertyChanged}"
+                                     ToolTip="{x:Static res:Strings.ProfileDescriptionLabel}" />
+                            <TextBlock Text="{x:Static res:Strings.ProfileDescriptionLabel}" Margin="10,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource SecondaryTextBrush}" IsHitTestVisible="False">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding NewProfileDescription}" Value="">
+                                                <Setter Property="Visibility" Value="Visible" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
                         <CheckBox Margin="0,0,0,4"
                                   Content="{x:Static res:Strings.ProfileUseDhcpLabel}"
                                   IsChecked="{Binding NewProfileUsesDhcp}" />
@@ -900,13 +1001,7 @@
                                     Content="{x:Static res:Strings.CommandImportProfile}"
                                     FontSize="12" />
                         </UniformGrid>
-                        <TextBlock Margin="0,6,0,0"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   Text="{Binding StatusMessage}"
-                                   Height="48"
-                                   ToolTip="{Binding StatusMessage}"
-                                   TextWrapping="Wrap"
-                                   Visibility="{Binding HasStatusMessage, Converter={StaticResource BooleanToHidden}}" />
+
                     </StackPanel>
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
@@ -1040,9 +1135,12 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <Expander Margin="0,8,0,0"
+                            <Expander Style="{StaticResource ProfileProblemsExpanderStyle}" Margin="0,8,0,0"
                                       Header="{Binding ProblemsHeader}"
-                                      Visibility="{Binding HasProblems, Converter={StaticResource BooleanToHidden}}">
+                                      Visibility="{Binding HasProblems, Converter={StaticResource BooleanToVisibility}}">
+                                <Expander.HeaderTemplate>
+                                    <DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" /></DataTemplate>
+                                </Expander.HeaderTemplate>
                                 <ItemsControl ItemsSource="{Binding Problems}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -1058,7 +1156,7 @@
                             <StackPanel Margin="8,32" HorizontalAlignment="Center">
                                 <StackPanel.Style>
                                     <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Hidden" />
+                                        <Setter Property="Visibility" Value="Collapsed" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding Groups.Count}" Value="0">
                                                 <Setter Property="Visibility" Value="Visible" />
@@ -1084,6 +1182,18 @@
                         </StackPanel>
                     </ScrollViewer>
                 </DockPanel>
+                    <Border VerticalAlignment="Top" Margin="0,80,0,0" Panel.ZIndex="2"
+                            Style="{StaticResource CardStyle}" Padding="12,8"
+                            Background="{DynamicResource InfoBackgroundBrush}"
+                            Visibility="{Binding HasStatusMessage, Converter={StaticResource BooleanToVisibility}}">
+                        <TextBlock Margin="0"
+                                   Foreground="{DynamicResource SecondaryTextBrush}"
+                                   Text="{Binding StatusMessage}"
+                                   ToolTip="{Binding StatusMessage}"
+                                   TextWrapping="Wrap"
+                                   Visibility="{Binding HasStatusMessage, Converter={StaticResource BooleanToVisibility}}" />
+                    </Border>
+                </Grid>
             </Border>
             <TabControl Grid.Row="1"
                         Grid.Column="2"

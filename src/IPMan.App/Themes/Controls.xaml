@@ -33,7 +33,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="CornerRadius" Value="8" />
-        <Setter Property="Padding" Value="20" />
+        <Setter Property="Padding" Value="16" />
     </Style>
     <Style x:Key="SectionHeaderStyle" TargetType="TextBlock">
         <Setter Property="FontSize" Value="16" />
@@ -117,7 +117,9 @@
         <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
     </Style>
     <Style x:Key="IconButtonStyle" TargetType="Button" BasedOn="{StaticResource SubtleButtonStyle}">
-        <Setter Property="Padding" Value="8" />
+        <Setter Property="Padding" Value="7" />
+        <Setter Property="Width" Value="32" />
+        <Setter Property="Height" Value="32" />
         <Setter Property="MinWidth" Value="32" />
         <Setter Property="Margin" Value="0" />
     </Style>
@@ -135,7 +137,7 @@
         <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="Padding" Value="10,4" />
         <Setter Property="MinHeight" Value="32" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Template">
@@ -143,7 +145,7 @@
                 <ControlTemplate TargetType="TextBox">
                     <Grid>
                         <Border CornerRadius="4" motion:FluentMotion.Background="{TemplateBinding Background}" motion:FluentMotion.BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
-                            <ScrollViewer x:Name="PART_ContentHost" Margin="{TemplateBinding Padding}" />
+                            <ScrollViewer x:Name="PART_ContentHost" />
                         </Border>
                         <Border x:Name="FocusLine" Height="2" Margin="1,0,1,0" VerticalAlignment="Bottom" motion:FluentMotion.Background="{DynamicResource FocusBrush}" motion:FluentMotion.Axis="X" motion:FluentMotion.Reveal="False" />
                     </Grid>
@@ -160,15 +162,17 @@
     <Style x:Key="DraftTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
         <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
         <Setter Property="HorizontalAlignment" Value="Stretch" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="10,4,36,4" />
     </Style>
     <Style x:Key="FieldErrorTextStyle" TargetType="TextBlock">
         <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}" />
         <Setter Property="FontSize" Value="12" />
-        <Setter Property="Height" Value="32" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
         <Setter Property="ToolTip" Value="{Binding Text, RelativeSource={RelativeSource Self}}" />
-        <Setter Property="TextWrapping" Value="Wrap" />
-        <Setter Property="Margin" Value="0,4,0,8" />
-        <Style.Triggers><DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource Self}}" Value=""><Setter Property="Visibility" Value="Hidden" /></DataTrigger></Style.Triggers>
+        <Setter Property="TextWrapping" Value="NoWrap" />
+        <Setter Property="Margin" Value="8,0,0,0" />
+        <Style.Triggers><DataTrigger Binding="{Binding Text, RelativeSource={RelativeSource Self}}" Value=""><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers>
     </Style>
     <Style TargetType="CheckBox">
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -221,7 +225,7 @@
         <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
-        <Setter Property="Padding" Value="10,6" />
+        <Setter Property="Padding" Value="10,4" />
         <Setter Property="MinHeight" Value="32" />
         <Setter Property="Template">
             <Setter.Value>
@@ -334,13 +338,37 @@
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
                                         <Border x:Name="Header" BorderThickness="1" Padding="4" Background="{DynamicResource TransparentBrush}">
-                                            <DockPanel><TextBlock DockPanel.Dock="Left" Style="{StaticResource IconStyle}" Foreground="{DynamicResource WarningBorderBrush}" Text="&#xE7BA;" Margin="0,0,8,0" /><TextBlock x:Name="Arrow" motion:FluentMotion.Angle="0" DockPanel.Dock="Right" Style="{StaticResource IconStyle}" Text="&#xE70D;" Margin="8,0,0,0" /><ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" /></DockPanel>
+                                            <DockPanel><TextBlock DockPanel.Dock="Left" Style="{StaticResource IconStyle}" Foreground="{DynamicResource WarningBorderBrush}" Text="&#xE7BA;" Margin="0,0,8,0" /><TextBlock x:Name="Arrow" motion:FluentMotion.Angle="0" DockPanel.Dock="Right" Style="{StaticResource IconStyle}" Text="&#xE70D;" Margin="8,0,0,0" /><ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType=Expander}}" /></DockPanel>
                                         </Border>
                                         <ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Arrow" Property="motion:FluentMotion.Angle" Value="180" /></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Header" Property="BorderBrush" Value="{DynamicResource FocusBrush}" /></Trigger></ControlTemplate.Triggers>
                                     </ControlTemplate>
                                 </ToggleButton.Template>
                             </ToggleButton>
                             <ContentPresenter x:Name="Body" Visibility="Hidden" motion:FluentMotion.Entrance="True" Margin="4,8,4,4" />
+                        </DockPanel>
+                    </Border>
+                    <ControlTemplate.Triggers><Trigger Property="IsExpanded" Value="True"><Setter TargetName="Body" Property="Visibility" Value="Visible" /></Trigger></ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <Style x:Key="ProfileProblemsExpanderStyle" TargetType="Expander" BasedOn="{StaticResource {x:Type Expander}}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Expander">
+                    <Border CornerRadius="4" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" Padding="8">
+                        <DockPanel>
+                            <ToggleButton DockPanel.Dock="Top" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}" Foreground="{TemplateBinding Foreground}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Header" BorderThickness="1" Padding="4" Background="{DynamicResource TransparentBrush}">
+                                            <DockPanel><TextBlock DockPanel.Dock="Left" Style="{StaticResource IconStyle}" Foreground="{DynamicResource WarningBorderBrush}" Text="&#xE7BA;" Margin="0,0,8,0" /><TextBlock x:Name="Arrow" motion:FluentMotion.Angle="0" DockPanel.Dock="Right" Style="{StaticResource IconStyle}" Text="&#xE70D;" Margin="8,0,0,0" /><ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType=Expander}}" /></DockPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Arrow" Property="motion:FluentMotion.Angle" Value="180" /></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Header" Property="BorderBrush" Value="{DynamicResource FocusBrush}" /></Trigger></ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="Body" Visibility="Collapsed" motion:FluentMotion.Entrance="True" Margin="4,8,4,4" />
                         </DockPanel>
                     </Border>
                     <ControlTemplate.Triggers><Trigger Property="IsExpanded" Value="True"><Setter TargetName="Body" Property="Visibility" Value="Visible" /></Trigger></ControlTemplate.Triggers>

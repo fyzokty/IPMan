@@ -69,9 +69,6 @@
   <data name="DraftConfigurationHeader" xml:space="preserve">
     <value>Yapılandırma taslağı</value>
   </data>
-  <data name="DraftConfigurationHint" xml:space="preserve">
-    <value>Bu alanlar yalnızca taslaktır. Bu sürümde Windows yapılandırması değiştirilmez.</value>
-  </data>
 
   <data name="FieldConnectionState" xml:space="preserve">
     <value>Durum</value>
@@ -158,6 +155,8 @@
   </data>
   <data name="CommandCopyNetworkInfo" xml:space="preserve"><value>Ağ Bilgisini Kopyala</value></data>
   <data name="CommandPingGateway" xml:space="preserve"><value>Ağ Geçidine Ping</value></data>
+  <data name="CommandRestoreLastCompact" xml:space="preserve"><value>Geri Yükle</value></data>
+  <data name="CommandFlushDnsCompact" xml:space="preserve"><value>DNS Önbelleğini Temizle</value></data>
   <data name="CommandFlushDns" xml:space="preserve"><value>DNS Önbelleğini Temizle (Tüm sistem)</value></data>
   <data name="CommandRenewIp" xml:space="preserve"><value>IP Yenile</value></data>
   <data name="CommandClearStatus" xml:space="preserve"><value>Temizle</value></data>

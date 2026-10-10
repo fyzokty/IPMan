@@ -3,7 +3,8 @@
         x:Class="IPMan.App.Views.DiagnosticsWindow"
         Title="{x:Static res:Strings.DiagnosticsTitle}"
         Width="760"
-        Height="560"
+        SizeToContent="Height"
+        MaxHeight="720"
         MinWidth="620"
         MinHeight="320"
         Background="{DynamicResource WindowBackgroundBrush}"
@@ -17,8 +18,9 @@
         FontFamily="{StaticResource BodyFont}"
         FontSize="14">
     <DockPanel>
-        <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="20,12">
-            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+        <Border DockPanel.Dock="Bottom" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,1,0,0" Padding="16,12">
+            <DockPanel>
+            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" HorizontalAlignment="Right">
                 <Button Content="{x:Static res:Strings.DiagnosticsRefresh}"
                         Command="{Binding RefreshCommand}"
                         Style="{StaticResource SecondaryActionButtonStyle}"
@@ -35,42 +37,31 @@
                         Style="{StaticResource PrimaryActionButtonStyle}"
                         Margin="0" />
             </StackPanel>
+                <TextBlock Text="{Binding CopyStatus}" VerticalAlignment="Center" Margin="0,0,12,0"
+                           TextTrimming="CharacterEllipsis" ToolTip="{Binding CopyStatus}"
+                           AutomationProperties.LiveSetting="Polite" motion:FluentMotion.Entrance="True">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock">
+                            <Setter Property="Foreground" Value="{DynamicResource SuccessBorderBrush}" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding CopyStatus}" Value="{x:Static res:Strings.DiagnosticsCopyFailed}">
+                                    <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </DockPanel>
         </Border>
-        <Grid Margin="20">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <Border motion:FluentMotion.Entrance="True" Height="60" CornerRadius="4" Padding="12" Margin="0,0,0,12">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}" />
-                        <Setter Property="BorderBrush" Value="{DynamicResource SuccessBorderBrush}" />
-                        <Setter Property="BorderThickness" Value="1" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding CopyStatus}" Value="">
-                                <Setter Property="Visibility" Value="Hidden" />
-                            </DataTrigger>
-                            <DataTrigger Binding="{Binding CopyStatus}" Value="{x:Static res:Strings.DiagnosticsCopyFailed}">
-                                <Setter Property="Background" Value="{DynamicResource ErrorBackgroundBrush}" />
-                                <Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}" />
-                            </DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-                <TextBlock Text="{Binding CopyStatus}"
-                           TextWrapping="Wrap"
-                           Foreground="{DynamicResource PrimaryTextBrush}"
-                           AutomationProperties.LiveSetting="Polite" />
-            </Border>
-            <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="0">
+        <Grid Margin="16">
+            <Border Style="{StaticResource CardStyle}" Padding="0">
                 <ScrollViewer VerticalScrollBarVisibility="Auto"
                               HorizontalScrollBarVisibility="Disabled"
                               AutomationProperties.Name="{x:Static res:Strings.DiagnosticsTitle}">
                     <ItemsControl ItemsSource="{Binding ReportRows}">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="16,10">
+                                <Border BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="16,8">
                                     <Grid>
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="210" />

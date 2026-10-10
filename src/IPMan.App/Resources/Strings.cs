@@ -19,7 +19,6 @@ public static class Strings
 
     public static string DraftConfigurationHeader => Get(nameof(DraftConfigurationHeader));
 
-    public static string DraftConfigurationHint => Get(nameof(DraftConfigurationHint));
 
     public static string FieldConnectionState => Get(nameof(FieldConnectionState));
 
@@ -73,12 +72,14 @@ public static class Strings
 
     /// <summary>Gets the recovery restore command label.</summary>
     public static string CommandRestoreLast => Get(nameof(CommandRestoreLast));
+    public static string CommandRestoreLastCompact => Get(nameof(CommandRestoreLastCompact));
 
     public static string CommandCopyNetworkInfo => Get(nameof(CommandCopyNetworkInfo));
 
     public static string CommandPingGateway => Get(nameof(CommandPingGateway));
 
     public static string CommandFlushDns => Get(nameof(CommandFlushDns));
+    public static string CommandFlushDnsCompact => Get(nameof(CommandFlushDnsCompact));
 
     public static string CommandRenewIp => Get(nameof(CommandRenewIp));
 
