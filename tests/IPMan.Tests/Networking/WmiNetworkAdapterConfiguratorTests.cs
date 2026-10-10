@@ -21,6 +21,8 @@ public sealed class WmiNetworkAdapterConfiguratorTests
 
     private static readonly string[] ExpectedPrimaryDnsServer = { "1.1.1.1" };
 
+    private static readonly string[] Issue57Gateway = { "192.168.0.1" };
+
     [Fact]
     public async Task ApplyStaticAsync_WhenManualDnsHasTwoServers_UsesNativeWriterAfterIpv4AndGateway()
     {
@@ -95,7 +97,51 @@ public sealed class WmiNetworkAdapterConfiguratorTests
     }
 
     [Fact]
-    public async Task ApplyStaticAsync_WhenDhcpTransitionsToStatic_InvokesEnableStatic()
+    public async Task ApplyStaticAsync_WhenDhcpTransitionsToStatic_InvokesEnableStaticThenSetsGateway()
+    {
+        FakeWmiSession session = new(0, 0);
+
+        NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
+            AdapterId,
+            Plan(
+                gatewayMode: GatewayMutationMode.Set,
+                dnsMode: DnsMutationMode.LeaveUnchanged,
+                previousMode: NetworkConfigurationMode.Dhcp),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(["EnableStatic", "SetGateways"], session.Calls.Select(call => call.Method));
+    }
+
+    [Theory]
+    [InlineData(NetworkConfigurationMode.Dhcp)]
+    [InlineData(NetworkConfigurationMode.Unknown)]
+    public async Task ApplyStaticAsync_WhenGatewayIsPreservedAcrossDhcpTransition_FailsBeforeResolvingAdapter(
+        NetworkConfigurationMode previousMode)
+    {
+        FakeWmiFactory factory = new(new WmiAdapterResolution(WmiAdapterResolutionStatus.Unavailable));
+        StaticIpv4MutationPlan plan = Plan(
+            gatewayMode: GatewayMutationMode.LeaveUnchanged,
+            gatewayMetric: 1,
+            previousMode: previousMode);
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            new WmiNetworkAdapterConfigurator(factory, new FakeDefaultRouteManager()).ApplyStaticAsync(
+                AdapterId,
+                plan,
+                CancellationToken.None));
+
+        Assert.Equal(0, factory.ResolveCount);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(25)]
+    [InlineData(9999)]
+    [InlineData(10000)]
+    public async Task ApplyStaticAsync_WhenStaticGatewayIsPreserved_AcceptsObservedMetricWithoutWritingIt(
+        ushort observedMetric)
     {
         FakeWmiSession session = new(0);
 
@@ -103,12 +149,96 @@ public sealed class WmiNetworkAdapterConfiguratorTests
             AdapterId,
             Plan(
                 gatewayMode: GatewayMutationMode.LeaveUnchanged,
+                gatewayMetric: observedMetric,
                 dnsMode: DnsMutationMode.LeaveUnchanged,
-                previousMode: NetworkConfigurationMode.Dhcp),
+                previousMode: NetworkConfigurationMode.Static),
             CancellationToken.None);
 
         Assert.True(result.IsSuccess);
+        Assert.Equal(NetworkMutationStepStatus.NotRequired, result.GatewayStep.Status);
         Assert.Equal("EnableStatic", Assert.Single(session.Calls).Method);
+    }
+
+    [Fact]
+    public async Task ApplyStaticAsync_WhenPreservedGatewayMetricIsMissing_FailsBeforeResolvingAdapter()
+    {
+        FakeWmiFactory factory = new(new WmiAdapterResolution(WmiAdapterResolutionStatus.Unavailable));
+        StaticIpv4MutationPlan plan = Plan(
+            gatewayMode: GatewayMutationMode.LeaveUnchanged,
+            gatewayMetric: null,
+            previousMode: NetworkConfigurationMode.Static);
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            new WmiNetworkAdapterConfigurator(factory, new FakeDefaultRouteManager()).ApplyStaticAsync(
+                AdapterId,
+                plan,
+                CancellationToken.None));
+
+        Assert.Equal(0, factory.ResolveCount);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(9999)]
+    public async Task ApplyStaticAsync_WhenSetGatewayMetricIsAtDocumentedBound_WritesExactMetric(
+        ushort metric)
+    {
+        FakeWmiSession session = new(0, 0);
+
+        NetworkApplyResult result = await CreateConfigurator(session).ApplyStaticAsync(
+            AdapterId,
+            Plan(gatewayMetric: metric, dnsMode: DnsMutationMode.LeaveUnchanged),
+            CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(new[] { metric }, session.Calls[1].Parameters!["GatewayCostMetric"]);
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(10000)]
+    public async Task ApplyStaticAsync_WhenSetGatewayMetricIsOutsideDocumentedRange_FailsBeforeResolvingAdapter(
+        ushort metric)
+    {
+        FakeWmiFactory factory = new(new WmiAdapterResolution(WmiAdapterResolutionStatus.Unavailable));
+
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            new WmiNetworkAdapterConfigurator(factory, new FakeDefaultRouteManager()).ApplyStaticAsync(
+                AdapterId,
+                Plan(gatewayMetric: metric),
+                CancellationToken.None));
+
+        Assert.Equal(0, factory.ResolveCount);
+    }
+
+    [Fact]
+    public async Task ApplyStaticAsync_WhenIssue57DhcpPlanRuns_WritesAddressGatewayAndDnsInOrder()
+    {
+        // Shape produced by StaticIpv4ApplyService for issue #57: DHCP adapter,
+        // same address/gateway, automatic gateway metric replaced by the default.
+        List<string> order = new();
+        FakeWmiSession session = new(0, 0) { Order = order };
+        FakeManualIpv4DnsWriter dnsWriter = new() { Order = order };
+        StaticIpv4MutationPlan plan = new(
+            new StaticIpv4Configuration(
+                "192.168.0.144",
+                "255.255.255.0",
+                "192.168.0.1",
+                "192.168.0.1",
+                null),
+            ApplyIpv4Address: true,
+            GatewayMutationMode.Set,
+            GatewayMetric: 1,
+            DnsMutationMode.Set,
+            NetworkConfigurationMode.Dhcp);
+
+        NetworkApplyResult result = await CreateConfigurator(session, dnsWriter: dnsWriter)
+            .ApplyStaticAsync(AdapterId, plan, CancellationToken.None);
+
+        Assert.True(result.IsSuccess);
+        Assert.Equal(["EnableStatic", "SetGateways", "ManualDns"], order);
+        Assert.Equal(Issue57Gateway, session.Calls[1].Parameters!["DefaultIPGateway"]);
+        Assert.Equal(new ushort[] { 1 }, session.Calls[1].Parameters!["GatewayCostMetric"]);
     }
 
     [Fact]

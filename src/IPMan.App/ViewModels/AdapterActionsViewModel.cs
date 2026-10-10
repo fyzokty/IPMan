@@ -5,6 +5,7 @@ using CommunityToolkit.Mvvm.Input;
 using IPMan.App.Presentation;
 using IPMan.App.Resources;
 using IPMan.App.Services;
+using IPMan.Application.Logging;
 using IPMan.Application.Networking;
 using IPMan.Application.Settings;
 using IPMan.Domain.Networking;
@@ -27,6 +28,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
     private readonly IClipboardService? _clipboardService;
     private readonly IAppSettingsRepository? _settingsRepository;
     private readonly OperationNotificationService? _operationNotificationService;
+    private readonly ICriticalLogger _criticalLogger;
     private bool _actionCancelledBecauseAdapterUnavailable;
     private bool _isDisposed;
 
@@ -102,7 +104,8 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         IQuickNetworkActionService? quickActionService,
         IClipboardService? clipboardService,
         IAppSettingsRepository? settingsRepository = null,
-        OperationNotificationService? operationNotificationService = null)
+        OperationNotificationService? operationNotificationService = null,
+        ICriticalLogger? criticalLogger = null)
     {
         ArgumentNullException.ThrowIfNull(staticApplyService);
         ArgumentNullException.ThrowIfNull(dhcpApplyService);
@@ -119,6 +122,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         _clipboardService = clipboardService;
         _settingsRepository = settingsRepository;
         _operationNotificationService = operationNotificationService;
+        _criticalLogger = criticalLogger ?? new NullCriticalLogger();
     }
 
     /// <summary>Attaches the actions to the selected adapter, or detaches them when null.</summary>
@@ -201,6 +205,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
 
         StaticIpv4ApplyResult? result = null;
         bool succeeded = false;
+        bool failedUnexpectedly = false;
         IsBusy = true;
 
         try
@@ -228,9 +233,15 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
                 succeeded = true;
             }
         }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            failedUnexpectedly = true;
+            ReportUnexpectedActionFailure(nameof(ApplyStaticCommand), exception);
+            ReportOperation(Strings.NotificationOperationApply, adapter, succeeded: false);
+        }
         finally
         {
-            if (result is not null)
+            if (result is not null || failedUnexpectedly)
             {
                 _refreshCoordinator.RequestRefresh(NetworkChangeReason.ConfigurationApplied);
             }
@@ -268,6 +279,12 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             SetStatus(ApplyResultMessageFormatter.Describe(result));
             succeeded = result.Status is DhcpApplyStatus.VerifiedSuccess or DhcpApplyStatus.NoChange;
             ReportOperation(Strings.NotificationOperationDhcp, adapter, succeeded);
+        }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            succeeded = false;
+            ReportUnexpectedActionFailure(nameof(ApplyDhcpCommand), exception);
+            ReportOperation(Strings.NotificationOperationDhcp, adapter, succeeded: false);
         }
         finally
         {
@@ -317,6 +334,10 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         {
             SetStatus(Strings.AdapterActionUnavailable, ApplyStatusSeverity.Error);
         }
+        catch (Exception exception)
+        {
+            ReportUnexpectedActionFailure(nameof(PingGatewayCommand), exception);
+        }
         finally
         {
             IsBusy = false;
@@ -352,6 +373,10 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         {
             SetStatus(Strings.AdapterActionUnavailable, ApplyStatusSeverity.Error);
         }
+        catch (Exception exception)
+        {
+            ReportUnexpectedActionFailure(nameof(FlushDnsCommand), exception);
+        }
         finally
         {
             IsBusy = false;
@@ -384,6 +409,12 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             SetStatus(Strings.AdapterActionUnavailable, ApplyStatusSeverity.Error);
             ReportOperation(Strings.NotificationOperationRenewIp, adapter, succeeded: false);
         }
+        catch (Exception exception)
+        {
+            ReportUnexpectedActionFailure(nameof(RenewIpCommand), exception);
+            ReportOperation(Strings.NotificationOperationRenewIp, adapter, succeeded: false);
+            _refreshCoordinator.RequestRefresh(NetworkChangeReason.ConfigurationApplied);
+        }
         finally
         {
             IsBusy = false;
@@ -415,6 +446,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         }
 
         RecoveryRestoreResult? result = null;
+        bool failedUnexpectedly = false;
         IsBusy = true;
 
         try
@@ -434,9 +466,15 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
                 adapter,
                 result.Status is RecoveryRestoreStatus.VerifiedSuccess or RecoveryRestoreStatus.NoChange);
         }
+        catch (Exception exception) when (exception is not OperationCanceledException)
+        {
+            failedUnexpectedly = true;
+            ReportUnexpectedActionFailure(nameof(RestoreLastCommand), exception);
+            ReportOperation(Strings.NotificationOperationRestore, adapter, succeeded: false);
+        }
         finally
         {
-            if (result is not null)
+            if (result is not null || failedUnexpectedly)
             {
                 _refreshCoordinator.RequestRefresh(NetworkChangeReason.ConfigurationApplied);
             }
@@ -778,6 +816,21 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
                 previousSnapshot.Gateway ?? Strings.ValueUnavailable,
                 result.ErrorCode),
             ApplyStatusSeverity.Error);
+    }
+
+    /// <summary>
+    /// Keeps an unexpected defect from a network action inside the action boundary:
+    /// the service layer lets programming errors propagate, and this is the last
+    /// point where they can be recorded and shown without terminating the process.
+    /// </summary>
+    private void ReportUnexpectedActionFailure(string action, Exception exception)
+    {
+        _criticalLogger.Log(new CriticalLogEntry(
+            CriticalLogCategory.Unhandled,
+            $"Adapter action {action} failed unexpectedly.",
+            exception.HResult,
+            exception));
+        SetStatus(Strings.ActionUnexpectedFailure, ApplyStatusSeverity.Error);
     }
 
     private void ReportOperation(string operation, AdapterViewModel adapter, bool succeeded) =>

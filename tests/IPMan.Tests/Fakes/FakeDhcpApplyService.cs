@@ -10,12 +10,20 @@ public sealed class FakeDhcpApplyService : IDhcpApplyService
 
     public List<DhcpApplyRequest> Requests { get; } = new();
 
+    public Exception? Failure { get; set; }
+
     public Task<DhcpApplyResult> ApplyAsync(
         DhcpApplyRequest request,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         Requests.Add(request);
+
+        if (Failure is not null)
+        {
+            return Task.FromException<DhcpApplyResult>(Failure);
+        }
+
         return Task.FromResult(QueuedResults.Count > 0 ? QueuedResults.Dequeue() : Result);
     }
 }
