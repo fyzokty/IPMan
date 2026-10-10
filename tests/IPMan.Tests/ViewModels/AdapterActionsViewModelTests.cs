@@ -2,6 +2,7 @@ using IPMan.App.Resources;
 using IPMan.App.ViewModels;
 using IPMan.Application.Logging;
 using IPMan.Application.Networking;
+using IPMan.Domain.Networking;
 using IPMan.Tests.Fakes;
 using Xunit;
 
@@ -326,6 +327,152 @@ public sealed class AdapterActionsViewModelTests
         Assert.False(context.Actions.PingGatewayCommand.CanExecute(null));
         Assert.False(context.Actions.RenewIpCommand.CanExecute(null));
         Assert.Contains(Strings.QuickActionAdapterInactive, context.Actions.PingGatewayDisabledReason, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void InPlaceRefresh_FromStaticToDhcp_ReevaluatesModeDependentActions()
+    {
+        using ActionsContext context = CreateContext();
+        context.Adapter.Update(TestData.Snapshot(id: "{A}", mode: NetworkConfigurationMode.Static));
+        context.Actions.Attach(context.Adapter);
+        Assert.True(context.Actions.ApplyDhcpCommand.CanExecute(null));
+        Assert.False(context.Actions.RenewIpCommand.CanExecute(null));
+        Assert.Equal(Strings.QuickActionDhcpRequired, context.Actions.RenewIpDisabledReason);
+        ChangeRecorder recorder = ChangeRecorder.Start(context.Actions);
+
+        context.Adapter.Update(TestData.Snapshot(id: "{A}", mode: NetworkConfigurationMode.Dhcp));
+
+        Assert.False(context.Actions.ApplyDhcpCommand.CanExecute(null));
+        Assert.True(context.Actions.RenewIpCommand.CanExecute(null));
+        Assert.Equal(string.Empty, context.Actions.RenewIpDisabledReason);
+        Assert.Contains(nameof(AdapterActionsViewModel.ApplyDhcpCommand), recorder.CanExecuteChanges);
+        Assert.Contains(nameof(AdapterActionsViewModel.RenewIpCommand), recorder.CanExecuteChanges);
+        Assert.Contains(nameof(AdapterActionsViewModel.RenewIpDisabledReason), recorder.PropertyChanges);
+        Assert.Contains(nameof(AdapterActionsViewModel.PingGatewayDisabledReason), recorder.PropertyChanges);
+    }
+
+    [Fact]
+    public void InPlaceRefresh_FromDhcpToStatic_ReevaluatesModeDependentActions()
+    {
+        using ActionsContext context = CreateContext();
+        context.Adapter.Update(TestData.Snapshot(id: "{A}", mode: NetworkConfigurationMode.Dhcp));
+        context.Actions.Attach(context.Adapter);
+        Assert.False(context.Actions.ApplyDhcpCommand.CanExecute(null));
+        Assert.True(context.Actions.RenewIpCommand.CanExecute(null));
+        ChangeRecorder recorder = ChangeRecorder.Start(context.Actions);
+
+        context.Adapter.Update(TestData.Snapshot(id: "{A}", mode: NetworkConfigurationMode.Static));
+
+        Assert.True(context.Actions.ApplyDhcpCommand.CanExecute(null));
+        Assert.False(context.Actions.RenewIpCommand.CanExecute(null));
+        Assert.Equal(Strings.QuickActionDhcpRequired, context.Actions.RenewIpDisabledReason);
+        Assert.Contains(nameof(AdapterActionsViewModel.ApplyDhcpCommand), recorder.CanExecuteChanges);
+        Assert.Contains(nameof(AdapterActionsViewModel.RenewIpCommand), recorder.CanExecuteChanges);
+        Assert.Contains(nameof(AdapterActionsViewModel.RenewIpDisabledReason), recorder.PropertyChanges);
+    }
+
+    [Fact]
+    public void InPlaceRefresh_WhenGatewayDisappears_DisablesGatewayPing()
+    {
+        using ActionsContext context = CreateContext();
+        Assert.True(context.Actions.PingGatewayCommand.CanExecute(null));
+        ChangeRecorder recorder = ChangeRecorder.Start(context.Actions);
+
+        context.Adapter.Update(TestData.Snapshot(
+            id: "{A}",
+            gateway: null,
+            ipv4Gateways: Ipv4AddressValueCollection.Empty));
+
+        Assert.False(context.Actions.PingGatewayCommand.CanExecute(null));
+        Assert.Equal(Strings.QuickActionNoIpv4Gateway, context.Actions.PingGatewayDisabledReason);
+        Assert.Contains(nameof(AdapterActionsViewModel.PingGatewayCommand), recorder.CanExecuteChanges);
+        Assert.Contains(nameof(AdapterActionsViewModel.PingGatewayDisabledReason), recorder.PropertyChanges);
+    }
+
+    [Fact]
+    public void InPlaceRefresh_WhenAdapterDisconnects_DisablesConnectionDependentActions()
+    {
+        using ActionsContext context = CreateContext();
+        Assert.True(context.Actions.PingGatewayCommand.CanExecute(null));
+        Assert.True(context.Actions.RenewIpCommand.CanExecute(null));
+        ChangeRecorder recorder = ChangeRecorder.Start(context.Actions);
+
+        context.Adapter.Update(TestData.Snapshot(id: "{A}", isConnected: false));
+
+        Assert.False(context.Actions.PingGatewayCommand.CanExecute(null));
+        Assert.False(context.Actions.RenewIpCommand.CanExecute(null));
+        Assert.Equal(Strings.QuickActionAdapterInactive, context.Actions.PingGatewayDisabledReason);
+        Assert.Equal(Strings.QuickActionAdapterInactive, context.Actions.RenewIpDisabledReason);
+        Assert.Contains(nameof(AdapterActionsViewModel.PingGatewayCommand), recorder.CanExecuteChanges);
+        Assert.Contains(nameof(AdapterActionsViewModel.RenewIpCommand), recorder.CanExecuteChanges);
+
+        recorder.Clear();
+        context.Adapter.Update(TestData.Snapshot(id: "{A}", isConnected: true));
+
+        Assert.True(context.Actions.PingGatewayCommand.CanExecute(null));
+        Assert.True(context.Actions.RenewIpCommand.CanExecute(null));
+        Assert.Contains(nameof(AdapterActionsViewModel.RenewIpCommand), recorder.CanExecuteChanges);
+    }
+
+    [Fact]
+    public void InPlaceRefresh_OfAPreviouslyAttachedAdapter_NoLongerNotifies()
+    {
+        using ActionsContext context = CreateContext();
+        AdapterViewModel other = new(
+            TestData.Snapshot(id: "{B}"),
+            new FakeClipboardService(),
+            new StaticIpv4ConfigurationValidator());
+        context.Actions.Attach(other);
+        ChangeRecorder recorder = ChangeRecorder.Start(context.Actions);
+
+        context.Adapter.Update(TestData.Snapshot(id: "{A}", mode: NetworkConfigurationMode.Static, isConnected: false));
+        context.Adapter.Draft.Ipv4Address = "10.0.0.99";
+
+        Assert.Empty(recorder.CanExecuteChanges);
+        Assert.Empty(recorder.PropertyChanges);
+    }
+
+    [Fact]
+    public void InPlaceRefresh_AfterDispose_NoLongerNotifies()
+    {
+        ActionsContext context = CreateContext();
+        ChangeRecorder recorder = ChangeRecorder.Start(context.Actions);
+        context.Dispose();
+
+        context.Adapter.Update(TestData.Snapshot(id: "{A}", mode: NetworkConfigurationMode.Static));
+
+        Assert.Empty(recorder.CanExecuteChanges);
+        Assert.Empty(recorder.PropertyChanges);
+    }
+
+    private sealed class ChangeRecorder
+    {
+        public List<string> CanExecuteChanges { get; } = new();
+
+        public List<string> PropertyChanges { get; } = new();
+
+        public static ChangeRecorder Start(AdapterActionsViewModel actions)
+        {
+            ChangeRecorder recorder = new();
+            Track(actions.ApplyStaticCommand, nameof(actions.ApplyStaticCommand));
+            Track(actions.ApplyDhcpCommand, nameof(actions.ApplyDhcpCommand));
+            Track(actions.RestoreLastCommand, nameof(actions.RestoreLastCommand));
+            Track(actions.CopyNetworkInfoCommand, nameof(actions.CopyNetworkInfoCommand));
+            Track(actions.PingGatewayCommand, nameof(actions.PingGatewayCommand));
+            Track(actions.FlushDnsCommand, nameof(actions.FlushDnsCommand));
+            Track(actions.RenewIpCommand, nameof(actions.RenewIpCommand));
+            actions.PropertyChanged += (_, e) => recorder.PropertyChanges.Add(e.PropertyName ?? string.Empty);
+            return recorder;
+
+            void Track(System.Windows.Input.ICommand command, string name) =>
+                command.CanExecuteChanged += (_, _) => recorder.CanExecuteChanges.Add(name);
+        }
+
+        public void Clear()
+        {
+            CanExecuteChanges.Clear();
+            PropertyChanges.Clear();
+        }
     }
 
     private static ActionsContext CreateContext(bool attachAdapter = true)
