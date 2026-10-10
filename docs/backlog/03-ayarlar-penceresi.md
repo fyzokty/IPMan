@@ -1,6 +1,6 @@
 # 03 — Ayarlar penceresi
 
-- **Durum:** yapılacak
+- **Durum:** tamamlandı
 - **Bağımlılık:** 02
 - **Gereksinimler:** PR-018, PR-010 · AC-010
 

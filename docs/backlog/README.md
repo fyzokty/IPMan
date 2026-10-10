@@ -7,13 +7,13 @@ Sıra, uygulama sırasıdır. Tüm maddeler 1.0 kapsamındadır.
 
 | #  | İş | Durum |
 |----|----|-------|
-| 01 | [Profil paneli](01-profil-paneli.md) | devam ediyor |
-| 02 | [Sistem tepsisi ve pencere durumu](02-tepsi-ve-pencere-durumu.md) | yapılacak |
-| 03 | [Ayarlar penceresi](03-ayarlar-penceresi.md) | yapılacak |
-| 04 | [Tema desteği](04-tema.md) | yapılacak |
-| 05 | [Hızlı eylemler](05-hizli-eylemler.md) | yapılacak |
-| 06 | [Bildirimler](06-bildirimler.md) | yapılacak |
-| 07 | [Kritik hata günlüğü ve çökme işareti](07-gunluk-ve-cokme.md) | yapılacak |
+| 01 | [Profil paneli](01-profil-paneli.md) | tamamlandı |
+| 02 | [Sistem tepsisi ve pencere durumu](02-tepsi-ve-pencere-durumu.md) | tamamlandı |
+| 03 | [Ayarlar penceresi](03-ayarlar-penceresi.md) | tamamlandı |
+| 04 | [Tema desteği](04-tema.md) | tamamlandı |
+| 05 | [Hızlı eylemler](05-hizli-eylemler.md) | tamamlandı |
+| 06 | [Bildirimler](06-bildirimler.md) | tamamlandı |
+| 07 | [Kritik hata günlüğü ve çökme işareti](07-gunluk-ve-cokme.md) | tamamlandı |
 | 08 | [Tanılama paneli](08-tanilama-paneli.md) | yapılacak |
 | 09 | [İlk açılışta yapılandırma yedeği](09-ilk-acilis-yedegi.md) | yapılacak |
 | 10 | [Dağıtım: taşınabilir paket ve kurulum](10-dagitim.md) | yapılacak |
