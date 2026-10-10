@@ -53,6 +53,31 @@ public sealed class WindowXamlSmokeTests
         Assert.Contains(problemText.Inlines.OfType<Run>(), run => run.Text == problem.FileName);
         Assert.Contains(problemText.Inlines.OfType<Run>(), run => run.Text == problem.Reason);
 
+        FluentMotion.SetIsEnabled(mainContent, false);
+        TextBox draftBox = Assert.Single(Descendants(mainContent).OfType<TextBox>(), element => element.Name == "Ipv4AddressBox");
+        TextBox dnsBox = Assert.Single(Descendants(mainContent).OfType<TextBox>(), element =>
+            ReferenceEquals(element.DataContext, adapter.Draft) &&
+            System.Windows.Automation.AutomationProperties.GetName(element) == Strings.FieldPrimaryDns);
+        Point originalDnsPosition = dnsBox.TransformToAncestor(mainContent).Transform(new Point());
+        Size originalFieldSize = draftBox.RenderSize;
+        adapter.Draft.Ipv4Address = "invalid";
+        adapter.Draft.MarkAllFieldsTouched();
+        Assert.NotEmpty(adapter.Draft.Ipv4AddressError);
+        fixture.Main.Actions.StatusMessage = string.Join(Environment.NewLine, Enumerable.Repeat("Result", 4));
+        fixture.Main.Actions.StatusSeverity = ApplyStatusSeverity.Error;
+        fixture.Main.Actions.IsBusy = true;
+        Layout(main);
+        Assert.Equal(originalFieldSize, draftBox.RenderSize);
+        Assert.Equal(originalDnsPosition, dnsBox.TransformToAncestor(mainContent).Transform(new Point()));
+        Border errorLine = (Border)draftBox.Template.FindName("FocusLine", draftBox);
+        Assert.Equal(((SolidColorBrush)main.Resources["ErrorBorderBrush"]).Color, ((SolidColorBrush)errorLine.Background).Color);
+        Assert.Equal(1, errorLine.Opacity);
+        fixture.Main.Actions.StatusMessage = string.Empty;
+        fixture.Main.Actions.StatusSeverity = ApplyStatusSeverity.None;
+        fixture.Main.Actions.IsBusy = false;
+        Layout(main);
+        Assert.Equal(originalDnsPosition, dnsBox.TransformToAncestor(mainContent).Transform(new Point()));
+
         // Lay out the popup child directly: opening a Popup would create a native window.
         Popup history = Assert.Single(Descendants(mainContent).OfType<Popup>());
         Assert.False(history.IsOpen);
@@ -180,7 +205,9 @@ public sealed class WindowXamlSmokeTests
         {
             SettingsRepository = new FakeWindowSettingsRepository(AppSettings.Default with
             {
-                Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light
+                Theme = theme == "Dark" ? AppTheme.Dark : AppTheme.Light,
+                // Inline error layout must not invoke the tray/modal fallback for a hidden window.
+                NotificationMode = NotificationMode.Always
             });
             FakeDiagnosticsSources sources = new();
             Notifications = new OperationNotificationService(SettingsRepository, sources);

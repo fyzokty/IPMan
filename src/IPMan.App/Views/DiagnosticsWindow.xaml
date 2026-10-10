@@ -12,6 +12,8 @@
         ShowInTaskbar="False"
         Loaded="OnLoaded"
         xmlns:res="clr-namespace:IPMan.App.Resources"
+        xmlns:motion="clr-namespace:IPMan.App.Presentation"
+        motion:FluentMotion.Entrance="True"
         FontFamily="{StaticResource BodyFont}"
         FontSize="14">
     <DockPanel>
@@ -23,6 +25,8 @@
                         Margin="0,0,8,0" />
                 <Button Content="{x:Static res:Strings.CommandCopy}"
                         Command="{Binding CopyCommand}"
+                        motion:CopyFeedback.IsEnabled="True"
+                        motion:CopyFeedback.Result="{Binding CopySucceeded}"
                         Style="{StaticResource SecondaryActionButtonStyle}"
                         Margin="0,0,8,0" />
                 <Button Content="{x:Static res:Strings.CommandOk}"
@@ -37,7 +41,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
-            <Border CornerRadius="4" Padding="12" Margin="0,0,0,12">
+            <Border motion:FluentMotion.Entrance="True" Height="60" CornerRadius="4" Padding="12" Margin="0,0,0,12">
                 <Border.Style>
                     <Style TargetType="Border">
                         <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}" />
@@ -45,7 +49,7 @@
                         <Setter Property="BorderThickness" Value="1" />
                         <Style.Triggers>
                             <DataTrigger Binding="{Binding CopyStatus}" Value="">
-                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Setter Property="Visibility" Value="Hidden" />
                             </DataTrigger>
                             <DataTrigger Binding="{Binding CopyStatus}" Value="{x:Static res:Strings.DiagnosticsCopyFailed}">
                                 <Setter Property="Background" Value="{DynamicResource ErrorBackgroundBrush}" />

@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Controls;
+using IPMan.App.Presentation;
 
 namespace IPMan.App.Views;
 
@@ -45,6 +46,7 @@ internal sealed class PromptWindow : Window
         body.Children.Add(Body);
         frame.Children.Add(body);
         Content = frame;
+        FluentMotion.SetEntrance(this, true);
     }
 
     internal StackPanel Body { get; }

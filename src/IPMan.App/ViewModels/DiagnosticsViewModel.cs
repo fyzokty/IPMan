@@ -29,6 +29,9 @@ public sealed partial class DiagnosticsViewModel : ObservableObject
     [ObservableProperty]
     private string _copyStatus = string.Empty;
 
+    [ObservableProperty]
+    private bool _copySucceeded;
+
     public DiagnosticsViewModel(
         ISystemDiagnosticsProvider system,
         IApplicationVersionProvider version,
@@ -90,12 +93,14 @@ public sealed partial class DiagnosticsViewModel : ObservableObject
     {
         try
         {
-            CopyStatus = _clipboard.SetText(ReportText)
+            CopySucceeded = _clipboard.SetText(ReportText);
+            CopyStatus = CopySucceeded
                 ? Strings.DiagnosticsCopySucceeded : Strings.DiagnosticsCopyFailed;
         }
         catch (Exception)
         {
             // Clipboard availability must never affect the diagnostics window.
+            CopySucceeded = false;
             CopyStatus = Strings.DiagnosticsCopyFailed;
         }
     }

@@ -9,6 +9,7 @@
     <SolidColorBrush x:Key="ControlHoverBrush" Color="#383838" />
     <SolidColorBrush x:Key="ControlDisabledBrush" Color="#333333" />
     <SolidColorBrush x:Key="AccentBrush" Color="#4CC2FF" />
+    <SolidColorBrush x:Key="AccentHoverBrush" Color="#62CDFF" />
     <SolidColorBrush x:Key="FocusBrush" Color="#4CC2FF" />
     <SolidColorBrush x:Key="ConnectedBrush" Color="#6CCB5F" />
     <SolidColorBrush x:Key="DisconnectedBrush" Color="#8C8C8C" />

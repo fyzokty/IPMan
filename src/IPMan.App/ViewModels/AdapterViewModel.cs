@@ -16,6 +16,9 @@ public sealed partial class AdapterViewModel : ObservableObject
     private readonly IClipboardService _clipboardService;
 
     [ObservableProperty]
+    private bool _copySucceeded;
+
+    [ObservableProperty]
     private string _displayName = string.Empty;
 
     [ObservableProperty]
@@ -64,15 +67,26 @@ public sealed partial class AdapterViewModel : ObservableObject
 
     /// <summary>Copies the latest Windows value without changing the editable draft.</summary>
     [RelayCommand]
-    private void CopyCurrentField(DraftField field) => _clipboardService.SetText(field switch
+    private void CopyCurrentField(DraftField field)
     {
-        DraftField.Ipv4Address => Snapshot.Ipv4Address ?? string.Empty,
-        DraftField.SubnetMask => Snapshot.SubnetMask ?? string.Empty,
-        DraftField.Gateway => Snapshot.Gateway ?? string.Empty,
-        DraftField.PrimaryDns => Snapshot.PrimaryDns ?? string.Empty,
-        DraftField.SecondaryDns => Snapshot.SecondaryDns ?? string.Empty,
-        _ => throw new ArgumentOutOfRangeException(nameof(field))
-    });
+        string text = field switch
+        {
+            DraftField.Ipv4Address => Snapshot.Ipv4Address ?? string.Empty,
+            DraftField.SubnetMask => Snapshot.SubnetMask ?? string.Empty,
+            DraftField.Gateway => Snapshot.Gateway ?? string.Empty,
+            DraftField.PrimaryDns => Snapshot.PrimaryDns ?? string.Empty,
+            DraftField.SecondaryDns => Snapshot.SecondaryDns ?? string.Empty,
+            _ => throw new ArgumentOutOfRangeException(nameof(field))
+        };
+        try
+        {
+            CopySucceeded = _clipboardService.SetText(text);
+        }
+        catch (Exception)
+        {
+            CopySucceeded = false;
+        }
+    }
 
     /// <summary>
     /// Applies a newly discovered snapshot. The read-only details always follow

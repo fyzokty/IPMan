@@ -10,6 +10,8 @@
         WindowStartupLocation="Manual"
         xmlns:res="clr-namespace:IPMan.App.Resources"
         xmlns:vm="clr-namespace:IPMan.App.ViewModels"
+        xmlns:motion="clr-namespace:IPMan.App.Presentation"
+        motion:FluentMotion.Entrance="True"
         FontFamily="{StaticResource BodyFont}"
         FontSize="14"
         Foreground="{DynamicResource PrimaryTextBrush}">
@@ -38,9 +40,11 @@
             </StackPanel>
         </DataTemplate>
         <Style x:Key="DraftIpv4DifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
+            <Setter Property="motion:FluentMotion.IsInvalid" Value="True" />
             <Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Ipv4AddressError.Length}" Value="0">
+                    <Setter Property="motion:FluentMotion.IsInvalid" Value="False" />
                     <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
                 </DataTrigger>
                 <MultiDataTrigger>
@@ -49,15 +53,16 @@
                         <Condition Binding="{Binding Ipv4AddressError.Length}" Value="0" />
                     </MultiDataTrigger.Conditions>
                     <Setter Property="BorderBrush" Value="{DynamicResource WarningBorderBrush}" />
-                    <Setter Property="BorderThickness" Value="2" />
                     <Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}" />
                 </MultiDataTrigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="DraftSubnetDifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
+            <Setter Property="motion:FluentMotion.IsInvalid" Value="True" />
             <Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding SubnetMaskError.Length}" Value="0">
+                    <Setter Property="motion:FluentMotion.IsInvalid" Value="False" />
                     <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
                 </DataTrigger>
                 <MultiDataTrigger>
@@ -66,15 +71,16 @@
                         <Condition Binding="{Binding SubnetMaskError.Length}" Value="0" />
                     </MultiDataTrigger.Conditions>
                     <Setter Property="BorderBrush" Value="{DynamicResource WarningBorderBrush}" />
-                    <Setter Property="BorderThickness" Value="2" />
                     <Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}" />
                 </MultiDataTrigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="DraftGatewayDifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
+            <Setter Property="motion:FluentMotion.IsInvalid" Value="True" />
             <Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding GatewayError.Length}" Value="0">
+                    <Setter Property="motion:FluentMotion.IsInvalid" Value="False" />
                     <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
                 </DataTrigger>
                 <MultiDataTrigger>
@@ -83,15 +89,16 @@
                         <Condition Binding="{Binding GatewayError.Length}" Value="0" />
                     </MultiDataTrigger.Conditions>
                     <Setter Property="BorderBrush" Value="{DynamicResource WarningBorderBrush}" />
-                    <Setter Property="BorderThickness" Value="2" />
                     <Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}" />
                 </MultiDataTrigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="DraftPrimaryDnsDifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
+            <Setter Property="motion:FluentMotion.IsInvalid" Value="True" />
             <Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding PrimaryDnsError.Length}" Value="0">
+                    <Setter Property="motion:FluentMotion.IsInvalid" Value="False" />
                     <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
                 </DataTrigger>
                 <MultiDataTrigger>
@@ -100,15 +107,16 @@
                         <Condition Binding="{Binding PrimaryDnsError.Length}" Value="0" />
                     </MultiDataTrigger.Conditions>
                     <Setter Property="BorderBrush" Value="{DynamicResource WarningBorderBrush}" />
-                    <Setter Property="BorderThickness" Value="2" />
                     <Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}" />
                 </MultiDataTrigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="DraftSecondaryDnsDifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
+            <Setter Property="motion:FluentMotion.IsInvalid" Value="True" />
             <Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding SecondaryDnsError.Length}" Value="0">
+                    <Setter Property="motion:FluentMotion.IsInvalid" Value="False" />
                     <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
                 </DataTrigger>
                 <MultiDataTrigger>
@@ -117,14 +125,14 @@
                         <Condition Binding="{Binding SecondaryDnsError.Length}" Value="0" />
                     </MultiDataTrigger.Conditions>
                     <Setter Property="BorderBrush" Value="{DynamicResource WarningBorderBrush}" />
-                    <Setter Property="BorderThickness" Value="2" />
                     <Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}" />
                 </MultiDataTrigger>
             </Style.Triggers>
         </Style>
         <!-- Tab content: current configuration on the left, editable draft on the right. -->
         <DataTemplate x:Key="AdapterTabContentTemplate" DataType="{x:Type vm:AdapterViewModel}">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,20,0,0">
+            <Grid>
+            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,20,0,80">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -272,6 +280,7 @@
                                 </ItemsControl>
                                 <Button Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding SelectedItem.CopyCurrentFieldCommand, RelativeSource={RelativeSource AncestorType=TabControl}}"
+                                        motion:CopyFeedback.Result="{Binding SelectedItem.CopySucceeded, RelativeSource={RelativeSource AncestorType=TabControl}}"
                                         CommandParameter="{x:Static vm:DraftField.Ipv4Address}"
                                         Content="{x:Static res:Strings.CommandCopy}"
                                         Grid.Row="5"
@@ -279,6 +288,7 @@
                                         AutomationProperties.Name="{x:Static res:Strings.FieldIpv4Address}" />
                                 <Button Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding SelectedItem.CopyCurrentFieldCommand, RelativeSource={RelativeSource AncestorType=TabControl}}"
+                                        motion:CopyFeedback.Result="{Binding SelectedItem.CopySucceeded, RelativeSource={RelativeSource AncestorType=TabControl}}"
                                         CommandParameter="{x:Static vm:DraftField.SubnetMask}"
                                         Content="{x:Static res:Strings.CommandCopy}"
                                         Grid.Row="6"
@@ -286,6 +296,7 @@
                                         AutomationProperties.Name="{x:Static res:Strings.FieldSubnetMask}" />
                                 <Button Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding SelectedItem.CopyCurrentFieldCommand, RelativeSource={RelativeSource AncestorType=TabControl}}"
+                                        motion:CopyFeedback.Result="{Binding SelectedItem.CopySucceeded, RelativeSource={RelativeSource AncestorType=TabControl}}"
                                         CommandParameter="{x:Static vm:DraftField.Gateway}"
                                         Content="{x:Static res:Strings.CommandCopy}"
                                         Grid.Row="7"
@@ -293,6 +304,7 @@
                                         AutomationProperties.Name="{x:Static res:Strings.FieldGateway}" />
                                 <Button Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding SelectedItem.CopyCurrentFieldCommand, RelativeSource={RelativeSource AncestorType=TabControl}}"
+                                        motion:CopyFeedback.Result="{Binding SelectedItem.CopySucceeded, RelativeSource={RelativeSource AncestorType=TabControl}}"
                                         CommandParameter="{x:Static vm:DraftField.PrimaryDns}"
                                         Content="{x:Static res:Strings.CommandCopy}"
                                         Grid.Row="8"
@@ -300,6 +312,7 @@
                                         AutomationProperties.Name="{x:Static res:Strings.FieldPrimaryDns}" />
                                 <Button Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding SelectedItem.CopyCurrentFieldCommand, RelativeSource={RelativeSource AncestorType=TabControl}}"
+                                        motion:CopyFeedback.Result="{Binding SelectedItem.CopySucceeded, RelativeSource={RelativeSource AncestorType=TabControl}}"
                                         CommandParameter="{x:Static vm:DraftField.SecondaryDns}"
                                         Content="{x:Static res:Strings.CommandCopy}"
                                         Grid.Row="9"
@@ -386,6 +399,7 @@
                                         Grid.Column="1"
                                         Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding CopyFieldCommand}"
+                                        motion:CopyFeedback.Result="{Binding CopySucceeded}"
                                         CommandParameter="{x:Static vm:DraftField.Ipv4Address}"
                                         Content="{x:Static res:Strings.CommandCopy}"
                                         AutomationProperties.Name="{x:Static res:Strings.FieldIpv4Address}" />
@@ -401,6 +415,7 @@
                                         Grid.Column="1"
                                         Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding CopyFieldCommand}"
+                                        motion:CopyFeedback.Result="{Binding CopySucceeded}"
                                         CommandParameter="{x:Static vm:DraftField.SubnetMask}"
                                         Content="{x:Static res:Strings.CommandCopy}"
                                         AutomationProperties.Name="{x:Static res:Strings.FieldSubnetMask}" />
@@ -416,6 +431,7 @@
                                         Grid.Column="1"
                                         Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding CopyFieldCommand}"
+                                        motion:CopyFeedback.Result="{Binding CopySucceeded}"
                                         CommandParameter="{x:Static vm:DraftField.Gateway}"
                                         Content="{x:Static res:Strings.CommandCopy}"
                                         AutomationProperties.Name="{x:Static res:Strings.FieldGateway}" />
@@ -431,6 +447,7 @@
                                         Grid.Column="1"
                                         Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding CopyFieldCommand}"
+                                        motion:CopyFeedback.Result="{Binding CopySucceeded}"
                                         CommandParameter="{x:Static vm:DraftField.PrimaryDns}"
                                         Content="{x:Static res:Strings.CommandCopy}"
                                         AutomationProperties.Name="{x:Static res:Strings.FieldPrimaryDns}" />
@@ -446,6 +463,7 @@
                                         Grid.Column="1"
                                         Style="{StaticResource CopyButtonStyle}"
                                         Command="{Binding CopyFieldCommand}"
+                                        motion:CopyFeedback.Result="{Binding CopySucceeded}"
                                         CommandParameter="{x:Static vm:DraftField.SecondaryDns}"
                                         Content="{x:Static res:Strings.CommandCopy}"
                                         AutomationProperties.Name="{x:Static res:Strings.FieldSecondaryDns}" />
@@ -454,7 +472,7 @@
                                                FontSize="12"
                                                Foreground="{DynamicResource WarningBorderBrush}"
                                                Margin="0,8,0,4"
-                                               Visibility="{Binding IsIpv4AddressDifferentFromWindows, Converter={StaticResource BooleanToVisibility}}"
+                                               Visibility="{Binding IsIpv4AddressDifferentFromWindows, Converter={StaticResource BooleanToHidden}}"
                                                ToolTip="{Binding SelectedItem.Details.Ipv4Address, RelativeSource={RelativeSource AncestorType=TabControl}}"
                                                DockPanel.Dock="Right" />
                                     <TextBlock Style="{StaticResource FieldLabelStyle}"
@@ -467,7 +485,7 @@
                                                FontSize="12"
                                                Foreground="{DynamicResource WarningBorderBrush}"
                                                Margin="0,8,0,4"
-                                               Visibility="{Binding IsSubnetMaskDifferentFromWindows, Converter={StaticResource BooleanToVisibility}}"
+                                               Visibility="{Binding IsSubnetMaskDifferentFromWindows, Converter={StaticResource BooleanToHidden}}"
                                                ToolTip="{Binding SelectedItem.Details.SubnetMask, RelativeSource={RelativeSource AncestorType=TabControl}}"
                                                DockPanel.Dock="Right" />
                                     <TextBlock Style="{StaticResource FieldLabelStyle}"
@@ -480,7 +498,7 @@
                                                FontSize="12"
                                                Foreground="{DynamicResource WarningBorderBrush}"
                                                Margin="0,8,0,4"
-                                               Visibility="{Binding IsGatewayDifferentFromWindows, Converter={StaticResource BooleanToVisibility}}"
+                                               Visibility="{Binding IsGatewayDifferentFromWindows, Converter={StaticResource BooleanToHidden}}"
                                                ToolTip="{Binding SelectedItem.Details.Gateway, RelativeSource={RelativeSource AncestorType=TabControl}}"
                                                DockPanel.Dock="Right" />
                                     <TextBlock Style="{StaticResource FieldLabelStyle}"
@@ -493,7 +511,7 @@
                                                FontSize="12"
                                                Foreground="{DynamicResource WarningBorderBrush}"
                                                Margin="0,8,0,4"
-                                               Visibility="{Binding IsPrimaryDnsDifferentFromWindows, Converter={StaticResource BooleanToVisibility}}"
+                                               Visibility="{Binding IsPrimaryDnsDifferentFromWindows, Converter={StaticResource BooleanToHidden}}"
                                                ToolTip="{Binding SelectedItem.Details.PrimaryDns, RelativeSource={RelativeSource AncestorType=TabControl}}"
                                                DockPanel.Dock="Right" />
                                     <TextBlock Style="{StaticResource FieldLabelStyle}"
@@ -506,7 +524,7 @@
                                                FontSize="12"
                                                Foreground="{DynamicResource WarningBorderBrush}"
                                                Margin="0,8,0,4"
-                                               Visibility="{Binding IsSecondaryDnsDifferentFromWindows, Converter={StaticResource BooleanToVisibility}}"
+                                               Visibility="{Binding IsSecondaryDnsDifferentFromWindows, Converter={StaticResource BooleanToHidden}}"
                                                ToolTip="{Binding SelectedItem.Details.SecondaryDns, RelativeSource={RelativeSource AncestorType=TabControl}}"
                                                DockPanel.Dock="Right" />
                                     <TextBlock Style="{StaticResource FieldLabelStyle}"
@@ -534,6 +552,8 @@
                                 <Button Style="{StaticResource SecondaryActionButtonStyle}"
                                         ToolTipService.ShowOnDisabled="True"
                                         Command="{Binding DataContext.Actions.CopyNetworkInfoCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        motion:CopyFeedback.IsEnabled="True"
+                                        motion:CopyFeedback.Result="{Binding DataContext.Actions.StatusSeverity, RelativeSource={RelativeSource AncestorType=Window}}"
                                         Content="{x:Static res:Strings.CommandCopyNetworkInfo}"
                                         FontSize="12"
                                         HorizontalContentAlignment="Left" />
@@ -559,16 +579,19 @@
                             </UniformGrid>
                             <ProgressBar Height="3"
                                          Margin="0,4,0,8"
-                                         IsIndeterminate="True"
-                                         Visibility="{Binding DataContext.Actions.IsBusy, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToVisibility}}" />
+                                         Visibility="{Binding DataContext.Actions.IsBusy, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToHidden}}"
+                                         IsIndeterminate="{Binding DataContext.Actions.IsBusy, RelativeSource={RelativeSource AncestorType=Window}}" />
                         </StackPanel>
                     </Border>
+
+                </Grid>
+            </ScrollViewer>
                     <Border AutomationProperties.LiveSetting="Assertive"
-                            Visibility="{Binding DataContext.Actions.HasStatusMessage, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToVisibility}}"
+                            Visibility="{Binding DataContext.Actions.HasStatusMessage, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToHidden}}"
                             Style="{StaticResource ResultBannerStyle}"
-                            Grid.Row="1"
-                            Grid.ColumnSpan="3"
-                            Margin="0,16,0,0">
+                            VerticalAlignment="Bottom"
+                            Margin="20,0,20,8"
+                            Panel.ZIndex="2">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -612,8 +635,7 @@
                             </TextBlock>
                         </Grid>
                     </Border>
-                </Grid>
-            </ScrollViewer>
+            </Grid>
         </DataTemplate>
     </Window.Resources>
     <DockPanel LastChildFill="True">
@@ -654,7 +676,7 @@
                             AutomationProperties.Name="{x:Static res:Strings.SettingsTitle}">
                         <TextBlock Style="{StaticResource IconStyle}" Text="&#xE713;" />
                     </Button>
-                    <Popup IsOpen="{Binding IsHistoryOpen, Mode=TwoWay}"
+                    <Popup motion:FluentMotion.Popup="True" AllowsTransparency="True" IsOpen="{Binding IsHistoryOpen, Mode=TwoWay}"
                            Placement="Bottom"
                            PlacementTarget="{Binding ElementName=HistoryButton}"
                            DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}"
@@ -680,7 +702,7 @@
                                            Text="{x:Static res:Strings.NotificationHistoryEmpty}">
                                     <TextBlock.Style>
                                         <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Setter Property="Visibility" Value="Hidden" />
                                             <Style.Triggers>
                                                 <DataTrigger Binding="{Binding NotificationHistory.Count}" Value="0">
                                                     <Setter Property="Visibility" Value="Visible" />
@@ -707,7 +729,7 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                                 <Run Text="{Binding Timestamp, StringFormat={}{0:t}}" />
-                                                <Run Text=" — " />
+                                                <Run Text=" â€” " />
                                                 <Run Text="{Binding Text}" />
                                             </TextBlock>
                                         </DataTemplate>
@@ -785,30 +807,34 @@
                 <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="96" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
             <!-- Inline refresh failure: never modal, never clears the last valid state. -->
             <StackPanel Grid.Row="0" Grid.Column="2">
-                <Border Margin="20,12,20,0"
+                <Border Height="42" Margin="20,6,20,0"
                         Padding="12,8"
                         Background="{DynamicResource WarningBackgroundBrush}"
                         BorderBrush="{DynamicResource WarningBorderBrush}"
                         BorderThickness="1"
                         CornerRadius="4"
-                        Visibility="{Binding HasRefreshError, Converter={StaticResource BooleanToVisibility}}">
+                        motion:FluentMotion.Entrance="True"
+                        Visibility="{Binding HasRefreshError, Converter={StaticResource BooleanToHidden}}">
                     <TextBlock Foreground="{DynamicResource PrimaryTextBrush}"
                                Text="{Binding RefreshErrorText}"
+                               ToolTip="{Binding RefreshErrorText}"
                                TextWrapping="Wrap" />
                 </Border>
-                <Border Margin="20,12,20,0"
+                <Border Height="42" Margin="20,6,20,0"
                         Padding="8,4"
                         Background="{DynamicResource ErrorBackgroundBrush}"
                         BorderBrush="{DynamicResource ErrorBorderBrush}"
                         BorderThickness="1"
-                        Visibility="{Binding SettingsWarningVisible, Converter={StaticResource BooleanToVisibility}}">
+                        motion:FluentMotion.Entrance="True"
+                        Visibility="{Binding SettingsWarningVisible, Converter={StaticResource BooleanToHidden}}">
                     <TextBlock Foreground="{DynamicResource ErrorTextBrush}"
                                Text="{Binding SettingsWarningText}"
+                               ToolTip="{Binding SettingsWarningText}"
                                TextWrapping="Wrap" />
                 </Border>
             </StackPanel>
@@ -838,7 +864,7 @@
                                        IsHitTestVisible="False">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Setter Property="Visibility" Value="Hidden" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding SearchText}" Value="">
                                                 <Setter Property="Visibility" Value="Visible" />
@@ -877,8 +903,10 @@
                         <TextBlock Margin="0,6,0,0"
                                    Foreground="{DynamicResource SecondaryTextBrush}"
                                    Text="{Binding StatusMessage}"
+                                   Height="48"
+                                   ToolTip="{Binding StatusMessage}"
                                    TextWrapping="Wrap"
-                                   Visibility="{Binding HasStatusMessage, Converter={StaticResource BooleanToVisibility}}" />
+                                   Visibility="{Binding HasStatusMessage, Converter={StaticResource BooleanToHidden}}" />
                     </StackPanel>
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
@@ -936,6 +964,8 @@
                                                                 <TextBlock.Style>
                                                                     <Style TargetType="TextBlock"
                                                                            BasedOn="{StaticResource IconStyle}">
+                                                                        <Setter Property="motion:FluentMotion.Pop" Value="{Binding IsFavorite}" />
+                                                                        <Setter Property="motion:FluentMotion.PopOnClick" Value="True" />
                                                                         <Setter Property="Text" Value="&#xE734;" />
                                                                         <Setter Property="Foreground"
                                                                                 Value="{DynamicResource SecondaryTextBrush}" />
@@ -1012,7 +1042,7 @@
                             </ItemsControl>
                             <Expander Margin="0,8,0,0"
                                       Header="{Binding ProblemsHeader}"
-                                      Visibility="{Binding HasProblems, Converter={StaticResource BooleanToVisibility}}">
+                                      Visibility="{Binding HasProblems, Converter={StaticResource BooleanToHidden}}">
                                 <ItemsControl ItemsSource="{Binding Problems}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
@@ -1028,7 +1058,7 @@
                             <StackPanel Margin="8,32" HorizontalAlignment="Center">
                                 <StackPanel.Style>
                                     <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Setter Property="Visibility" Value="Hidden" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding Groups.Count}" Value="0">
                                                 <Setter Property="Visibility" Value="Visible" />

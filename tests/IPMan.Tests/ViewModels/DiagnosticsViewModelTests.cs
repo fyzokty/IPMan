@@ -144,11 +144,13 @@ public sealed class DiagnosticsViewModelTests
         viewModel.CopyCommand.Execute(null);
 
         Assert.Equal(Strings.DiagnosticsCopyFailed, viewModel.CopyStatus);
+        Assert.False(viewModel.CopySucceeded);
         Assert.Equal(report, viewModel.ReportText);
         clipboard.Succeeds = true;
         clipboard.Failure = null;
         viewModel.CopyCommand.Execute(null);
         Assert.Equal(Strings.DiagnosticsCopySucceeded, viewModel.CopyStatus);
+        Assert.True(viewModel.CopySucceeded);
     }
 
     [Fact]

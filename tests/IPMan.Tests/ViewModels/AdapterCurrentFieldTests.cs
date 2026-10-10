@@ -24,6 +24,7 @@ public sealed class AdapterCurrentFieldTests
         adapter.CopyCurrentFieldCommand.Execute(field);
 
         Assert.Equal(expected, clipboard.LastCopiedText);
+        Assert.True(adapter.CopySucceeded);
         Assert.Equal("10.0.0.99", adapter.Draft.Ipv4Address);
         Assert.True(adapter.Draft.IsDirty);
     }
@@ -40,5 +41,32 @@ public sealed class AdapterCurrentFieldTests
         adapter.CopyCurrentFieldCommand.Execute(DraftField.Gateway);
 
         Assert.Equal(string.Empty, clipboard.LastCopiedText);
+    }
+
+    [Fact]
+    public void CopyFields_ReportClipboardFailureAndRecoverWithoutChangingDraft()
+    {
+        FakeClipboardService clipboard = new() { Succeeds = false };
+        AdapterViewModel adapter = new(TestData.Snapshot(), clipboard, new StaticIpv4ConfigurationValidator());
+        adapter.Draft.Ipv4Address = "10.0.0.99";
+        adapter.CopyCurrentFieldCommand.Execute(DraftField.Ipv4Address);
+        adapter.Draft.CopyFieldCommand.Execute(DraftField.Ipv4Address);
+        Assert.False(adapter.CopySucceeded);
+        Assert.False(adapter.Draft.CopySucceeded);
+
+        clipboard.Failure = new InvalidOperationException("Clipboard unavailable.");
+        adapter.CopyCurrentFieldCommand.Execute(DraftField.Ipv4Address);
+        adapter.Draft.CopyFieldCommand.Execute(DraftField.Ipv4Address);
+        Assert.False(adapter.CopySucceeded);
+        Assert.False(adapter.Draft.CopySucceeded);
+
+        clipboard.Failure = null;
+        clipboard.Succeeds = true;
+        adapter.CopyCurrentFieldCommand.Execute(DraftField.Ipv4Address);
+        adapter.Draft.CopyFieldCommand.Execute(DraftField.Ipv4Address);
+        Assert.True(adapter.CopySucceeded);
+        Assert.True(adapter.Draft.CopySucceeded);
+        Assert.Equal("10.0.0.99", adapter.Draft.Ipv4Address);
+        Assert.True(adapter.Draft.IsDirty);
     }
 }
