@@ -17,7 +17,7 @@ IPMan'i hem taşınabilir paket hem kurulum programı olarak yayınlamak.
 
 ## Bitti sayılır
 - [ ] Temiz bir Windows 10/11 makinesinde iki biçim de kurulup çalışıyor
-- [ ] Çıktılar CI'dan üretilebiliyor
+- [x] Çıktılar CI'dan üretilebiliyor
 
 ## Sorular
 
