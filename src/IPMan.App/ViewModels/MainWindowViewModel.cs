@@ -8,7 +8,6 @@ using IPMan.App.Resources;
 using IPMan.App.Services;
 using IPMan.Application.Common;
 using IPMan.Application.Networking;
-using IPMan.Domain.Adapters;
 using IPMan.Domain.Networking;
 
 namespace IPMan.App.ViewModels;
@@ -302,10 +301,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             Actions.CancelUnavailableAction();
         }
 
-        IReadOnlyList<NetworkAdapterSnapshot> displayedAdapters = adapters
-            .Where(adapter => AdapterCategoryClassifier.IsVisible(adapter, _showVirtualAdapters) ||
-                adapter.Id == SelectedAdapter?.Id)
-            .ToArray();
+        IReadOnlyList<NetworkAdapterSnapshot> displayedAdapters = AdapterVisibilityFilter
+            .SelectVisible(adapters, _showVirtualAdapters, SelectedAdapter?.Id);
         NetworkAdapterId? previouslySelectedId = SelectedAdapter?.Id;
         HashSet<NetworkAdapterId> displayedAdapterIds = displayedAdapters
             .Select(adapter => adapter.Id)

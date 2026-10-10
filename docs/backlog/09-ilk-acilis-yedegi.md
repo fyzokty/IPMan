@@ -1,6 +1,6 @@
 # 09 — İlk açılışta yapılandırma yedeği
 
-- **Durum:** devam ediyor
+- **Durum:** tamamlandı
 - **Bağımlılık:** yok
 - **Gereksinimler:** PR-016
 
@@ -15,8 +15,8 @@ kurtarılabilir bir kopyasını almak.
 - Mevcut kurtarma yedeği mekanizmasıyla uyumlu (ADR-016)
 
 ## Bitti sayılır
-- [ ] İlk açılışta yedek sessizce oluşuyor
-- [ ] Sonraki açılışlarda gereksiz kopya oluşmuyor
+- [x] İlk açılışta yedek sessizce oluşuyor
+- [x] Sonraki açılışlarda gereksiz kopya oluşmuyor
 
 ## Sorular
 

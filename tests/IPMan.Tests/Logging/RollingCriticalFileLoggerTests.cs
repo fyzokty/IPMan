@@ -88,6 +88,28 @@ public sealed class RollingCriticalFileLoggerTests
     }
 
     [Fact]
+    public void Log_WhenFirstRunBackupLogCannotBeWritten_DoesNotRaiseNotificationEvent()
+    {
+        string directory = CreateTemporaryDirectory();
+        string blockingFile = Path.Combine(directory, "not-a-directory");
+        try
+        {
+            File.WriteAllText(blockingFile, "block");
+            RollingCriticalFileLogger logger = new(Path.Combine(blockingFile, "ipman-critical.log"), "1.0.0");
+            bool writeFailed = false;
+            logger.WriteFailed += (_, _) => writeFailed = true;
+
+            logger.Log(new CriticalLogEntry(CriticalLogCategory.FirstRunBackup, "First-run backup failed."));
+
+            Assert.False(writeFailed);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public void Log_WhenCalledConcurrently_WritesEveryRecord()
     {
         string directory = CreateTemporaryDirectory();

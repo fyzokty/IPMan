@@ -18,7 +18,8 @@ public enum CriticalLogCategory
     ProfileWrite,
     NetworkApi,
     Unhandled,
-    UnexpectedShutdown
+    UnexpectedShutdown,
+    FirstRunBackup
 }
 
 /// <summary>Contains data written to the critical diagnostic log.</summary>

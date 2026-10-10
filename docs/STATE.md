@@ -24,6 +24,8 @@ copyable plain-text report (08).
 Profiles / settings: one JSON file per profile under `Documents\IPMan\Profiles\`,
 settings in `Documents\IPMan\settings.json`; recovery snapshots stay in
 `%LocalAppData%\IPMan\Backup\` (ADR-015 supersedes ADR-012).
+First startup silently captures visible adapters in `%LocalAppData%\IPMan\FirstRun\first-run.json`,
+never overwriting it or exposing it to restore and retention (09, ADR-017).
 CI: GitHub Actions, `windows-latest`, Release build + full suite on push to `main`
 and on PRs. Destructive tests stay skipped — no `IPMAN_*` in CI.
 Elevation: whole app runs `requireAdministrator`, helper split rejected (ADR-013).
@@ -33,9 +35,8 @@ i18n: `Strings.resx`, single language (Turkish).
 
 # Next
 Order and details live in `docs/backlog/`:
-1. 09 — silent first-run configuration backup
-2. 10 — portable package and installer
-3. 11 — real-adapter verification on an isolated VM (can run in parallel)
+1. 10 — portable package and installer
+2. 11 — real-adapter verification on an isolated VM (can run in parallel)
 
 # Constraints
 - Destructive network tests are opt-in and must run only on an isolated VM adapter

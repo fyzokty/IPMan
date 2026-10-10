@@ -38,11 +38,17 @@ public sealed class RollingCriticalFileLogger : ICriticalLogger
         }
         catch (IOException)
         {
-            NotifyWriteFailed();
+            if (entry.Category != CriticalLogCategory.FirstRunBackup)
+            {
+                NotifyWriteFailed();
+            }
         }
         catch (UnauthorizedAccessException)
         {
-            NotifyWriteFailed();
+            if (entry.Category != CriticalLogCategory.FirstRunBackup)
+            {
+                NotifyWriteFailed();
+            }
         }
     }
 
