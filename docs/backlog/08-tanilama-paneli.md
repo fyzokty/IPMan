@@ -21,7 +21,7 @@ Destek için kopyalanabilir sistem bilgisi.
 
 Yanıtlar kullanıcı onayı beklemeden makul varsayılan olarak verildi; değiştirilebilir.
 1. Tanılama paneli ana pencerede nerede açılmalı (ayrı pencere, ayarlar içinde bölüm veya başka bir konum) ve hangi kullanıcı eylemiyle erişilmelidir?
-    * Ayarlar penceresindeki "Tanılama…" düğmesiyle açılan ayrı, küçük, kalıcı olmayan (modal) bir pencere.
+    * Ayarlar penceresindeki "Tanılama…" düğmesiyle açılan ayrı, küçük, ayarlar penceresine bağlı modal bir pencere.
 2. Windows sürümü kullanıcıya hangi ayrıntı düzeyinde gösterilmelidir (ürün adı, sürüm, derleme numarası ve mimari gibi)?
     * Ürün adı (derleme ≥ 22000 ise Windows 11), görünen sürüm (ör. 23H2), derleme numarası ve işletim sistemi mimarisi.
 3. Uygulama sürümü hangi kaynaktan alınmalı ve ön-sürüm/derleme bilgisi de görüntülenmeli midir?
