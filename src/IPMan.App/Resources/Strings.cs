@@ -486,6 +486,16 @@ public static class Strings
     public static string FormatValidationAddressNotAllowed(string fieldLabel) =>
         Format(Get("ValidationAddressNotAllowed"), CultureInfo.CurrentCulture, fieldLabel);
 
+    public static string QuickActionsHeader => Get(nameof(QuickActionsHeader));
+
+    public static string ProfileSaveHeader => Get(nameof(ProfileSaveHeader));
+
+    public static string DraftDifferentHint => Get(nameof(DraftDifferentHint));
+
+    public static string ProfileEmptyTitle => Get(nameof(ProfileEmptyTitle));
+
+    public static string ProfileEmptyDescription => Get(nameof(ProfileEmptyDescription));
+
     private static string Get(string name) =>
         Manager.GetString(name, CultureInfo.CurrentUICulture) ?? name;
 

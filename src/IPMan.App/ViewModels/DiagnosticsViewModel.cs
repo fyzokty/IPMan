@@ -24,6 +24,9 @@ public sealed partial class DiagnosticsViewModel : ObservableObject
     private string _reportText = string.Empty;
 
     [ObservableProperty]
+    private IReadOnlyList<DiagnosticsReportRow> _reportRows = Array.Empty<DiagnosticsReportRow>();
+
+    [ObservableProperty]
     private string _copyStatus = string.Empty;
 
     public DiagnosticsViewModel(
@@ -54,7 +57,7 @@ public sealed partial class DiagnosticsViewModel : ObservableObject
     [RelayCommand]
     private void Refresh()
     {
-        ReportText = string.Join(Environment.NewLine,
+        ReportRows = [
             ReadField(Strings.DiagnosticsWindowsVersion, () =>
             {
                 WindowsVersionInfo windows = _system.ReadWindowsVersion();
@@ -77,7 +80,8 @@ public sealed partial class DiagnosticsViewModel : ObservableObject
             ReadField(Strings.DiagnosticsProblemCount, () => _profiles.Problems.Count.ToString(CultureInfo.CurrentCulture)),
             ReadField(Strings.DiagnosticsCriticalLog, () => _system.CriticalLogExists()
                 ? _system.CriticalLogFile : Strings.FormatDiagnosticsMissingLog(_system.CriticalLogFile)),
-            ReadField(Strings.DiagnosticsCreatedAt, () => _clock.UtcNow.ToLocalTime().ToString("G", CultureInfo.CurrentCulture)));
+            ReadField(Strings.DiagnosticsCreatedAt, () => _clock.UtcNow.ToLocalTime().ToString("G", CultureInfo.CurrentCulture))];
+        ReportText = string.Join(Environment.NewLine, ReportRows.Select(row => $"{row.Name}: {row.Value}"));
         CopyStatus = string.Empty;
     }
 
@@ -96,7 +100,7 @@ public sealed partial class DiagnosticsViewModel : ObservableObject
         }
     }
 
-    private static string ReadField(string name, Func<string> read)
+    private static DiagnosticsReportRow ReadField(string name, Func<string> read)
     {
         string value;
         try
@@ -109,6 +113,9 @@ public sealed partial class DiagnosticsViewModel : ObservableObject
             value = Strings.DiagnosticsUnreadable;
         }
 
-        return $"{name}: {value}";
+        return new DiagnosticsReportRow(name, value);
     }
 }
+
+/// <summary>A display row from the same independently collected diagnostics as the plain text report.</summary>
+public sealed record DiagnosticsReportRow(string Name, string Value);

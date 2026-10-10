@@ -21,4 +21,5 @@
     <SolidColorBrush x:Key="InfoBorderBrush" Color="#0F6CBD" />
     <SolidColorBrush x:Key="ErrorBackgroundBrush" Color="#FDE7E9" />
     <SolidColorBrush x:Key="ErrorBorderBrush" Color="#A80000" />
+    <SolidColorBrush x:Key="OnAccentBrush" Color="#FFFFFF" />
 </ResourceDictionary>

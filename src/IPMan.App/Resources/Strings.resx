@@ -498,4 +498,9 @@
   <data name="DiagnosticsUnreadable" xml:space="preserve"><value>Okunamadı</value></data>
   <data name="DiagnosticsCopySucceeded" xml:space="preserve"><value>Panoya kopyalandı</value></data>
   <data name="DiagnosticsCopyFailed" xml:space="preserve"><value>Panoya kopyalanamadı</value></data>
+  <data name="QuickActionsHeader" xml:space="preserve"><value>Hızlı eylemler</value></data>
+  <data name="ProfileSaveHeader" xml:space="preserve"><value>Hızlı yapılandırma</value></data>
+  <data name="DraftDifferentHint" xml:space="preserve"><value>Windows’tan farklı</value></data>
+  <data name="ProfileEmptyTitle" xml:space="preserve"><value>Kayıtlı profil bulunamadı</value></data>
+  <data name="ProfileEmptyDescription" xml:space="preserve"><value>Yeni bir profili aşağıdaki alandan kaydedebilirsiniz.</value></data>
 </root>
