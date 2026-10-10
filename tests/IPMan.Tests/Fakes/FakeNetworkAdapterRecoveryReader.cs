@@ -12,6 +12,8 @@ public sealed class FakeNetworkAdapterRecoveryReader : INetworkAdapterRecoveryRe
 
     public NetworkAdapterId? LastAdapterId { get; private set; }
 
+    public Dictionary<NetworkAdapterId, Exception> Failures { get; } = new();
+
     public void Enqueue(NetworkAdapterRecoveryReadResult result) => _results.Enqueue(result);
 
     public void Enqueue(NetworkAdapterRecoverySnapshot snapshot) =>
@@ -24,6 +26,11 @@ public sealed class FakeNetworkAdapterRecoveryReader : INetworkAdapterRecoveryRe
         cancellationToken.ThrowIfCancellationRequested();
         ReadCount++;
         LastAdapterId = adapterId;
+
+        if (Failures.TryGetValue(adapterId, out Exception? failure))
+        {
+            throw failure;
+        }
 
         if (_results.Count > 0)
         {

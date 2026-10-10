@@ -17,6 +17,12 @@ public static class AppStorageLayout
     /// <summary>Gets the operational recovery snapshot directory.</summary>
     public static string BackupDirectory { get; } = Path.Combine(LocalDataRoot, "Backup");
 
+    /// <summary>Gets the first-run directory, excluded from recovery retention and restore.</summary>
+    public static string FirstRunDirectory { get; } = Path.Combine(LocalDataRoot, "FirstRun");
+
+    /// <summary>Gets the permanent first-run configuration copy.</summary>
+    public static string FirstRunBackupFile { get; } = Path.Combine(FirstRunDirectory, "first-run.json");
+
     /// <summary>Gets the directory containing critical diagnostic logs.</summary>
     public static string LogsDirectory { get; } = Path.Combine(LocalDataRoot, "logs");
 

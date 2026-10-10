@@ -99,8 +99,8 @@ public partial class App : System.Windows.Application
 
         ShutdownMode = ShutdownMode.OnLastWindowClose;
         IAppSettingsRepository settingsRepository = _serviceProvider.GetRequiredService<IAppSettingsRepository>();
-        AppTheme theme = settingsRepository.LoadAsync(CancellationToken.None).GetAwaiter().GetResult().Theme;
-        _serviceProvider.GetRequiredService<WindowsThemeService>().Apply(theme);
+        AppSettings startupSettings = settingsRepository.LoadAsync(CancellationToken.None).GetAwaiter().GetResult();
+        _serviceProvider.GetRequiredService<WindowsThemeService>().Apply(startupSettings.Theme);
         MainWindow window = _serviceProvider.GetRequiredService<MainWindow>();
         MainWindow = window;
         SessionEnding += OnSessionEnding;
@@ -113,6 +113,9 @@ public partial class App : System.Windows.Application
         _activationChannelServer.StartListening();
 
         _serviceProvider.GetRequiredService<MainWindowViewModel>().Initialize();
+
+        FirstRunBackupService firstRunBackup = _serviceProvider.GetRequiredService<FirstRunBackupService>();
+        _ = Task.Run(() => firstRunBackup.CaptureAsync(startupSettings.ShowVirtualAdapters, CancellationToken.None));
 
         _profileCatalog = _serviceProvider.GetRequiredService<IProfileCatalog>();
         _ = InitializeProfileCatalogAsync(_profileCatalog);
@@ -189,6 +192,8 @@ public partial class App : System.Windows.Application
         });
         services.AddSingleton(new ProfileWatcherOptions());
         services.AddSingleton<IRecoverySnapshotRepository, JsonRecoverySnapshotRepository>();
+        services.AddSingleton<IFirstRunBackupStore>(_ => new JsonFirstRunBackupStore(AppStorageLayout.FirstRunBackupFile));
+        services.AddSingleton<FirstRunBackupService>();
         services.AddSingleton<IProfileRepository, JsonProfileRepository>();
         services.AddSingleton<IAppSettingsRepository, JsonAppSettingsRepository>();
         services.AddSingleton<IProfileDirectoryWatcher, FileSystemProfileDirectoryWatcher>();

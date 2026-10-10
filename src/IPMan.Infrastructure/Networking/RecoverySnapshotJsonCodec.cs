@@ -58,6 +58,54 @@ public sealed class RecoverySnapshotJsonCodec
         return snapshot;
     }
 
+    /// <summary>Uses the same recovery wire contract inside the first-run envelope.</summary>
+    public async Task SerializeFirstRunBackupAsync(
+        Stream destination,
+        FirstRunBackup backup,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(destination);
+        ArgumentNullException.ThrowIfNull(backup);
+        EnsureFirstRunBackup(backup);
+        await JsonSerializer.SerializeAsync(destination, backup, _serializerOptions, cancellationToken)
+            .ConfigureAwait(false);
+    }
+
+    public async Task<FirstRunBackup> DeserializeFirstRunBackupAsync(
+        Stream source,
+        CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        FirstRunBackup? backup = await JsonSerializer.DeserializeAsync<FirstRunBackup>(
+            source, _serializerOptions, cancellationToken).ConfigureAwait(false);
+        if (backup is null)
+        {
+            throw new JsonException("First-run backup JSON cannot be null.");
+        }
+
+        EnsureFirstRunBackup(backup);
+        return backup;
+    }
+
+    private static void EnsureFirstRunBackup(FirstRunBackup backup)
+    {
+        if (backup.SchemaVersion != FirstRunBackup.CurrentSchemaVersion ||
+            backup.Adapters is null || backup.Adapters.Length == 0)
+        {
+            throw new JsonException("First-run backup must have a supported schema and nonempty adapter list.");
+        }
+
+        foreach (RecoverySnapshot snapshot in backup.Adapters)
+        {
+            if (snapshot is null)
+            {
+                throw new JsonException("First-run backup adapter snapshot cannot be null.");
+            }
+
+            EnsureAdapterIdentity(snapshot.AdapterId);
+        }
+    }
+
     private static void EnsureAdapterIdentity(NetworkAdapterId adapterId)
     {
         if (string.IsNullOrWhiteSpace(adapterId.Value))

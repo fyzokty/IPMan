@@ -71,6 +71,57 @@ public sealed class RecoverySnapshotJsonCodecTests
         Assert.Equal(DnsConfigurationMode.Automatic, snapshot.DnsMode);
     }
 
+    [Fact]
+    public async Task FirstRunRoundTrip_WhenMultipleAdaptersExist_PreservesEnvelopeAndRecoveryContract()
+    {
+        RecoverySnapshotJsonCodec codec = new();
+        RecoverySnapshot first = Snapshot() with
+        {
+            Ipv4Gateways = new[] { new Ipv4GatewayRecoveryState("10.250.0.1", 25), new Ipv4GatewayRecoveryState("10.250.0.254", 50) }
+        };
+        RecoverySnapshot second = Snapshot() with
+        {
+            AdapterId = new NetworkAdapterId("{B}"),
+            Mode = NetworkConfigurationMode.Dhcp,
+            DnsMode = DnsConfigurationMode.Automatic,
+            ConfiguredIpv4DnsServers = Array.Empty<string>()
+        };
+        FirstRunBackup expected = new(FirstRunBackup.CurrentSchemaVersion, first.CapturedAtUtc, new[] { first, second });
+        await using MemoryStream stream = new();
+
+        await codec.SerializeFirstRunBackupAsync(stream, expected, CancellationToken.None);
+        stream.Position = 0;
+        FirstRunBackup actual = await codec.DeserializeFirstRunBackupAsync(stream, CancellationToken.None);
+
+        Assert.Equal(expected.SchemaVersion, actual.SchemaVersion);
+        Assert.Equal(expected.CapturedAtUtc, actual.CapturedAtUtc);
+        Assert.Equal(2, actual.Adapters.Length);
+        AssertSnapshotEqual(first, actual.Adapters[0]);
+        AssertSnapshotEqual(second, actual.Adapters[1]);
+
+        stream.Position = 0;
+        using JsonDocument document = await JsonDocument.ParseAsync(stream);
+        foreach (JsonElement element in document.RootElement.GetProperty("adapters").EnumerateArray())
+        {
+            RecoverySnapshot standalone = await DeserializeAsync(element.GetRawText());
+            AssertSnapshotEqual(actual.Adapters.Single(item => item.AdapterId == standalone.AdapterId), standalone);
+        }
+    }
+
+    [Theory]
+    [InlineData("null")]
+    [InlineData("{\"schemaVersion\":99,\"adapters\":[]}")]
+    [InlineData("{\"schemaVersion\":1,\"adapters\":[]}")]
+    [InlineData("{\"schemaVersion\":1,\"adapters\":[null]}")]
+    [InlineData("{\"schemaVersion\":1,\"adapters\":[{}]}")]
+    public async Task DeserializeFirstRunBackupAsync_WhenEnvelopeIsInvalid_ThrowsJsonException(string json)
+    {
+        await using MemoryStream stream = new(Encoding.UTF8.GetBytes(json));
+
+        await Assert.ThrowsAsync<JsonException>(() => new RecoverySnapshotJsonCodec()
+            .DeserializeFirstRunBackupAsync(stream, CancellationToken.None));
+    }
+
     private static async Task<RecoverySnapshot> DeserializeAsync(string json)
     {
         await using MemoryStream stream = new(Encoding.UTF8.GetBytes(json));
