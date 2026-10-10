@@ -42,6 +42,9 @@ public sealed partial class SettingsViewModel : ObservableObject
     /// <summary>Raised after a setting is persisted or reset so the main window can apply it live.</summary>
     public event EventHandler<AppSettings>? SettingsChanged;
 
+    /// <summary>Requests the modal diagnostics host without constructing a window.</summary>
+    public event EventHandler? DiagnosticsRequested;
+
     /// <summary>Creates the settings editor from the persisted user preferences.</summary>
     public SettingsViewModel(
         IAppSettingsRepository settingsRepository,
@@ -175,6 +178,9 @@ public sealed partial class SettingsViewModel : ObservableObject
     partial void OnApplyProfileOnSelectionChanged(bool value) => SaveIfReady();
     partial void OnShowVirtualAdaptersChanged(bool value) => SaveIfReady();
     partial void OnRememberWindowStateChanged(bool value) => SaveIfReady();
+
+    [RelayCommand]
+    private void OpenDiagnostics() => DiagnosticsRequested?.Invoke(this, EventArgs.Empty);
 
     [RelayCommand]
     private void ResetToDefaults()

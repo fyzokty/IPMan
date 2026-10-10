@@ -383,6 +383,56 @@ public static class Strings
 
     public static string UnhandledExceptionMessage => Get(nameof(UnhandledExceptionMessage));
 
+    public static string SettingsDiagnostics => Get(nameof(SettingsDiagnostics));
+
+    public static string DiagnosticsTitle => Get(nameof(DiagnosticsTitle));
+
+    public static string DiagnosticsRefresh => Get(nameof(DiagnosticsRefresh));
+
+    public static string DiagnosticsWindowsVersion => Get(nameof(DiagnosticsWindowsVersion));
+
+    public static string DiagnosticsApplicationVersion => Get(nameof(DiagnosticsApplicationVersion));
+
+    public static string DiagnosticsAdministrator => Get(nameof(DiagnosticsAdministrator));
+
+    public static string DiagnosticsAdministratorYes => Get(nameof(DiagnosticsAdministratorYes));
+
+    public static string DiagnosticsAdministratorNo => Get(nameof(DiagnosticsAdministratorNo));
+
+    public static string DiagnosticsAdapterCount => Get(nameof(DiagnosticsAdapterCount));
+
+    public static string DiagnosticsProfilesDirectory => Get(nameof(DiagnosticsProfilesDirectory));
+
+    public static string DiagnosticsProfilesDirectoryStatus => Get(nameof(DiagnosticsProfilesDirectoryStatus));
+
+    public static string DiagnosticsDirectoryExists => Get(nameof(DiagnosticsDirectoryExists));
+
+    public static string DiagnosticsDirectoryNotCreated => Get(nameof(DiagnosticsDirectoryNotCreated));
+
+    public static string DiagnosticsDirectoryInaccessible => Get(nameof(DiagnosticsDirectoryInaccessible));
+
+    public static string DiagnosticsProfileCount => Get(nameof(DiagnosticsProfileCount));
+
+    public static string DiagnosticsProblemCount => Get(nameof(DiagnosticsProblemCount));
+
+    public static string DiagnosticsCriticalLog => Get(nameof(DiagnosticsCriticalLog));
+
+    public static string DiagnosticsCreatedAt => Get(nameof(DiagnosticsCreatedAt));
+
+    public static string DiagnosticsUnreadable => Get(nameof(DiagnosticsUnreadable));
+
+    public static string DiagnosticsCopySucceeded => Get(nameof(DiagnosticsCopySucceeded));
+
+    public static string DiagnosticsCopyFailed => Get(nameof(DiagnosticsCopyFailed));
+
+    public static string FormatDiagnosticsWindowsVersion(string productName, string displayVersion, string buildNumber, string architecture) =>
+        string.IsNullOrWhiteSpace(displayVersion)
+            ? Format(Get("DiagnosticsWindowsVersionWithoutDisplayVersionFormat"), CultureInfo.CurrentCulture, productName, buildNumber, architecture)
+            : Format(Get("DiagnosticsWindowsVersionFormat"), CultureInfo.CurrentCulture, productName, displayVersion, buildNumber, architecture);
+
+    public static string FormatDiagnosticsMissingLog(string path) =>
+        Format(Get("DiagnosticsMissingLogFormat"), CultureInfo.CurrentCulture, path);
+
     public static string FormatOperationNotification(string operation, string adapterName, string result) =>
         Format(Get("OperationNotification"), CultureInfo.CurrentCulture, operation, adapterName, result);
 

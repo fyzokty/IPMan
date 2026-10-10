@@ -474,4 +474,28 @@
   <data name="UnexpectedShutdownNotification" xml:space="preserve"><value>Uygulama önceki oturumda beklenmedik şekilde kapandı.</value></data>
   <data name="CriticalLogWriteFailedNotification" xml:space="preserve"><value>Tanılama günlüğü yazılamadı.</value></data>
   <data name="UnhandledExceptionMessage" xml:space="preserve"><value>Beklenmeyen bir hata nedeniyle uygulama kapatılacak.</value></data>
+  <data name="SettingsDiagnostics" xml:space="preserve"><value>Tanılama…</value></data>
+  <data name="DiagnosticsTitle" xml:space="preserve"><value>Tanılama</value></data>
+  <data name="DiagnosticsRefresh" xml:space="preserve"><value>Yenile</value></data>
+  <data name="DiagnosticsWindowsVersion" xml:space="preserve"><value>Windows sürümü</value></data>
+  <data name="DiagnosticsWindowsVersionFormat" xml:space="preserve"><value>{0} — {1}, derleme {2}, {3}</value></data>
+  <data name="DiagnosticsWindowsVersionWithoutDisplayVersionFormat" xml:space="preserve"><value>{0} — derleme {1}, {2}</value></data>
+  <data name="DiagnosticsApplicationVersion" xml:space="preserve"><value>Uygulama sürümü</value></data>
+  <data name="DiagnosticsAdministrator" xml:space="preserve"><value>Yönetici olarak çalışıyor</value></data>
+  <data name="DiagnosticsAdministratorYes" xml:space="preserve"><value>Evet</value></data>
+  <data name="DiagnosticsAdministratorNo" xml:space="preserve"><value>Hayır</value></data>
+  <data name="DiagnosticsAdapterCount" xml:space="preserve"><value>Bağdaştırıcı sayısı</value></data>
+  <data name="DiagnosticsProfilesDirectory" xml:space="preserve"><value>Profil klasörü</value></data>
+  <data name="DiagnosticsProfilesDirectoryStatus" xml:space="preserve"><value>Profil klasörü durumu</value></data>
+  <data name="DiagnosticsDirectoryExists" xml:space="preserve"><value>Mevcut</value></data>
+  <data name="DiagnosticsDirectoryNotCreated" xml:space="preserve"><value>Henüz oluşturulmadı</value></data>
+  <data name="DiagnosticsDirectoryInaccessible" xml:space="preserve"><value>Erişilemiyor</value></data>
+  <data name="DiagnosticsProfileCount" xml:space="preserve"><value>Geçerli profil sayısı</value></data>
+  <data name="DiagnosticsProblemCount" xml:space="preserve"><value>Bozuk profil sayısı</value></data>
+  <data name="DiagnosticsCriticalLog" xml:space="preserve"><value>Kritik günlük dosyası</value></data>
+  <data name="DiagnosticsMissingLogFormat" xml:space="preserve"><value>{0} (henüz oluşturulmadı)</value></data>
+  <data name="DiagnosticsCreatedAt" xml:space="preserve"><value>Oluşturulma zamanı</value></data>
+  <data name="DiagnosticsUnreadable" xml:space="preserve"><value>Okunamadı</value></data>
+  <data name="DiagnosticsCopySucceeded" xml:space="preserve"><value>Panoya kopyalandı</value></data>
+  <data name="DiagnosticsCopyFailed" xml:space="preserve"><value>Panoya kopyalanamadı</value></data>
 </root>

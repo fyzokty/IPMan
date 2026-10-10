@@ -1,6 +1,6 @@
 # 08 — Tanılama paneli
 
-- **Durum:** devam ediyor
+- **Durum:** tamamlandı
 - **Bağımlılık:** 07
 - **Gereksinimler:** PR-028 · AC-021
 
@@ -14,8 +14,8 @@ Destek için kopyalanabilir sistem bilgisi.
 - "Kopyala" eylemi
 
 ## Bitti sayılır
-- [ ] Panel bilgileri doğru gösteriyor
-- [ ] Tek tıkla panoya kopyalanıyor
+- [x] Panel bilgileri doğru gösteriyor
+- [x] Tek tıkla panoya kopyalanıyor
 
 ## Sorular
 

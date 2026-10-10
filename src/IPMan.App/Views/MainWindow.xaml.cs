@@ -24,6 +24,7 @@ public partial class MainWindow : Window
     private readonly IUserConfirmationService _confirmationService;
     private readonly TrayIconManager _trayIconManager;
     private readonly SettingsViewModel _settingsViewModel;
+    private readonly Func<DiagnosticsViewModel> _diagnosticsFactory;
     private readonly WindowsThemeService _themeService;
     private readonly OperationNotificationService _operationNotificationService;
     private readonly IUiDispatcher _uiDispatcher;
@@ -44,7 +45,8 @@ public partial class MainWindow : Window
         WindowsThemeService themeService,
         OperationNotificationService operationNotificationService,
         IUiDispatcher uiDispatcher,
-        ISessionMarker sessionMarker)
+        ISessionMarker sessionMarker,
+        Func<DiagnosticsViewModel> diagnosticsFactory)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(settingsRepository);
@@ -55,12 +57,14 @@ public partial class MainWindow : Window
         ArgumentNullException.ThrowIfNull(operationNotificationService);
         ArgumentNullException.ThrowIfNull(uiDispatcher);
         ArgumentNullException.ThrowIfNull(sessionMarker);
+        ArgumentNullException.ThrowIfNull(diagnosticsFactory);
 
         _viewModel = viewModel;
         _settingsRepository = settingsRepository;
         _confirmationService = confirmationService;
         _trayIconManager = trayIconManager;
         _settingsViewModel = settingsViewModel;
+        _diagnosticsFactory = diagnosticsFactory;
         _themeService = themeService;
         _operationNotificationService = operationNotificationService;
         _uiDispatcher = uiDispatcher;
@@ -136,7 +140,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        _settingsWindow = new SettingsWindow(_settingsViewModel) { Owner = this };
+        _settingsWindow = new SettingsWindow(_settingsViewModel, _diagnosticsFactory, _themeService) { Owner = this };
         _themeService.AttachWindow(_settingsWindow);
         _settingsWindow.Closed += OnSettingsWindowClosed;
         _settingsWindow.ShowDialog();

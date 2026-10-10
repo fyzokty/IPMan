@@ -5,12 +5,14 @@ using IPMan.App.Services;
 using IPMan.App.ViewModels;
 using IPMan.App.Views;
 using IPMan.Application.Common;
+using IPMan.Application.Diagnostics;
 using IPMan.Application.Logging;
 using IPMan.Application.Networking;
 using IPMan.Application.Profiles;
 using IPMan.Application.Settings;
 using IPMan.Domain.Settings;
 using IPMan.Infrastructure.Common;
+using IPMan.Infrastructure.Diagnostics;
 using IPMan.Infrastructure.Logging;
 using IPMan.Infrastructure.Networking;
 using IPMan.Infrastructure.Profiles;
@@ -164,6 +166,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IDelayProvider, SystemDelayProvider>();
         services.AddSingleton<IElevationStateProvider, WindowsElevationStateProvider>();
+        services.AddSingleton<ISystemDiagnosticsProvider, WindowsSystemDiagnosticsProvider>();
 
         services.AddSingleton<IAdapterProbe, SystemNetworkInterfaceProbe>();
         services.AddSingleton<INetworkAdapterReader, NetworkAdapterReader>();
@@ -218,6 +221,16 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ProfilePanelViewModel>();
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<MainWindowViewModel>();
+        services.AddTransient<DiagnosticsViewModel>(provider => new DiagnosticsViewModel(
+            provider.GetRequiredService<ISystemDiagnosticsProvider>(),
+            provider.GetRequiredService<IApplicationVersionProvider>(),
+            provider.GetRequiredService<IElevationStateProvider>(),
+            () => provider.GetRequiredService<MainWindowViewModel>().Adapters.Count,
+            provider.GetRequiredService<IProfileCatalog>(),
+            provider.GetRequiredService<IClock>(),
+            provider.GetRequiredService<IClipboardService>()));
+        services.AddSingleton<Func<DiagnosticsViewModel>>(provider =>
+            () => provider.GetRequiredService<DiagnosticsViewModel>());
         services.AddSingleton<TrayIconManager>();
         services.AddSingleton<MainWindow>();
     }
