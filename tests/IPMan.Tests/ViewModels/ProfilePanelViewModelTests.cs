@@ -97,58 +97,7 @@ public sealed class ProfilePanelViewModelTests
     }
 
     [Fact]
-    public void ApplyOnExplicitSelection_WhenAlreadySelectedProfileIsClicked_DoesNotApply()
-    {
-        FakeProfileCatalog catalog = new()
-        {
-            Profiles = [TestData.Profile(profileId: "selected-profile")]
-        };
-        using ProfilePanelViewModel viewModel = Create(catalog);
-        ProfileListItemViewModel profile = viewModel.Groups[0].Profiles[0];
-        int requests = 0;
-        viewModel.ExplicitProfileApplyRequested += (_, _) => requests++;
-        viewModel.SetApplyProfileOnSelection(true);
-        viewModel.SelectedProfile = profile;
-
-        viewModel.BeginExplicitProfileSelection();
-        viewModel.ApplyOnExplicitSelection(profile);
-
-        Assert.Equal(0, requests);
-    }
-
-    [Fact]
-    public void ApplyOnExplicitSelection_WhenApplyFails_AllowsSelectingTheSameProfileAgain()
-    {
-        FakeProfileCatalog catalog = new()
-        {
-            Profiles =
-            [
-                TestData.Profile(profileId: "first-profile", name: "First"),
-                TestData.Profile(profileId: "retry-profile", name: "Retry")
-            ]
-        };
-        using ProfilePanelViewModel viewModel = Create(catalog);
-        ProfileListItemViewModel first = viewModel.Groups[0].Profiles[0];
-        ProfileListItemViewModel retry = viewModel.Groups[0].Profiles[1];
-        int requests = 0;
-        viewModel.ExplicitProfileApplyRequested += (_, _) => requests++;
-        viewModel.SetApplyProfileOnSelection(true);
-        viewModel.SelectedProfile = first;
-
-        viewModel.BeginExplicitProfileSelection();
-        viewModel.SelectedProfile = retry;
-        viewModel.ApplyOnExplicitSelection(retry);
-        bool completed = viewModel.CompleteExplicitProfileApply(succeeded: false);
-
-        viewModel.BeginExplicitProfileSelection();
-        viewModel.ApplyOnExplicitSelection(retry);
-
-        Assert.False(completed);
-        Assert.Equal(2, requests);
-    }
-
-    [Fact]
-    public void SelectedProfile_WhenDhcpProfileSelected_ClearsStaticDraftAndShowsGuidance()
+    public void EditSetting_WhenDhcpProfileSelected_ClearsStaticDraftAndShowsGuidance()
     {
         FakeProfileCatalog catalog = new()
         {
@@ -161,14 +110,14 @@ public sealed class ProfilePanelViewModelTests
         draft.UpdateCurrentValues(TestData.Snapshot(mode: NetworkConfigurationMode.Static));
         viewModel.SetDraft(draft);
 
-        viewModel.SelectedProfile = viewModel.Groups[0].Profiles[0];
+        viewModel.EditSetting(viewModel.Groups[0].Profiles[0]);
 
         Assert.Equal(string.Empty, draft.Ipv4Address);
         Assert.NotEmpty(draft.ProfileGuidance);
     }
 
     [Fact]
-    public void SelectedProfile_WhenDirtyDraftLoadIsDeclined_RestoresPreviousSelection()
+    public void EditSetting_WhenDirtyDraftLoadIsDeclined_RestoresPreviousSelection()
     {
         FakeProfileCatalog catalog = new()
         {
@@ -184,10 +133,10 @@ public sealed class ProfilePanelViewModelTests
         viewModel.SetDraft(draft);
         ProfileListItemViewModel first = viewModel.Groups[0].Profiles[0];
 
-        viewModel.SelectedProfile = first;
+        viewModel.EditSetting(first);
         draft.Ipv4Address = "10.0.0.99";
         confirmation.Answer = false;
-        viewModel.SelectedProfile = viewModel.Groups[0].Profiles[1];
+        Assert.False(viewModel.EditSetting(viewModel.Groups[0].Profiles[1]));
 
         Assert.Same(first, viewModel.SelectedProfile);
         Assert.Equal("10.0.0.99", draft.Ipv4Address);
@@ -234,6 +183,51 @@ public sealed class ProfilePanelViewModelTests
         Assert.Equal("10.0.0.5", saved.Ipv4Address);
         Assert.Equal(Strings.ProfileSaveSuccess, viewModel.StatusMessage);
         Assert.Equal(saved.ProfileId, viewModel.SelectedProfile!.Id);
+    }
+
+    [Fact]
+    public async Task EditSetting_WhenSaved_UpdatesExistingIdentityAndNewSettingCreatesSeparateIdentity()
+    {
+        NetworkProfile original = TestData.Profile(isFavorite: true);
+        FakeProfileCatalog catalog = new() { Profiles = [original] };
+        using ProfilePanelViewModel viewModel = Create(catalog);
+        AdapterDraftViewModel draft = new(new FakeClipboardService(), new StaticIpv4ConfigurationValidator());
+        draft.UpdateCurrentValues(TestData.Snapshot());
+        viewModel.SetDraft(draft);
+        Assert.True(viewModel.EditSetting(viewModel.Profiles[0]));
+        draft.Ipv4Address = "10.0.0.25";
+        viewModel.NewProfileName = "Updated";
+        await viewModel.SaveCommand.ExecuteAsync(null);
+        NetworkProfile updated = Assert.Single(catalog.SavedProfiles);
+        Assert.Equal(original.ProfileId, updated.ProfileId);
+        Assert.Equal(original.CreatedAtUtc, updated.CreatedAtUtc);
+        Assert.True(updated.IsFavorite);
+        Assert.Equal("10.0.0.25", updated.Ipv4Address);
+        viewModel.BeginNewSetting();
+        viewModel.NewProfileName = "New";
+        await viewModel.SaveCommand.ExecuteAsync(null);
+        Assert.Equal(2, catalog.Profiles.Count);
+        Assert.NotEqual(original.ProfileId, catalog.SavedProfiles[1].ProfileId);
+        Assert.Equal("10.0.0.25", catalog.SavedProfiles[1].Ipv4Address);
+    }
+
+    [Fact]
+    public void SearchAndCatalogRefresh_LeaveUnsavedEditorValuesIntact()
+    {
+        FakeProfileCatalog catalog = new() { Profiles = [TestData.Profile()] };
+        using ProfilePanelViewModel viewModel = Create(catalog);
+        AdapterDraftViewModel draft = new(new FakeClipboardService(), new StaticIpv4ConfigurationValidator());
+        draft.UpdateCurrentValues(TestData.Snapshot());
+        viewModel.SetDraft(draft);
+        viewModel.EditSetting(viewModel.Profiles[0]);
+        draft.Ipv4Address = "invalid";
+        viewModel.NewProfileName = "Unsaved";
+        viewModel.SearchText = "unmatched";
+        catalog.RaiseChanged();
+        Assert.Equal("invalid", draft.Ipv4Address);
+        Assert.True(draft.IsDirty);
+        Assert.Equal("Unsaved", viewModel.NewProfileName);
+        Assert.Equal(Strings.UpdateSetting, viewModel.SaveLabel);
     }
 
     [Fact]

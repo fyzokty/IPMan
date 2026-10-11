@@ -34,14 +34,22 @@ internal static class FakeWindowServices
     }
 }
 
-internal sealed class FakeWindowSettingsRepository(AppSettings settings) : IAppSettingsRepository
+internal sealed class FakeWindowSettingsRepository(AppSettings initialSettings) : IAppSettingsRepository
 {
+    public AppSettings Settings { get; private set; } = initialSettings;
+
+    public int SaveCount { get; private set; }
+
     public bool LastLoadFailed => false;
 
-    public Task<AppSettings> LoadAsync(CancellationToken cancellationToken) => Task.FromResult(settings);
+    public Task<AppSettings> LoadAsync(CancellationToken cancellationToken) => Task.FromResult(Settings);
 
-    public Task<SettingsSaveResult> SaveAsync(AppSettings settings, CancellationToken cancellationToken) =>
-        throw new InvalidOperationException("Window loading must not save settings.");
+    public Task<SettingsSaveResult> SaveAsync(AppSettings settings, CancellationToken cancellationToken)
+    {
+        Settings = settings;
+        SaveCount++;
+        return Task.FromResult(SettingsSaveResult.Success());
+    }
 }
 
 internal sealed class FakeWindowSessionMarker : ISessionMarker

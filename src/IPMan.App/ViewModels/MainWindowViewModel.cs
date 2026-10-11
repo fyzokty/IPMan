@@ -9,12 +9,15 @@ using IPMan.App.Services;
 using IPMan.Application.Common;
 using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
+using IPMan.Domain.Settings;
+using IPMan.Domain.Adapters;
+using IPMan.Application.Profiles;
 
 namespace IPMan.App.ViewModels;
 
 /// <summary>
-/// Main window coordinator: owns the adapter tab collection, the selected
-/// adapter, the global loading/error state and the status bar.
+/// Main window coordinator: owns the connection collection, the selected
+/// adapter, the global loading/error state and the connection status.
 /// <para>
 /// It never touches Windows networking APIs. Adapter data arrives only through
 /// <see cref="IAdapterRefreshCoordinator"/>, and every update is marshalled onto
@@ -76,7 +79,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     {
     }
 
-    /// <summary>Creates the main-window coordinator with the fixed profile panel.</summary>
+    /// <summary>Creates the main-window coordinator with the saved settings catalog.</summary>
     public MainWindowViewModel(
         IAdapterRefreshCoordinator refreshCoordinator,
         IUiDispatcher uiDispatcher,
@@ -108,27 +111,21 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
         Actions = actions;
         Actions.PropertyChanged += OnActionsPropertyChanged;
-        Actions.ApplyCompleted += OnApplyCompleted;
+
         if (ProfilePanel is not null)
         {
-            ProfilePanel.ExplicitProfileApplyRequested += OnExplicitProfileApplyRequested;
+            ProfilePanel.PropertyChanged += OnProfilesPropertyChanged;
         }
 
-        StatusBar = new StatusBarViewModel
-        {
-            ApplicationState = Strings.StateLoading,
-            SelectedAdapterState = Strings.StatusNoSelectedAdapter,
-            LastRefresh = Strings.StatusLastRefreshNever,
-            AdministratorState = elevationStateProvider.IsElevated
-                ? Strings.StatusAdministratorYes
-                : Strings.StatusAdministratorNo,
-            Version = Strings.FormatVersion(versionProvider.Version)
-        };
+        ApplicationState = Strings.StateLoading;
+        SelectedAdapterState = Strings.StatusNoSelectedAdapter;
+        LastRefresh = Strings.StatusLastRefreshNever;
+        AdministratorState = elevationStateProvider.IsElevated ? Strings.StatusAdministratorYes : Strings.StatusAdministratorNo;
+        Version = Strings.FormatVersion(versionProvider.Version);
+        UpdateHome();
     }
 
-    public string ApplicationName { get; } = "IPMan";
-
-    public string ApplicationTagline { get; } = Strings.ApplicationTagline;
+    public string ApplicationName { get; } = Strings.ApplicationName;
 
     public string RefreshErrorText { get; } = Strings.RefreshFailedTitle;
 
@@ -136,12 +133,22 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<AdapterViewModel> Adapters { get; } = new();
 
-    public StatusBarViewModel StatusBar { get; }
+    [ObservableProperty]
+    private string _applicationState = string.Empty;
+
+    [ObservableProperty]
+    private string _selectedAdapterState = string.Empty;
+
+    [ObservableProperty]
+    private string _lastRefresh = string.Empty;
+
+    public string AdministratorState { get; }
+    public string Version { get; }
 
     /// <summary>The shared action state for the currently selected adapter.</summary>
     public AdapterActionsViewModel Actions { get; }
 
-    /// <summary>The fixed profile-management panel shown beside adapter tabs.</summary>
+    /// <summary>The shared saved-setting operations and temporary editor.</summary>
     public ProfilePanelViewModel? ProfilePanel { get; }
 
     /// <summary>Gets the session-only history of adapter operation notifications.</summary>
@@ -165,8 +172,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     /// <summary>Gets whether a network configuration action is currently running.</summary>
     public bool IsBusy => Actions.IsBusy;
 
-    /// <summary>Adapter tabs remain fixed while an action targets the selected adapter.</summary>
-    public bool AreAdapterTabsEnabled => !IsBusy;
+    /// <summary>Connection selection remains fixed while an action targets the selected adapter.</summary>
+    public bool IsConnectionSelectionEnabled => !IsBusy;
 
     /// <summary>Gets whether any adapter draft contains unapplied changes.</summary>
     public bool HasDirtyDrafts => Adapters.Any(adapter => adapter.Draft.IsDirty);
@@ -235,10 +242,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _refreshCoordinator.Refreshed -= OnAdaptersRefreshed;
         _refreshCoordinator.RefreshFailed -= OnAdapterRefreshFailed;
         Actions.PropertyChanged -= OnActionsPropertyChanged;
-        Actions.ApplyCompleted -= OnApplyCompleted;
+
         if (ProfilePanel is not null)
         {
-            ProfilePanel.ExplicitProfileApplyRequested -= OnExplicitProfileApplyRequested;
+            ProfilePanel.PropertyChanged -= OnProfilesPropertyChanged;
         }
         Actions.Dispose();
         ProfilePanel?.Dispose();
@@ -250,6 +257,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         UpdateSelectedAdapterStatus();
         Actions.Attach(value);
         ProfilePanel?.SetDraft(value?.Draft);
+        UpdateHome();
     }
 
     private void OnAdaptersRefreshed(object? sender, AdapterRefreshedEventArgs e) =>
@@ -266,8 +274,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         HasRefreshError = false;
         IsLoading = false;
 
-        StatusBar.ApplicationState = Strings.StateReady;
-        StatusBar.LastRefresh = AdapterDisplayFormatter.FormatRefreshTime(
+        ApplicationState = Strings.StateReady;
+        LastRefresh = AdapterDisplayFormatter.FormatRefreshTime(
             _lastSuccessfulRefreshUtc,
             CultureInfo.CurrentCulture);
 
@@ -283,20 +291,20 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         HasRefreshError = true;
         IsLoading = false;
 
-        StatusBar.ApplicationState = Strings.StateError;
+        ApplicationState = Strings.StateError;
 
         NotifyStateVisibilityChanged();
     }
 
     /// <summary>
-    /// Reconciles the tab collection with a discovery result, reusing existing
-    /// tab ViewModels so per-adapter drafts survive, and keeping the displayed
+    /// Reconciles the connection collection with a discovery result, reusing existing
+    /// connection ViewModels so per-adapter drafts survive, and keeping the displayed
     /// order identical to the discovery order.
     /// </summary>
     private void MergeAdapters(IReadOnlyList<NetworkAdapterSnapshot> adapters)
     {
         if (Actions.IsBusy && Actions.CurrentAdapter is AdapterViewModel activeAdapter &&
-            !adapters.Any(adapter => adapter.Id == activeAdapter.Id && adapter.IsConnected))
+            !adapters.Any(adapter => adapter.Id == activeAdapter.Id && (!activeAdapter.IsConnected || adapter.IsConnected)))
         {
             Actions.CancelUnavailableAction();
         }
@@ -336,6 +344,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         }
 
         RestoreSelection(previouslySelectedId);
+        UpdateHome();
     }
 
     /// <summary>
@@ -388,19 +397,24 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     private void UpdateSelectedAdapterStatus() =>
-        StatusBar.SelectedAdapterState = SelectedAdapter is null
+        SelectedAdapterState = SelectedAdapter is null
             ? Strings.StatusNoSelectedAdapter
             : Strings.FormatSelectedAdapter(
                 SelectedAdapter.DisplayName,
-                SelectedAdapter.ConnectionState);
+                SelectedAdapter.IsConnected && SelectedAdapter.Snapshot.InternetConnectivity == InternetConnectivity.Unknown
+                ? Strings.ConnectionStatusUnknown : SelectedAdapter.ConnectionState);
 
     private void OnActionsPropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (e.PropertyName == nameof(AdapterActionsViewModel.IsBusy))
         {
             OnPropertyChanged(nameof(IsBusy));
-            OnPropertyChanged(nameof(AreAdapterTabsEnabled));
-            StatusBar.ApplicationState = Actions.IsBusy
+            OnPropertyChanged(nameof(IsConnectionSelectionEnabled));
+            foreach (SettingItemViewModel item in Settings)
+            {
+                item.SwitchCommand.NotifyCanExecuteChanged();
+            }
+            ApplicationState = Actions.IsBusy
                 ? Strings.StateApplying
                 : HasRefreshError
                     ? Strings.StateError
@@ -416,22 +430,144 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(IsContentVisible));
     }
 
-    private void OnExplicitProfileApplyRequested(object? sender, IPMan.Domain.Profiles.NetworkProfile profile)
-    {
-        if (profile.Mode == NetworkConfigurationMode.Dhcp)
-        {
-            Actions.ApplyDhcpCommand.Execute(null);
-            return;
-        }
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsHomeVisible))]
+    private bool _isDetailsOpen;
 
-        Actions.ApplyStaticCommand.Execute(null);
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsCardView))]
+    [NotifyPropertyChangedFor(nameof(IsListView))]
+    private PreferredViewMode _preferredViewMode;
+
+    public event EventHandler? ViewModeChanged;
+
+    public bool IsHomeVisible => !IsDetailsOpen;
+    public bool IsCardView => PreferredViewMode == PreferredViewMode.Card ||
+        (PreferredViewMode == PreferredViewMode.Auto && (ProfilePanel?.AllProfiles.Count ?? 0) <= 6);
+    public bool IsListView => !IsCardView;
+    public IReadOnlyList<SettingItemViewModel> Settings { get; private set; } = Array.Empty<SettingItemViewModel>();
+    public IReadOnlyList<SettingGroupViewModel> SettingGroups { get; private set; } = Array.Empty<SettingGroupViewModel>();
+    public bool IsCableDisconnected => SelectedAdapter is not null && !SelectedAdapter.IsConnected &&
+        AdapterCategoryClassifier.GetConnectionKind(SelectedAdapter.Snapshot) == AdapterCategoryClassifier.ConnectionKind.Wired;
+    public ApplyStatusSeverity ConnectivitySeverity => SelectedAdapter?.IsConnected != true ? ApplyStatusSeverity.None :
+        SelectedAdapter.Snapshot.InternetConnectivity switch
+        {
+            InternetConnectivity.Internet => ApplyStatusSeverity.Success,
+            InternetConnectivity.LocalNetwork or InternetConnectivity.None => ApplyStatusSeverity.Warning,
+            _ => ApplyStatusSeverity.None
+        };
+    public string ConnectivityGlyph => ConnectivitySeverity switch
+    {
+        ApplyStatusSeverity.Success => "\uE73E",
+        ApplyStatusSeverity.Warning => "\uE7BA",
+        _ => IsCableDisconnected ? "\uE711" : "\uE946"
+    };
+    private AdapterViewModel? ConnectedWireless => Adapters.FirstOrDefault(adapter => adapter.IsConnected &&
+        AdapterCategoryClassifier.GetConnectionKind(adapter.Snapshot) == AdapterCategoryClassifier.ConnectionKind.Wireless);
+    public bool HasWirelessShortcut => IsCableDisconnected && ConnectedWireless is not null;
+    public string StatusHeadline
+    {
+        get
+        {
+            if (IsCableDisconnected)
+            {
+                return Strings.ConnectionStatusCableDisconnected;
+            }
+            if (SelectedAdapter is null)
+            {
+                return Strings.StatusNoSelectedAdapter;
+            }
+            NetworkAdapterSnapshot snapshot = SelectedAdapter.Snapshot;
+            string name = snapshot.Mode == NetworkConfigurationMode.Dhcp ? Strings.ModeDhcp :
+                new ActiveSettingMatcher().Find(snapshot, ProfilePanel?.AllProfiles ?? [])?.Name ??
+                Strings.FormatManualSettingName(snapshot.Ipv4Address ?? Strings.ValueUnavailable);
+            return Strings.FormatCurrentNetwork(name);
+        }
+    }
+    public string StatusDescription => IsCableDisconnected ? Strings.CableDisconnectedGuidance :
+        SelectedAdapter is null ? Strings.ConnectionStatusNoConnection :
+        Strings.FormatConnectionSummary(AdapterDisplayFormatter.FormatConnectionKind(SelectedAdapter.Snapshot),
+            SelectedAdapter.IsConnected && SelectedAdapter.Snapshot.InternetConnectivity == InternetConnectivity.Unknown
+                ? Strings.ConnectionStatusUnknown : SelectedAdapter.ConnectionState);
+
+    [RelayCommand]
+    private void OpenDetails() => IsDetailsOpen = true;
+
+    // Returning preserves per-connection drafts; closing still uses the existing dirty-draft prompt.
+    [RelayCommand]
+    private void GoBack() => IsDetailsOpen = false;
+
+    [RelayCommand]
+    private void NewSetting()
+    {
+        ProfilePanel?.BeginNewSetting();
+        IsDetailsOpen = true;
     }
 
-    private void OnApplyCompleted(object? sender, bool succeeded)
+    [RelayCommand]
+    private void EditSetting(ProfileListItemViewModel? item)
     {
-        if (ProfilePanel?.CompleteExplicitProfileApply(succeeded) == true)
+        if (item is not null && ProfilePanel?.EditSetting(item) == true)
         {
-            Actions.ShowProfileAppliedNotice();
+            IsDetailsOpen = true;
+        }
+    }
+
+    [RelayCommand]
+    private void SwitchToWireless()
+    {
+        if (!IsBusy && ConnectedWireless is { } wireless)
+        {
+            SelectAdapter(wireless.Id.Value);
+        }
+    }
+
+    [RelayCommand]
+    private void ChooseCardView() => ChooseViewMode(PreferredViewMode.Card);
+
+    [RelayCommand]
+    private void ChooseListView() => ChooseViewMode(PreferredViewMode.List);
+
+    private void ChooseViewMode(PreferredViewMode mode)
+    {
+        PreferredViewMode = mode;
+        ViewModeChanged?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void OnProfilesPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ProfilePanelViewModel.Profiles))
+        {
+            UpdateHome();
+        }
+    }
+
+    private void UpdateHome()
+    {
+        NetworkAdapterSnapshot? snapshot = SelectedAdapter?.Snapshot;
+        string? activeId = snapshot is null ? null : new ActiveSettingMatcher()
+            .Find(snapshot, ProfilePanel?.AllProfiles ?? [])?.ProfileId;
+        bool connected = snapshot?.IsConnected == true;
+        List<SettingItemViewModel> settings = [new(this, null, connected && snapshot?.Mode == NetworkConfigurationMode.Dhcp)];
+        settings.AddRange((ProfilePanel?.Profiles ?? []).Select(profile =>
+            new SettingItemViewModel(this, profile, connected && profile.Id == activeId)));
+        Settings = settings;
+        List<SettingGroupViewModel> groups = new();
+        SettingItemViewModel[] favorites = settings.Skip(1).Where(item => item.IsFavorite).ToArray();
+        SettingItemViewModel[] others = settings.Skip(1).Where(item => !item.IsFavorite).ToArray();
+        if (favorites.Length > 0)
+        {
+            groups.Add(new(Strings.ProfileGroupFavorites, favorites));
+        }
+        if (others.Length > 0)
+        {
+            groups.Add(new(Strings.ProfileGroupOthers, others));
+        }
+        SettingGroups = groups;
+        foreach (string property in new[] { nameof(Settings), nameof(SettingGroups), nameof(IsCardView),
+            nameof(IsListView), nameof(ConnectivitySeverity), nameof(ConnectivityGlyph), nameof(StatusHeadline), nameof(StatusDescription), nameof(IsCableDisconnected), nameof(HasWirelessShortcut) })
+        {
+            OnPropertyChanged(property);
         }
     }
 }

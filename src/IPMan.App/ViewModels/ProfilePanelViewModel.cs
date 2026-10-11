@@ -20,17 +20,8 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     private readonly IUserConfirmationService _confirmationService;
     private readonly IUiDispatcher _uiDispatcher;
     private AdapterDraftViewModel? _draft;
-    private bool _isRestoringSelection;
     private bool _isDisposed;
-    private ProfileListItemViewModel? _previousSelectedProfile;
-    private string? _profileSelectedBeforeExplicitMouseClickId;
-    private string? _lastAppliedProfileId;
-    private string? _pendingProfileApplyId;
-    private string? _failedProfileApplyId;
-    private bool _applyProfileOnSelection;
-
-    /// <summary>Raised for an explicit mouse selection when immediate application is enabled.</summary>
-    public event EventHandler<NetworkProfile>? ExplicitProfileApplyRequested;
+    private NetworkProfile? _editingProfile;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasStatusMessage))]
@@ -89,52 +80,60 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
 
     public bool HasStatusMessage => StatusMessage.Length > 0;
 
-    /// <summary>Enables immediate profile application for explicit mouse selection only.</summary>
-    public void SetApplyProfileOnSelection(bool enabled) => _applyProfileOnSelection = enabled;
+    public string SaveLabel => _editingProfile is null ? Strings.CommandSaveProfile : Strings.UpdateSetting;
 
-    /// <summary>Records the selected profile before an explicit mouse selection changes it.</summary>
-    public void BeginExplicitProfileSelection() =>
-        _profileSelectedBeforeExplicitMouseClickId = SelectedProfile?.Id;
+    public IReadOnlyList<NetworkProfile> AllProfiles => _catalog.Profiles;
 
-    /// <summary>Requests the standard apply flow for an explicitly clicked, changed profile.</summary>
-    public void ApplyOnExplicitSelection(ProfileListItemViewModel? item)
+    public void BeginNewSetting()
     {
-        if (!_applyProfileOnSelection || item is null || SelectedProfile?.Id != item.Id ||
-            item.Id == _lastAppliedProfileId || item.Id == _pendingProfileApplyId ||
-            (item.Id == _profileSelectedBeforeExplicitMouseClickId && item.Id != _failedProfileApplyId))
-        {
-            return;
-        }
-
-        _pendingProfileApplyId = item.Id;
-        ExplicitProfileApplyRequested?.Invoke(this, item.Profile);
+        _editingProfile = null;
+        OnPropertyChanged(nameof(SaveLabel));
+        SelectedProfile = null;
+        NewProfileName = string.Empty;
+        NewProfileDescription = string.Empty;
+        NewProfileUsesDhcp = false;
     }
 
-    /// <summary>Completes an immediate profile application after the validated action flow finishes.</summary>
-    public bool CompleteExplicitProfileApply(bool succeeded)
+    public bool EditSetting(ProfileListItemViewModel item)
     {
-        if (_pendingProfileApplyId is null)
+        ArgumentNullException.ThrowIfNull(item);
+        if (_draft is null)
         {
             return false;
         }
-
-        if (succeeded)
+        if (!ConfirmDraftReplacement())
         {
-            _lastAppliedProfileId = _pendingProfileApplyId;
-            _failedProfileApplyId = null;
-        }
-        else
-        {
-            _failedProfileApplyId = _pendingProfileApplyId;
+            StatusMessage = Strings.ProfileLoadCancelled;
+            return false;
         }
 
-        _pendingProfileApplyId = null;
-        return succeeded;
+        SelectedProfile = item;
+        LoadForEditing(item);
+        return true;
+    }
+
+    private bool ConfirmDraftReplacement() => _draft?.IsDirty != true ||
+        _confirmationService.Confirm(new UserConfirmationRequest(
+            Strings.ConfirmProfileLoadTitle, Strings.ConfirmProfileLoadMessage));
+
+    private void LoadForEditing(ProfileListItemViewModel item)
+    {
+        _draft!.LoadProfile(item.Profile);
+        _editingProfile = item.Profile;
+        OnPropertyChanged(nameof(SaveLabel));
+        NewProfileName = item.Name;
+        NewProfileDescription = item.Description;
+        NewProfileUsesDhcp = item.Profile.Mode == NetworkConfigurationMode.Dhcp;
     }
 
     /// <summary>Associates the selected adapter draft; null disables draft-specific commands.</summary>
     public void SetDraft(AdapterDraftViewModel? draft)
     {
+        if (!ReferenceEquals(_draft, draft))
+        {
+            _editingProfile = null;
+            OnPropertyChanged(nameof(SaveLabel));
+        }
         _draft = draft;
         SaveCommand.NotifyCanExecuteChanged();
     }
@@ -152,47 +151,6 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
 
     partial void OnSearchTextChanged(string value) => RefreshFromCatalog();
 
-    partial void OnSelectedProfileChanged(ProfileListItemViewModel? value)
-    {
-        if (_isRestoringSelection || value is null)
-        {
-            return;
-        }
-
-        if (_draft is null)
-        {
-            _previousSelectedProfile = value;
-            return;
-        }
-
-        if (_previousSelectedProfile?.Id == value.Id)
-        {
-            _previousSelectedProfile = value;
-            return;
-        }
-
-        if (_draft.IsDirty && !_confirmationService.Confirm(new UserConfirmationRequest(
-                Strings.ConfirmProfileLoadTitle,
-                Strings.ConfirmProfileLoadMessage)))
-        {
-            _isRestoringSelection = true;
-            try
-            {
-                SelectedProfile = _previousSelectedProfile;
-            }
-            finally
-            {
-                _isRestoringSelection = false;
-            }
-
-            StatusMessage = Strings.ProfileLoadCancelled;
-            return;
-        }
-
-        _draft.LoadProfile(value.Profile);
-        _previousSelectedProfile = value;
-    }
-
     [RelayCommand(CanExecute = nameof(CanSave))]
     private async Task SaveAsync()
     {
@@ -208,10 +166,23 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
         }
 
         NetworkProfile profile = _draft.CreateProfile(NewProfileName, NewProfileDescription, NewProfileUsesDhcp);
+        if (_editingProfile is not null)
+        {
+            profile = profile with
+            {
+                ProfileId = _editingProfile.ProfileId,
+                CreatedAtUtc = _editingProfile.CreatedAtUtc,
+                IsFavorite = _editingProfile.IsFavorite,
+                OriginAdapterName = _editingProfile.OriginAdapterName
+            };
+        }
+
         ProfileSaveResult result = await _catalog.SaveAsync(profile, CancellationToken.None);
         StatusMessage = ProfileResultMessageFormatter.Describe(result.Status);
         if (result.IsSuccess && result.Profile is not null)
         {
+            _editingProfile = result.Profile;
+            OnPropertyChanged(nameof(SaveLabel));
             ClearFilterAndSelect(result.Profile.ProfileId);
         }
     }
@@ -380,8 +351,9 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
         OnPropertyChanged(nameof(ProblemCount));
         OnPropertyChanged(nameof(HasProblems));
         OnPropertyChanged(nameof(ProblemsHeader));
-        OnPropertyChanged(nameof(Profiles));
         SelectedProfile = orderedProfiles.FirstOrDefault(profile => profile.Id == selectedId);
+        OnPropertyChanged(nameof(AllProfiles));
+        OnPropertyChanged(nameof(Profiles));
     }
 
     private bool MatchesSearch(NetworkProfile profile)

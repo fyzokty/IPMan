@@ -25,7 +25,6 @@ public sealed class FluentControlStylesTests
             {
                 new TextBox { Text = "192.168.1.1" }, new CheckBox { Content = "Test", IsChecked = true },
                 new RadioButton { Content = "Test", IsChecked = true }, new ComboBox(),
-                new TabControl { Items = { new TabItem { Header = "Test", Content = "Test" } } },
                 new ListBox { Items = { "Test" } }, new Expander { Header = "Test", Content = "Test", IsExpanded = true }
             })
             {

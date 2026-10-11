@@ -13,7 +13,65 @@ public static class Strings
     private static readonly ResourceManager Manager =
         new("IPMan.App.Resources.Strings", typeof(Strings).Assembly);
 
-    public static string ApplicationTagline => Get(nameof(ApplicationTagline));
+    public static string ConnectionSelectorLabel => Get(nameof(ConnectionSelectorLabel));
+
+    public static string SettingsQuestion => Get(nameof(SettingsQuestion));
+
+    public static string ViewModeCard => Get(nameof(ViewModeCard));
+
+    public static string ViewModeList => Get(nameof(ViewModeList));
+
+    public static string AutomaticSummary => Get(nameof(AutomaticSummary));
+
+    public static string AutomaticRecommended => Get(nameof(AutomaticRecommended));
+
+    public static string SwitchNetwork => Get(nameof(SwitchNetwork));
+
+    public static string SwitchNetworkCompact => Get(nameof(SwitchNetworkCompact));
+
+    public static string SettingCurrentlyUsed => Get(nameof(SettingCurrentlyUsed));
+
+    public static string SettingActive => Get(nameof(SettingActive));
+
+    public static string SettingInUse => Get(nameof(SettingInUse));
+
+    public static string NewSetting => Get(nameof(NewSetting));
+
+    public static string EditSetting => Get(nameof(EditSetting));
+
+    public static string DetailsAndManualSettings => Get(nameof(DetailsAndManualSettings));
+
+    public static string GoBack => Get(nameof(GoBack));
+
+    public static string SwitchToWireless => Get(nameof(SwitchToWireless));
+
+    public static string CableDisconnectedGuidance => Get(nameof(CableDisconnectedGuidance));
+
+    public static string ConnectionKindWired => Get(nameof(ConnectionKindWired));
+
+    public static string ConnectionKindWireless => Get(nameof(ConnectionKindWireless));
+
+    public static string ConnectionKindVirtual => Get(nameof(ConnectionKindVirtual));
+
+    public static string ConnectionKindBluetooth => Get(nameof(ConnectionKindBluetooth));
+
+    public static string ConnectionKindCellular => Get(nameof(ConnectionKindCellular));
+
+    public static string SettingMenu => Get(nameof(SettingMenu));
+
+    public static string FavoriteSetting => Get(nameof(FavoriteSetting));
+
+    public static string UpdateSetting => Get(nameof(UpdateSetting));
+
+    public static string ConnectionStatusUnknown => Get(nameof(ConnectionStatusUnknown));
+
+    public static string FormatCurrentNetwork(string value) => Format(Get("CurrentNetwork"), CultureInfo.CurrentCulture, value);
+
+    public static string FormatManualSettingName(string value) => Format(Get("ManualSettingName"), CultureInfo.CurrentCulture, value);
+
+    public static string FormatStaticSettingSummary(string value) => Format(Get("StaticSettingSummary"), CultureInfo.CurrentCulture, value);
+
+    public static string FormatConnectionSummary(string kind, string status) => Format(Get("ConnectionSummary"), CultureInfo.CurrentCulture, kind, status);
 
     public static string CurrentConfigurationHeader => Get(nameof(CurrentConfigurationHeader));
 
@@ -518,13 +576,7 @@ public static class Strings
 
     public static string QuickActionsHeader => Get(nameof(QuickActionsHeader));
 
-    public static string ProfileSaveHeader => Get(nameof(ProfileSaveHeader));
-
     public static string DraftDifferentHint => Get(nameof(DraftDifferentHint));
-
-    public static string ProfileEmptyTitle => Get(nameof(ProfileEmptyTitle));
-
-    public static string ProfileEmptyDescription => Get(nameof(ProfileEmptyDescription));
 
     private static string Get(string name) =>
         Manager.GetString(name, CultureInfo.CurrentUICulture) ?? name;

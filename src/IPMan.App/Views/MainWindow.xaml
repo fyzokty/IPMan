@@ -2,10 +2,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         x:Class="IPMan.App.Views.MainWindow"
         Title="{Binding ApplicationName}"
-        Width="1100"
-        Height="700"
-        MinWidth="1100"
-        MinHeight="700"
+        Width="1000"
+        Height="680"
+        MinWidth="900"
+        MinHeight="600"
         Background="{DynamicResource WindowBackgroundBrush}"
         WindowStartupLocation="Manual"
         xmlns:res="clr-namespace:IPMan.App.Resources"
@@ -16,34 +16,6 @@
         FontSize="14"
         Foreground="{DynamicResource PrimaryTextBrush}">
     <Window.Resources>
-        <CollectionViewSource x:Key="GroupedProfiles" Source="{Binding ProfilePanel.Profiles}">
-            <CollectionViewSource.GroupDescriptions>
-                <PropertyGroupDescription PropertyName="GroupName" />
-            </CollectionViewSource.GroupDescriptions>
-        </CollectionViewSource>
-        <!-- Tab header: name plus a shape-based connection marker, never colour alone. -->
-        <DataTemplate x:Key="AdapterTabHeaderTemplate" DataType="{x:Type vm:AdapterViewModel}">
-            <StackPanel Orientation="Horizontal"
-                        AutomationProperties.Name="{Binding AccessibleDescription}"
-                        ToolTip="{Binding AccessibleDescription}">
-                <TextBlock Text="{Binding ConnectionMarker}" Margin="0,0,6,0" VerticalAlignment="Center">
-                    <TextBlock.Style>
-                        <Style TargetType="TextBlock">
-                            <Setter Property="Foreground" Value="{DynamicResource DisconnectedBrush}" />
-                            <Style.Triggers>
-                                <DataTrigger Binding="{Binding IsConnected}" Value="True">
-                                    <Setter Property="Foreground" Value="{DynamicResource ConnectedBrush}" />
-                                </DataTrigger>
-                            </Style.Triggers>
-                        </Style>
-                    </TextBlock.Style>
-                </TextBlock>
-                <TextBlock Text="{Binding DisplayName}"
-                           MaxWidth="220"
-                           TextTrimming="CharacterEllipsis"
-                           VerticalAlignment="Center" />
-            </StackPanel>
-        </DataTemplate>
         <Style x:Key="DraftIpv4DifferentStyle" TargetType="TextBox" BasedOn="{StaticResource DraftTextBoxStyle}">
             <Setter Property="motion:FluentMotion.IsInvalid" Value="True" />
             <Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}" />
@@ -134,8 +106,7 @@
                 </MultiDataTrigger>
             </Style.Triggers>
         </Style>
-        <!-- Tab content: current configuration on the left, editable draft on the right. -->
-        <DataTemplate x:Key="AdapterTabContentTemplate" DataType="{x:Type vm:AdapterViewModel}">
+        <DataTemplate x:Key="AdapterDetailsTemplate" DataType="{x:Type vm:AdapterViewModel}">
             <Grid>
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,16,0,0">
                 <Grid>
@@ -662,96 +633,105 @@
 
                 </Grid>
             </ScrollViewer>
-                <StackPanel VerticalAlignment="Bottom" Margin="0,0,0,8" Panel.ZIndex="2">
-                    <Border AutomationProperties.LiveSetting="Assertive"
-                            Visibility="{Binding DataContext.Actions.HasStatusMessage, RelativeSource={RelativeSource AncestorType=Window}, Converter={StaticResource BooleanToVisibility}}"
-                            Style="{StaticResource ResultBannerStyle}"
-                            Margin="0">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Foreground="{DynamicResource PrimaryTextBrush}"
-                                       Text="{Binding DataContext.Actions.StatusMessage, RelativeSource={RelativeSource AncestorType=Window}}"
-                                       TextWrapping="Wrap"
-                                       Margin="28,0,0,0" />
-                            <Button Grid.Column="1"
-                                    Margin="12,0,0,0"
-                                    Style="{StaticResource IconButtonStyle}"
-                                    Command="{Binding DataContext.Actions.ClearStatusCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                    AutomationProperties.Name="{x:Static res:Strings.CommandClearStatus}"
-                                    ToolTip="{x:Static res:Strings.CommandClearStatus}">
-                                <TextBlock Style="{StaticResource IconStyle}" Text="&#xE711;" />
-                            </Button>
-                            <TextBlock HorizontalAlignment="Left">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock" BasedOn="{StaticResource IconStyle}">
-                                        <Setter Property="Text" Value="&#xE946;" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding DataContext.Actions.StatusSeverity, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                         Value="{x:Static vm:ApplyStatusSeverity.Success}">
-                                                <Setter Property="Text" Value="&#xE73E;" />
-                                                <Setter Property="Foreground" Value="{DynamicResource SuccessBorderBrush}" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding DataContext.Actions.StatusSeverity, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                         Value="{x:Static vm:ApplyStatusSeverity.Warning}">
-                                                <Setter Property="Text" Value="&#xE7BA;" />
-                                                <Setter Property="Foreground" Value="{DynamicResource WarningBorderBrush}" />
-                                            </DataTrigger>
-                                            <DataTrigger Binding="{Binding DataContext.Actions.StatusSeverity, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                         Value="{x:Static vm:ApplyStatusSeverity.Error}">
-                                                <Setter Property="Text" Value="&#xE783;" />
-                                                <Setter Property="Foreground" Value="{DynamicResource ErrorBorderBrush}" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </Grid>
-                    </Border>
-                </StackPanel>
             </Grid>
         </DataTemplate>
+        <DataTemplate x:Key="SettingCardTemplate">
+            <Border Style="{StaticResource SettingCardStyle}" Margin="6" Height="168">
+                <Grid>
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal"><Button Content="{Binding FavoriteGlyph}" Padding="6,2" VerticalAlignment="Top" Height="32" Margin="0,0,4,0"
+                    Command="{Binding Owner.ProfilePanel.ToggleFavoriteCommand}" CommandParameter="{Binding StoredSetting}"
+                    AutomationProperties.Name="{x:Static res:Strings.FavoriteSetting}"
+                    Visibility="{Binding CanManage, Converter={StaticResource BooleanToVisibility}}" /><Button Content="⋯" Padding="6,2" VerticalAlignment="Top" Height="32" Click="OnSettingMenuClicked" AutomationProperties.Name="{x:Static res:Strings.SettingMenu}"
+                    Visibility="{Binding CanManage, Converter={StaticResource BooleanToVisibility}}">
+                <Button.ContextMenu>
+                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                        <MenuItem Header="{x:Static res:Strings.EditSetting}" Command="{Binding Owner.EditSettingCommand}" CommandParameter="{Binding StoredSetting}" />
+                        <MenuItem Header="{x:Static res:Strings.CommandDuplicateProfile}" Command="{Binding Owner.ProfilePanel.DuplicateCommand}" CommandParameter="{Binding StoredSetting}" />
+                        <MenuItem Header="{x:Static res:Strings.CommandRenameProfile}" Command="{Binding Owner.ProfilePanel.RenameCommand}" CommandParameter="{Binding StoredSetting}" />
+                        <MenuItem Header="{x:Static res:Strings.CommandExportProfile}" Command="{Binding Owner.ProfilePanel.ExportCommand}" CommandParameter="{Binding StoredSetting}" />
+                        <Separator />
+                        <MenuItem Header="{x:Static res:Strings.CommandDeleteProfile}" Command="{Binding Owner.ProfilePanel.DeleteCommand}" CommandParameter="{Binding StoredSetting}" />
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button></StackPanel>
+                        <StackPanel>
+                            <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" />
+                            <Border Style="{StaticResource SettingBadgeStyle}" HorizontalAlignment="Left" Margin="0,6,0,0"
+                                    Visibility="{Binding HasBadge, Converter={StaticResource BooleanToVisibility}}">
+                                <TextBlock Text="{Binding Badge}" FontSize="12" />
+                            </Border>
+                        </StackPanel>
+                    </DockPanel>
+                    <TextBlock Grid.Row="1" Text="{Binding Summary}" VerticalAlignment="Center" Foreground="{DynamicResource SecondaryTextBrush}"
+                               TextTrimming="CharacterEllipsis" ToolTip="{Binding Summary}" />
+                    <Button Grid.Row="2" Content="{Binding SwitchLabel}" Command="{Binding SwitchCommand}" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+        <DataTemplate x:Key="SettingRowTemplate">
+            <Border Style="{StaticResource SettingCardStyle}" Margin="0,0,0,4" Padding="12,8">
+                <Grid>
+                    <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="2*" /><ColumnDefinition Width="3*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                    <Button Content="{Binding FavoriteGlyph}" Padding="6,2" VerticalAlignment="Top" Height="32" Margin="0,0,4,0"
+                    Command="{Binding Owner.ProfilePanel.ToggleFavoriteCommand}" CommandParameter="{Binding StoredSetting}"
+                    AutomationProperties.Name="{x:Static res:Strings.FavoriteSetting}"
+                    Visibility="{Binding CanManage, Converter={StaticResource BooleanToVisibility}}" />
+                    <TextBlock Grid.Column="1" Text="{Binding Name}" VerticalAlignment="Center" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding Name}" Margin="8,0" />
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Summary}" Foreground="{DynamicResource SecondaryTextBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" ToolTip="{Binding Summary}" />
+                        <Border Style="{StaticResource SettingBadgeStyle}" HorizontalAlignment="Left" Margin="0,4,0,0" Visibility="{Binding IsBuiltIn, Converter={StaticResource BooleanToVisibility}}">
+                            <TextBlock Text="{x:Static res:Strings.AutomaticRecommended}" FontSize="12" />
+                        </Border>
+                    </StackPanel>
+                    <Button Grid.Column="3" Content="{Binding ListSwitchLabel}" Command="{Binding SwitchCommand}" Margin="8,0">
+                        <Button.Style><Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                            <Style.Triggers><DataTrigger Binding="{Binding IsActive}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers>
+                        </Style></Button.Style>
+                    </Button>
+                    <Border Grid.Column="3" Background="{DynamicResource SuccessBackgroundBrush}" CornerRadius="12" Padding="10,4" Margin="8,0" VerticalAlignment="Center"
+                            Visibility="{Binding IsActive, Converter={StaticResource BooleanToVisibility}}">
+                        <TextBlock Text="{x:Static res:Strings.SettingInUse}" Foreground="{DynamicResource ConnectedBrush}" />
+                    </Border>
+                    <StackPanel Grid.Column="4"><Button Content="⋯" Padding="6,2" VerticalAlignment="Top" Height="32" Click="OnSettingMenuClicked" AutomationProperties.Name="{x:Static res:Strings.SettingMenu}"
+                    Visibility="{Binding CanManage, Converter={StaticResource BooleanToVisibility}}">
+                <Button.ContextMenu>
+                    <ContextMenu DataContext="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource Self}}">
+                        <MenuItem Header="{x:Static res:Strings.EditSetting}" Command="{Binding Owner.EditSettingCommand}" CommandParameter="{Binding StoredSetting}" />
+                        <MenuItem Header="{x:Static res:Strings.CommandDuplicateProfile}" Command="{Binding Owner.ProfilePanel.DuplicateCommand}" CommandParameter="{Binding StoredSetting}" />
+                        <MenuItem Header="{x:Static res:Strings.CommandRenameProfile}" Command="{Binding Owner.ProfilePanel.RenameCommand}" CommandParameter="{Binding StoredSetting}" />
+                        <MenuItem Header="{x:Static res:Strings.CommandExportProfile}" Command="{Binding Owner.ProfilePanel.ExportCommand}" CommandParameter="{Binding StoredSetting}" />
+                        <Separator />
+                        <MenuItem Header="{x:Static res:Strings.CommandDeleteProfile}" Command="{Binding Owner.ProfilePanel.DeleteCommand}" CommandParameter="{Binding StoredSetting}" />
+                    </ContextMenu>
+                </Button.ContextMenu>
+            </Button></StackPanel>
+                </Grid>
+            </Border>
+        </DataTemplate>
     </Window.Resources>
-    <DockPanel LastChildFill="True">
-        <!-- Header -->
-        <Border DockPanel.Dock="Top"
-                Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}"
-                BorderThickness="0,0,0,1"
-                Padding="12,8">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Style="{StaticResource IconStyle}" Text="&#xE968;" Margin="0,0,10,0" />
-                    <TextBlock FontSize="20"
-                               FontWeight="SemiBold"
-                               Foreground="{DynamicResource PrimaryTextBrush}"
-                               Text="{Binding ApplicationName}" />
-                    <TextBlock Foreground="{DynamicResource SecondaryTextBrush}"
-                               Text="{Binding ApplicationTagline}"
-                               Margin="12,0,0,0"
-                               VerticalAlignment="Center" />
-                </StackPanel>
-                <StackPanel Grid.Column="1" Orientation="Horizontal">
-                    <Button x:Name="HistoryButton"
-                            Margin="0,0,8,0"
-                            Command="{Binding ToggleHistoryCommand}"
-                            Style="{StaticResource IconButtonStyle}"
-                            AutomationProperties.Name="{x:Static res:Strings.NotificationHistory}"
-                            ToolTip="{x:Static res:Strings.NotificationHistory}">
-                        <TextBlock Style="{StaticResource IconStyle}" Text="&#xEA8F;" />
-                    </Button>
-                    <Button ToolTip="{x:Static res:Strings.SettingsTitle}"
-                            Click="OnSettingsClicked"
-                            Style="{StaticResource IconButtonStyle}"
-                            AutomationProperties.Name="{x:Static res:Strings.SettingsTitle}">
-                        <TextBlock Style="{StaticResource IconStyle}" Text="&#xE713;" />
-                    </Button>
+    <DockPanel LastChildFill="True" Margin="20">
+        <Grid DockPanel.Dock="Top" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <TextBlock Text="{x:Static res:Strings.ConnectionSelectorLabel}" VerticalAlignment="Center" Margin="0,0,8,0" FontWeight="SemiBold" />
+                <ComboBox x:Name="ConnectionSelector" ItemsSource="{Binding Adapters}" SelectedItem="{Binding SelectedAdapter}"
+                          IsEnabled="{Binding IsConnectionSelectionEnabled}" MinWidth="300" MaxWidth="540"
+                          AutomationProperties.Name="{x:Static res:Strings.ConnectionSelectorLabel}">
+                    <ComboBox.ItemTemplate><DataTemplate>
+                        <TextBlock Text="{Binding DisplayName}" ToolTip="{Binding Snapshot.Description}" AutomationProperties.Name="{Binding AccessibleDescription}" TextTrimming="CharacterEllipsis" />
+                    </DataTemplate></ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button x:Name="HistoryButton" Command="{Binding ToggleHistoryCommand}" Style="{StaticResource IconButtonStyle}"
+                        AutomationProperties.Name="{x:Static res:Strings.NotificationHistory}" ToolTip="{x:Static res:Strings.NotificationHistory}" Margin="0,0,8,0">
+                    <TextBlock Style="{StaticResource IconStyle}" Text="&#xEA8F;" />
+                </Button>
+                <Button Click="OnSettingsClicked" Style="{StaticResource IconButtonStyle}" AutomationProperties.Name="{x:Static res:Strings.SettingsTitle}" ToolTip="{x:Static res:Strings.SettingsTitle}">
+                    <TextBlock Style="{StaticResource IconStyle}" Text="&#xE713;" />
+                </Button>
                     <Popup motion:FluentMotion.Popup="True" AllowsTransparency="True" IsOpen="{Binding IsHistoryOpen, Mode=TwoWay}"
                            Placement="Bottom"
                            PlacementTarget="{Binding ElementName=HistoryButton}"
@@ -805,8 +785,8 @@
                                                     </Style>
                                                 </TextBlock.Style>
                                                 <Run Text="{Binding Timestamp, StringFormat={}{0:t}}" />
-                                                <Run Text=" â€” " />
-                                                <Run Text="{Binding Text}" />
+                                                <Run Text="{x:Static res:Strings.ProfileProblemSeparator}" />
+                                                <Run Text="{Binding Text, Mode=OneWay}" />
                                             </TextBlock>
                                         </DataTemplate>
                                     </ListBox.ItemTemplate>
@@ -814,448 +794,124 @@
                             </DockPanel>
                         </Border>
                     </Popup>
-                </StackPanel>
-            </Grid>
-        </Border>
-        <!-- Status bar -->
-        <Border DockPanel.Dock="Bottom"
-                Background="{DynamicResource SurfaceBrush}"
-                BorderBrush="{DynamicResource BorderBrush}"
-                BorderThickness="0,1,0,0"
-                Padding="12,0"
-                Height="28">
-            <Grid DataContext="{Binding StatusBar}">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Style="{StaticResource StatusBarTextStyle}" Text="{Binding ApplicationState}" />
-                <TextBlock Grid.Column="1"
-                           Style="{StaticResource StatusBarTextStyle}"
-                           Text="{Binding SelectedAdapterState}"
-                           Margin="12,0,16,0" />
-                <TextBlock Grid.Column="2"
-                           Style="{StaticResource StatusBarTextStyle}"
-                           Text="{Binding LastRefresh}"
-                           Margin="12,0,16,0" />
-                <TextBlock Grid.Column="3"
-                           Style="{StaticResource StatusBarTextStyle}"
-                           Text="{Binding AdministratorState}"
-                           Margin="12,0,16,0" />
-                <TextBlock Grid.Column="4"
-                           Margin="12,0,16,0"
-                           Style="{StaticResource StatusBarTextStyle}"
-                           Text="{Binding Version}" />
-                <Border Width="1"
-                        Height="16"
-                        Background="{DynamicResource BorderBrush}"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        Grid.Column="1" />
-                <Border Width="1"
-                        Height="16"
-                        Background="{DynamicResource BorderBrush}"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        Grid.Column="2" />
-                <Border Width="1"
-                        Height="16"
-                        Background="{DynamicResource BorderBrush}"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        Grid.Column="3" />
-                <Border Width="1"
-                        Height="16"
-                        Background="{DynamicResource BorderBrush}"
-                        HorizontalAlignment="Left"
-                        VerticalAlignment="Center"
-                        Grid.Column="4" />
-            </Grid>
-        </Border>
-        <!-- Main content -->
-        <Grid Margin="0">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="280" />
-                <ColumnDefinition Width="0" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
-            <!-- Inline refresh failure: never modal, never clears the last valid state. -->
-            <StackPanel Grid.Row="0" Grid.Column="2">
-                <Border Margin="20,8,20,0"
-                        Padding="12,8"
-                        Background="{DynamicResource WarningBackgroundBrush}"
-                        BorderBrush="{DynamicResource WarningBorderBrush}"
-                        BorderThickness="1"
-                        CornerRadius="4"
-                        motion:FluentMotion.Entrance="True"
-                        Visibility="{Binding HasRefreshError, Converter={StaticResource BooleanToVisibility}}">
-                    <TextBlock Foreground="{DynamicResource PrimaryTextBrush}"
-                               Text="{Binding RefreshErrorText}"
-                               ToolTip="{Binding RefreshErrorText}"
-                               TextWrapping="Wrap" />
-                </Border>
-                <Border Margin="20,8,20,0"
-                        Padding="8,4"
-                        Background="{DynamicResource ErrorBackgroundBrush}"
-                        BorderBrush="{DynamicResource ErrorBorderBrush}"
-                        BorderThickness="1"
-                        motion:FluentMotion.Entrance="True"
-                        Visibility="{Binding SettingsWarningVisible, Converter={StaticResource BooleanToVisibility}}">
-                    <TextBlock Foreground="{DynamicResource ErrorTextBrush}"
-                               Text="{Binding SettingsWarningText}"
-                               ToolTip="{Binding SettingsWarningText}"
-                               TextWrapping="Wrap" />
-                </Border>
-            </StackPanel>
-            <Border x:Name="ProfilePanelRoot"
-                    Grid.Row="0"
-                    Grid.RowSpan="2"
-                    Grid.Column="0"
-                    Style="{StaticResource CardStyle}"
-                    VerticalAlignment="Stretch"
-                    DataContext="{Binding ProfilePanel}"
-                    CornerRadius="0"
-                    BorderThickness="0,0,1,0"
-                    Padding="12">
-                <Grid>
-                <DockPanel LastChildFill="True">
-                    <StackPanel DockPanel.Dock="Top">
-                        <TextBlock Style="{StaticResource SectionHeaderStyle}"
-                                   Text="{x:Static res:Strings.ProfilePanelHeader}" />
-                        <Grid Margin="0,0,0,12">
-                            <TextBox Margin="0" Height="32" Padding="32,4,8,4"
-                                     AutomationProperties.Name="{x:Static res:Strings.ProfileSearchPlaceholder}"
-                                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="{x:Static res:Strings.ProfileSearchPlaceholder}" />
-                            <TextBlock Style="{StaticResource IconStyle}" Text="&#xE721;" Margin="10,0,0,0" HorizontalAlignment="Left" IsHitTestVisible="False" />
-                            <TextBlock Text="{x:Static res:Strings.ProfileSearchPlaceholder}"
-                                       Margin="32,0,8,0"
-                                       VerticalAlignment="Center"
-                                       Foreground="{DynamicResource SecondaryTextBrush}"
-                                       IsHitTestVisible="False">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding SearchText}" Value="">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </Grid>
-                    </StackPanel>
-                    <StackPanel DockPanel.Dock="Bottom">
-                        <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,12,0,12" />
-                        <TextBlock Style="{StaticResource SectionHeaderStyle}" Text="{x:Static res:Strings.ProfileSaveHeader}" />
-                        <Grid Margin="0,0,0,8">
-                            <TextBox Height="32" AutomationProperties.Name="{x:Static res:Strings.ProfileNameLabel}"
-                                     Text="{Binding NewProfileName, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="{x:Static res:Strings.ProfileNameLabel}" />
-                            <TextBlock Text="{x:Static res:Strings.ProfileNameLabel}" Margin="10,0" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource SecondaryTextBrush}" IsHitTestVisible="False">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding NewProfileName}" Value="">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </Grid>
-                        <Grid Margin="0,0,0,8">
-                            <TextBox Height="32" AutomationProperties.Name="{x:Static res:Strings.ProfileDescriptionLabel}"
-                                     Text="{Binding NewProfileDescription, UpdateSourceTrigger=PropertyChanged}"
-                                     ToolTip="{x:Static res:Strings.ProfileDescriptionLabel}" />
-                            <TextBlock Text="{x:Static res:Strings.ProfileDescriptionLabel}" Margin="10,0" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource SecondaryTextBrush}" IsHitTestVisible="False">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding NewProfileDescription}" Value="">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </Grid>
-                        <CheckBox Margin="0,0,0,4"
-                                  Content="{x:Static res:Strings.ProfileUseDhcpLabel}"
-                                  IsChecked="{Binding NewProfileUsesDhcp}" />
-                        <UniformGrid Columns="2">
-                            <Button Command="{Binding SaveCommand}"
-                                    Content="{x:Static res:Strings.CommandSaveProfile}"
-                                    Style="{StaticResource PrimaryActionButtonStyle}"
-                                    FontSize="12"
-                                    Margin="0,8,6,0" />
-                            <Button Margin="0,8,0,0"
-                                    Command="{Binding ImportCommand}"
-                                    Content="{x:Static res:Strings.CommandImportProfile}"
-                                    FontSize="12" />
-                        </UniformGrid>
 
-                    </StackPanel>
-                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+            </StackPanel>
+        </Grid>
+        <StackPanel DockPanel.Dock="Top">
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12" Visibility="{Binding SettingsWarningVisible, Converter={StaticResource BooleanToVisibility}}">
+                <TextBlock Text="{Binding SettingsWarningText}" TextWrapping="Wrap" />
+            </Border>
+            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,12" Visibility="{Binding HasRefreshError, Converter={StaticResource BooleanToVisibility}}">
+                <TextBlock Text="{Binding RefreshErrorText}" TextWrapping="Wrap" />
+            </Border>
+            <ProgressBar Height="3" IsIndeterminate="{Binding IsBusy}" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibility}}" Margin="0,0,0,8" />
+        </StackPanel>
+        <Grid>
+            <StackPanel Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibility}}" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <ProgressBar Width="220" Height="4" IsIndeterminate="True" /><TextBlock Text="{x:Static res:Strings.LoadingAdapters}" Margin="0,12,0,0" />
+            </StackPanel>
+            <StackPanel Visibility="{Binding IsEmptyStateVisible, Converter={StaticResource BooleanToVisibility}}" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="460">
+                <TextBlock Text="{x:Static res:Strings.EmptyStateTitle}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
+                <TextBlock Text="{x:Static res:Strings.EmptyStateDescription}" TextWrapping="Wrap" Margin="0,8,0,0" />
+            </StackPanel>
+            <Grid Visibility="{Binding IsContentVisible, Converter={StaticResource BooleanToVisibility}}">
+                <Grid Visibility="{Binding IsHomeVisible, Converter={StaticResource BooleanToVisibility}}">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
+                    <Border x:Name="ConnectionStatusCard" Margin="0,0,0,12">
+                        <Border.Style><Style TargetType="Border" BasedOn="{StaticResource CardStyle}">
+                            <Style.Triggers><DataTrigger Binding="{Binding IsCableDisconnected}" Value="True"><Setter Property="Background" Value="{DynamicResource DisconnectedBackgroundBrush}" /></DataTrigger></Style.Triggers>
+                        </Style></Border.Style>
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="52" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource ConnectivityIndicatorStyle}" Width="36" Height="36" CornerRadius="18" HorizontalAlignment="Left" VerticalAlignment="Center">
+                                <TextBlock Style="{StaticResource IconStyle}" Text="{Binding ConnectivityGlyph}" HorizontalAlignment="Center" Foreground="{Binding (TextElement.Foreground), RelativeSource={RelativeSource AncestorType=Border}}" />
+                            </Border>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding StatusHeadline}" FontSize="20" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding StatusDescription}" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,8,12,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                <Button Content="{x:Static res:Strings.SwitchToWireless}" Command="{Binding SwitchToWirelessCommand}" IsEnabled="{Binding IsConnectionSelectionEnabled}"
+                                        Visibility="{Binding HasWirelessShortcut, Converter={StaticResource BooleanToVisibility}}" Margin="0,0,0,8" />
+                                <Button Content="{x:Static res:Strings.DetailsAndManualSettings}" Command="{Binding OpenDetailsCommand}" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+                    <Border Grid.Row="1" Style="{StaticResource ResultBannerStyle}" Margin="0,0,0,12" AutomationProperties.LiveSetting="Assertive"
+                            Visibility="{Binding Actions.HasStatusMessage, Converter={StaticResource BooleanToVisibility}}">
+                        <DockPanel><Button DockPanel.Dock="Right" Content="×" Style="{StaticResource IconButtonStyle}" Command="{Binding Actions.ClearStatusCommand}" AutomationProperties.Name="{x:Static res:Strings.CommandClearStatus}" />
+                            <TextBlock Text="{Binding Actions.StatusMessage}" TextWrapping="Wrap" VerticalAlignment="Center" /></DockPanel>
+                    </Border>
+                    <Grid Grid.Row="2" Margin="0,8,0,12">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="200" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <TextBlock Text="{x:Static res:Strings.SettingsQuestion}" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <Grid Grid.Column="1" Margin="8,0,12,0">
+                            <TextBox Text="{Binding ProfilePanel.SearchText, UpdateSourceTrigger=PropertyChanged}" Height="32" AutomationProperties.Name="{x:Static res:Strings.ProfileSearchPlaceholder}" />
+                            <TextBlock Text="{x:Static res:Strings.ProfileSearchPlaceholder}" Margin="10,0" Foreground="{DynamicResource SecondaryTextBrush}" IsHitTestVisible="False" VerticalAlignment="Center">
+                                <TextBlock.Style><Style TargetType="TextBlock"><Setter Property="Visibility" Value="Collapsed" /><Style.Triggers><DataTrigger Binding="{Binding ProfilePanel.SearchText}" Value=""><Setter Property="Visibility" Value="Visible" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                            </TextBlock>
+                        </Grid>
+                        <Border Grid.Column="2" Background="{DynamicResource ControlBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="2">
+                            <StackPanel Orientation="Horizontal">
+                                <RadioButton Content="{x:Static res:Strings.ViewModeCard}" IsChecked="{Binding IsCardView, Mode=OneWay}" Command="{Binding ChooseCardViewCommand}" GroupName="ViewMode" Style="{StaticResource ViewModeSegmentStyle}" />
+                                <RadioButton Content="{x:Static res:Strings.ViewModeList}" IsChecked="{Binding IsListView, Mode=OneWay}" Command="{Binding ChooseListViewCommand}" GroupName="ViewMode" Style="{StaticResource ViewModeSegmentStyle}" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                    <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel>
-                            <ListBox BorderThickness="0"
-                                     Background="{DynamicResource TransparentBrush}"
-                                     ItemsSource="{Binding Source={StaticResource GroupedProfiles}}"
-                                     SelectedItem="{Binding SelectedProfile, Mode=OneWay}"
-                                     SelectionChanged="OnProfileSelectionChanged"
-                                     IsSynchronizedWithCurrentItem="False"
-                                     SelectionMode="Single">
-                                <ListBox.GroupStyle>
-                                    <GroupStyle>
-                                        <GroupStyle.HeaderTemplate>
-                                            <DataTemplate>
-                                                <TextBlock FontWeight="SemiBold" Text="{Binding Name}" />
-                                            </DataTemplate>
-                                        </GroupStyle.HeaderTemplate>
-                                        <GroupStyle.ContainerStyle>
-                                            <Style TargetType="GroupItem">
-                                                <Setter Property="Margin" Value="0,0,0,8" />
-                                            </Style>
-                                        </GroupStyle.ContainerStyle>
-                                    </GroupStyle>
-                                </ListBox.GroupStyle>
-                                <ListBox.ItemTemplate>
-                                    <DataTemplate>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions>
-                                                <ColumnDefinition Width="*" />
-                                                <ColumnDefinition Width="Auto" />
-                                            </Grid.ColumnDefinitions>
-                                            <TextBlock Padding="24,2,0,2"
-                                                       Tag="{Binding DataContext, ElementName=ProfilePanelRoot}"
-                                                       PreviewMouseLeftButtonDown="OnProfileMouseDown"
-                                                       PreviewMouseLeftButtonUp="OnProfileMouseUp"
-                                                       Text="{Binding Name}"
-                                                       Background="{DynamicResource TransparentBrush}"
-                                                       ToolTip="{Binding Description}"
-                                                       VerticalAlignment="Center"
-                                                       TextTrimming="CharacterEllipsis">
-                                                <TextBlock.ContextMenu>
-                                                    <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
-                                                        <MenuItem Command="{Binding RenameCommand}"
-                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                  Header="{x:Static res:Strings.CommandRenameProfile}" />
-                                                        <MenuItem Command="{Binding DuplicateCommand}"
-                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                  Header="{x:Static res:Strings.CommandDuplicateProfile}" />
-                                                        <MenuItem Command="{Binding ToggleFavoriteCommand}"
-                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                  Header="{x:Static res:Strings.CommandToggleFavorite}" />
-                                                        <MenuItem Command="{Binding ExportCommand}"
-                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                  Header="{x:Static res:Strings.CommandExportProfile}" />
-                                                        <MenuItem Command="{Binding DeleteCommand}"
-                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                  Header="{x:Static res:Strings.CommandDeleteProfile}" />
-                                                    </ContextMenu>
-                                                </TextBlock.ContextMenu>
-                                            </TextBlock>
-                                            <TextBlock HorizontalAlignment="Left"
-                                                       VerticalAlignment="Center"
-                                                       PreviewMouseLeftButtonDown="OnProfileMouseDown"
-                                                       PreviewMouseLeftButtonUp="OnProfileMouseUp"
-                                                       Tag="{Binding DataContext, ElementName=ProfilePanelRoot}"
-                                                       Background="{DynamicResource TransparentBrush}">
-                                                <TextBlock.Style>
-                                                    <Style TargetType="TextBlock"
-                                                           BasedOn="{StaticResource IconStyle}">
-                                                        <Setter Property="motion:FluentMotion.Pop" Value="{Binding IsFavorite}" />
-                                                        <Setter Property="motion:FluentMotion.PopOnClick" Value="True" />
-                                                        <Setter Property="Text" Value="&#xE734;" />
-                                                        <Setter Property="Foreground"
-                                                                Value="{DynamicResource SecondaryTextBrush}" />
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsFavorite}"
-                                                                         Value="True">
-                                                                <Setter Property="Text" Value="&#xE735;" />
-                                                                <Setter Property="Foreground"
-                                                                        Value="{DynamicResource WarningBorderBrush}" />
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </TextBlock.Style>
-                                                <TextBlock.ContextMenu>
-                                                    <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
-                                                        <MenuItem Command="{Binding RenameCommand}"
-                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                  Header="{x:Static res:Strings.CommandRenameProfile}" />
-                                                        <MenuItem Command="{Binding DuplicateCommand}"
-                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                  Header="{x:Static res:Strings.CommandDuplicateProfile}" />
-                                                        <MenuItem Command="{Binding ToggleFavoriteCommand}"
-                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                  Header="{x:Static res:Strings.CommandToggleFavorite}" />
-                                                        <MenuItem Command="{Binding ExportCommand}"
-                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                  Header="{x:Static res:Strings.CommandExportProfile}" />
-                                                        <MenuItem Command="{Binding DeleteCommand}"
-                                                                  CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                  Header="{x:Static res:Strings.CommandDeleteProfile}" />
-                                                    </ContextMenu>
-                                                </TextBlock.ContextMenu>
-                                            </TextBlock>
-                                            <Border CornerRadius="4"
-                                                    Padding="4,2"
-                                                    Margin="4,0,0,0"
-                                                    Background="{DynamicResource WindowBackgroundBrush}"
-                                                    Grid.Column="1">
-                                                <TextBlock FontFamily="{StaticResource MonoFont}"
-                                                           FontSize="12"
-                                                           Text="{Binding Summary}"
-                                                           PreviewMouseLeftButtonDown="OnProfileMouseDown"
-                                                           PreviewMouseLeftButtonUp="OnProfileMouseUp"
-                                                           Tag="{Binding DataContext, ElementName=ProfilePanelRoot}"
-                                                           Background="{DynamicResource TransparentBrush}">
-                                                    <TextBlock.ContextMenu>
-                                                        <ContextMenu DataContext="{Binding PlacementTarget.Tag, RelativeSource={RelativeSource Self}}">
-                                                            <MenuItem Command="{Binding RenameCommand}"
-                                                                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                      Header="{x:Static res:Strings.CommandRenameProfile}" />
-                                                            <MenuItem Command="{Binding DuplicateCommand}"
-                                                                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                      Header="{x:Static res:Strings.CommandDuplicateProfile}" />
-                                                            <MenuItem Command="{Binding ToggleFavoriteCommand}"
-                                                                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                      Header="{x:Static res:Strings.CommandToggleFavorite}" />
-                                                            <MenuItem Command="{Binding ExportCommand}"
-                                                                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                      Header="{x:Static res:Strings.CommandExportProfile}" />
-                                                            <MenuItem Command="{Binding DeleteCommand}"
-                                                                      CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}}"
-                                                                      Header="{x:Static res:Strings.CommandDeleteProfile}" />
-                                                        </ContextMenu>
-                                                    </TextBlock.ContextMenu>
-                                                </TextBlock>
-                                            </Border>
-                                        </Grid>
-                                    </DataTemplate>
-                                </ListBox.ItemTemplate>
-                            </ListBox>
-                            <Expander Style="{StaticResource ProfileProblemsExpanderStyle}" Margin="0,8,0,0"
-                                      Header="{Binding ProblemsHeader}"
-                                      Visibility="{Binding HasProblems, Converter={StaticResource BooleanToVisibility}}">
-                                <Expander.HeaderTemplate>
-                                    <DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" /></DataTemplate>
-                                </Expander.HeaderTemplate>
-                                <ItemsControl ItemsSource="{Binding Problems}">
-                                    <ItemsControl.ItemTemplate>
-                                        <DataTemplate>
-                                            <TextBlock Margin="0,3,0,0" TextWrapping="Wrap">
-                                                <Run Text="{Binding FileName, Mode=OneWay}" />
-                                                <Run Text="{x:Static res:Strings.ProfileProblemSeparator}" />
-                                                <Run Text="{Binding Reason, Mode=OneWay}" />
-                                            </TextBlock>
-                                        </DataTemplate>
-                                    </ItemsControl.ItemTemplate>
+                            <ItemsControl ItemsSource="{Binding Settings}" ItemTemplate="{StaticResource SettingCardTemplate}" Visibility="{Binding IsCardView, Converter={StaticResource BooleanToVisibility}}">
+                                <ItemsControl.ItemsPanel><ItemsPanelTemplate><motion:ResponsiveCardPanel /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
+                            </ItemsControl>
+                            <StackPanel Visibility="{Binding IsListView, Converter={StaticResource BooleanToVisibility}}">
+                                <ContentControl Content="{Binding Settings[0]}" ContentTemplate="{StaticResource SettingRowTemplate}" />
+                                <ItemsControl ItemsSource="{Binding SettingGroups}">
+                                    <ItemsControl.ItemTemplate><DataTemplate>
+                                        <StackPanel><TextBlock Text="{Binding Name}" FontSize="12" FontWeight="SemiBold" Foreground="{DynamicResource SecondaryTextBrush}" Margin="12,12,0,8" />
+                                            <ItemsControl ItemsSource="{Binding Settings}" ItemTemplate="{StaticResource SettingRowTemplate}" /></StackPanel>
+                                    </DataTemplate></ItemsControl.ItemTemplate>
                                 </ItemsControl>
-                            </Expander>
-                            <StackPanel Margin="8,32" HorizontalAlignment="Center">
-                                <StackPanel.Style>
-                                    <Style TargetType="StackPanel">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding Groups.Count}" Value="0">
-                                                <Setter Property="Visibility" Value="Visible" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </StackPanel.Style>
-                                <TextBlock Style="{StaticResource IconStyle}"
-                                           Text="&#xE8B7;"
-                                           FontSize="32"
-                                           HorizontalAlignment="Center"
-                                           Margin="0,0,0,12" />
-                                <TextBlock Text="{x:Static res:Strings.ProfileEmptyTitle}"
-                                           TextAlignment="Center"
-                                           FontWeight="SemiBold"
-                                           TextWrapping="Wrap" />
-                                <TextBlock Text="{x:Static res:Strings.ProfileEmptyDescription}"
-                                           Foreground="{DynamicResource SecondaryTextBrush}"
-                                           Margin="0,8,0,0"
-                                           TextAlignment="Center"
-                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                            <WrapPanel Margin="6,12,0,12">
+                                <Button Content="{x:Static res:Strings.NewSetting}" Command="{Binding NewSettingCommand}" Margin="0,0,8,0" />
+                                <Button Content="{x:Static res:Strings.CommandImportProfile}" Command="{Binding ProfilePanel.ImportCommand}" />
+                            </WrapPanel>
+                            <StackPanel DataContext="{Binding ProfilePanel}">
+                                <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" Visibility="{Binding HasStatusMessage, Converter={StaticResource BooleanToVisibility}}" Margin="0,0,0,8" />
+                                <Expander Style="{StaticResource ProfileProblemsExpanderStyle}" Header="{Binding ProblemsHeader}" Visibility="{Binding HasProblems, Converter={StaticResource BooleanToVisibility}}">
+                                    <ItemsControl ItemsSource="{Binding Problems}"><ItemsControl.ItemTemplate><DataTemplate>
+                                        <TextBlock TextWrapping="Wrap"><Run Text="{Binding FileName, Mode=OneWay}" /><Run Text="{x:Static res:Strings.ProfileProblemSeparator}" /><Run Text="{Binding Reason, Mode=OneWay}" /></TextBlock>
+                                    </DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+                                </Expander>
                             </StackPanel>
                         </StackPanel>
                     </ScrollViewer>
-                </DockPanel>
-                    <Border VerticalAlignment="Top" Margin="0,80,0,0" Panel.ZIndex="2"
-                            Style="{StaticResource CardStyle}" Padding="12,8"
-                            Background="{DynamicResource InfoBackgroundBrush}"
-                            Visibility="{Binding HasStatusMessage, Converter={StaticResource BooleanToVisibility}}">
-                        <TextBlock Margin="0"
-                                   Foreground="{DynamicResource SecondaryTextBrush}"
-                                   Text="{Binding StatusMessage}"
-                                   ToolTip="{Binding StatusMessage}"
-                                   TextWrapping="Wrap"
-                                   Visibility="{Binding HasStatusMessage, Converter={StaticResource BooleanToVisibility}}" />
-                    </Border>
                 </Grid>
-            </Border>
-            <TabControl Grid.Row="1"
-                        Grid.Column="2"
-                        IsEnabled="{Binding AreAdapterTabsEnabled}"
-                        Background="{DynamicResource TransparentBrush}"
-                        BorderThickness="0"
-                        ItemsSource="{Binding Adapters}"
-                        SelectedItem="{Binding SelectedAdapter}"
-                        ItemTemplate="{StaticResource AdapterTabHeaderTemplate}"
-                        ContentTemplate="{StaticResource AdapterTabContentTemplate}"
-                        Visibility="{Binding IsContentVisible, Converter={StaticResource BooleanToVisibility}}" />
-            <!-- Loading -->
-            <StackPanel Grid.Row="1"
-                        Grid.Column="2"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibility}}">
-                <ProgressBar Width="220" Height="4" IsIndeterminate="True" />
-                <TextBlock Margin="0,12,0,0"
-                           HorizontalAlignment="Center"
-                           Foreground="{DynamicResource SecondaryTextBrush}"
-                           Text="{x:Static res:Strings.LoadingAdapters}" />
-            </StackPanel>
-            <!-- Empty -->
-            <StackPanel Grid.Row="1"
-                        Grid.Column="2"
-                        MaxWidth="460"
-                        HorizontalAlignment="Center"
-                        VerticalAlignment="Center"
-                        Visibility="{Binding IsEmptyStateVisible, Converter={StaticResource BooleanToVisibility}}">
-                <TextBlock Style="{StaticResource IconStyle}"
-                           Text="&#xE968;"
-                           FontSize="64"
-                           Foreground="{DynamicResource DisconnectedBrush}"
-                           HorizontalAlignment="Center"
-                           Margin="0,0,0,24" />
-                <TextBlock HorizontalAlignment="Center"
-                           FontSize="20"
-                           FontWeight="SemiBold"
-                           Foreground="{DynamicResource PrimaryTextBrush}"
-                           Text="{x:Static res:Strings.EmptyStateTitle}"
-                           TextAlignment="Center"
-                           TextWrapping="Wrap" />
-                <TextBlock Margin="0,8,0,0"
-                           Foreground="{DynamicResource SecondaryTextBrush}"
-                           Text="{x:Static res:Strings.EmptyStateDescription}"
-                           TextAlignment="Center"
-                           TextWrapping="Wrap" />
-            </StackPanel>
+                <DockPanel Visibility="{Binding IsDetailsOpen, Converter={StaticResource BooleanToVisibility}}">
+                    <StackPanel DockPanel.Dock="Top">
+                        <Button Content="{x:Static res:Strings.GoBack}" Command="{Binding GoBackCommand}" HorizontalAlignment="Left" Margin="0,0,0,8" />
+                        <WrapPanel Margin="0,0,0,8">
+                            <TextBlock Text="{Binding ApplicationState}" Margin="0,0,16,0" /><TextBlock Text="{Binding SelectedAdapterState}" Margin="0,0,16,0" />
+                            <TextBlock Text="{Binding LastRefresh}" Margin="0,0,16,0" /><TextBlock Text="{Binding AdministratorState}" Margin="0,0,16,0" /><TextBlock Text="{Binding Version}" />
+                        </WrapPanel>
+                        <Border Style="{StaticResource ResultBannerStyle}" Visibility="{Binding Actions.HasStatusMessage, Converter={StaticResource BooleanToVisibility}}"><TextBlock Text="{Binding Actions.StatusMessage}" TextWrapping="Wrap" /></Border>
+                        <Border Style="{StaticResource CardStyle}" Margin="0,8,0,0" DataContext="{Binding ProfilePanel}">
+                            <StackPanel>
+                                <WrapPanel>
+                                    <StackPanel Margin="0,0,8,0"><TextBlock Text="{x:Static res:Strings.ProfileNameLabel}" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,4" />
+                                        <TextBox Width="180" Height="32" Text="{Binding NewProfileName, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{x:Static res:Strings.ProfileNameLabel}" /></StackPanel>
+                                    <StackPanel Margin="0,0,8,0"><TextBlock Text="{x:Static res:Strings.ProfileDescriptionLabel}" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,4" />
+                                        <TextBox Width="220" Height="32" Text="{Binding NewProfileDescription, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{x:Static res:Strings.ProfileDescriptionLabel}" /></StackPanel>
+                                    <CheckBox Content="{x:Static res:Strings.ProfileUseDhcpLabel}" IsChecked="{Binding NewProfileUsesDhcp}" VerticalAlignment="Bottom" Margin="0,0,8,0" />
+                                    <Button Content="{Binding SaveLabel}" Command="{Binding SaveCommand}" VerticalAlignment="Bottom" />
+                                </WrapPanel>
+                                <TextBlock Text="{Binding StatusMessage}" Visibility="{Binding HasStatusMessage, Converter={StaticResource BooleanToVisibility}}" TextWrapping="Wrap" Margin="0,8,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+                    <ContentControl Content="{Binding SelectedAdapter}" ContentTemplate="{StaticResource AdapterDetailsTemplate}" />
+                </DockPanel>
+            </Grid>
         </Grid>
     </DockPanel>
 </Window>

@@ -4,7 +4,7 @@ using IPMan.Domain.Profiles;
 
 namespace IPMan.App.ViewModels;
 
-/// <summary>Presents one stored profile in the fixed profile panel.</summary>
+/// <summary>Presents one stored setting.</summary>
 public sealed class ProfileListItemViewModel
 {
     /// <summary>Creates a profile list item.</summary>
@@ -25,9 +25,7 @@ public sealed class ProfileListItemViewModel
 
     public bool IsFavorite => Profile.IsFavorite;
 
-    public string GroupName => IsFavorite ? Strings.ProfileGroupFavorites : Strings.ProfileGroupOthers;
-
     public string Summary => Profile.Mode == NetworkConfigurationMode.Dhcp
-        ? Strings.ModeDhcp
-        : Profile.Ipv4Address ?? Strings.ValueUnavailable;
+        ? Strings.AutomaticSummary
+        : Strings.FormatStaticSettingSummary(Profile.Ipv4Address ?? Strings.ValueUnavailable);
 }

@@ -1,3 +1,4 @@
+#pragma warning disable CS0618 // Verify compatibility of the obsolete persisted field.
 using System.IO;
 using System.Text.Json;
 using IPMan.Application.Settings;
@@ -338,6 +339,59 @@ public sealed class JsonAppSettingsRepositoryTests
             AppSettings result = await CreateRepository(directory).LoadAsync(CancellationToken.None);
 
             Assert.Equal(AppSettings.Default, result);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData(null, PreferredViewMode.Auto)]
+    [InlineData("null", PreferredViewMode.Auto)]
+    [InlineData("\"Auto\"", PreferredViewMode.Auto)]
+    [InlineData("\"Card\"", PreferredViewMode.Card)]
+    [InlineData("\"list\"", PreferredViewMode.List)]
+    [InlineData("2", PreferredViewMode.List)]
+    [InlineData("\"invalid\"", PreferredViewMode.Auto)]
+    [InlineData("99", PreferredViewMode.Auto)]
+    [InlineData("true", PreferredViewMode.Auto)]
+    [InlineData("{}", PreferredViewMode.Auto)]
+    public async Task LoadAsync_ViewModeIsAdditiveAndInvalidValuesDefault(string? value, PreferredViewMode expected)
+    {
+        string directory = CreateTestDirectory();
+        try
+        {
+            string extra = value is null ? string.Empty : $", \"preferredViewMode\": {value}";
+            await File.WriteAllTextAsync(Path.Combine(directory, "settings.json"),
+                "{\"schemaVersion\":1,\"theme\":\"Dark\",\"applyProfileOnSelection\":true" + extra + "}");
+            JsonAppSettingsRepository repository = CreateRepository(directory);
+            AppSettings settings = await repository.LoadAsync(CancellationToken.None);
+            Assert.Equal(expected, settings.PreferredViewMode);
+            Assert.Equal(1, settings.SchemaVersion);
+            Assert.Equal(AppTheme.Dark, settings.Theme);
+            Assert.True(settings.ApplyProfileOnSelection);
+            Assert.False(repository.LastLoadFailed);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Theory]
+    [InlineData(PreferredViewMode.Auto)]
+    [InlineData(PreferredViewMode.Card)]
+    [InlineData(PreferredViewMode.List)]
+    public async Task SaveAsync_RoundTripsPreferredViewMode(PreferredViewMode mode)
+    {
+        string directory = CreateTestDirectory();
+        try
+        {
+            JsonAppSettingsRepository repository = CreateRepository(directory);
+            AppSettings settings = AppSettings.Default with { PreferredViewMode = mode };
+            Assert.True((await repository.SaveAsync(settings, CancellationToken.None)).IsSuccess);
+            Assert.Equal(settings, await repository.LoadAsync(CancellationToken.None));
         }
         finally
         {

@@ -11,7 +11,7 @@ UI: the selected adapter tab applies. `Uygula`, `Otomatik Al (DHCP)` and
 whose `IsBusy` locks the edit fields; the draft validates live and shows per-field
 Turkish errors once a field is edited. Conflict overrides and restore ask through
 `IUserConfirmationService`; every outcome is inline text with a severity.
-Profiles panel: fixed left pane over `IProfileCatalog` — favorites first, search,
+Profiles: setting cards over `IProfileCatalog` — favorites first, search,
 context menu (rename, duplicate, favorite, export, delete), inline save, single-profile
 JSON import/export, malformed files listed separately (backlog 01).
 Shell: tray icon with close-to-tray choice asked once, persisted window bounds and last
@@ -23,7 +23,10 @@ starts after the first change (07); a diagnostics window behind settings with a
 copyable plain-text report (08).
 Adapter tabs and details now show Windows NLM/NCSI's IPv4 internet assessment,
 without IPMan ping/HTTP/DNS probes, with plain Turkish connection names and virtual
-adapters hidden by default (12). The status card and wireless shortcut await 13.
+adapters hidden by default (12). The main window is profile-centric (13): connection
+selector, status card with wireless shortcut, Kart/Liste settings with search and a built-in
+Otomatik card; "Bu ağa geç" applies directly. The legacy current/draft view lives behind
+"Ayrıntılar ve elle ayar" until 16.
 Profiles / settings: one JSON file per profile under `Documents\IPMan\Profiles\`,
 settings in `Documents\IPMan\settings.json`; recovery snapshots stay in
 `%LocalAppData%\IPMan\Backup\` (ADR-015 supersedes ADR-012).
@@ -36,7 +39,7 @@ Distribution: win-x64 self-contained portable zip and Inno Setup installer tooli
 Single instance: `Local\` mutex + admin-only pipe activation; mutation serialized
 machine-wide by a `Global\` mutex (ADR-011, ADR-014).
 i18n: `Strings.resx`, single language (Turkish).
-Design: Windows 11 Fluent tokens and simplified component specifications in `docs/03_UI_UX/DESIGN.md`, UX principles in `docs/03_UI_UX/UX-ilkeleri.md`, and 10 canonical reference screens in `docs/03_UI_UX/stitch-karma/` (ADR-018). The legacy technician layout in `docs/03_UI_UX/stitch/` is superseded. UI code has not yet been migrated to the new design. Shared styles live in `Themes/Controls.xaml`.
+Design: Windows 11 Fluent tokens and simplified component specifications in `docs/03_UI_UX/DESIGN.md`, UX principles in `docs/03_UI_UX/UX-ilkeleri.md`, and 10 canonical reference screens in `docs/03_UI_UX/stitch-karma/` (ADR-018). The legacy technician layout in `docs/03_UI_UX/stitch/` is superseded. The main window follows the new design (13); 14–18 remain. Shared styles live in `Themes/Controls.xaml`.
 
 # Next
 Order and details live in `docs/backlog/`:

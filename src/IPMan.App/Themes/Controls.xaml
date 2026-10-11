@@ -259,42 +259,6 @@
             </Setter.Value>
         </Setter>
     </Style>
-    <Style TargetType="TabControl">
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="TabControl">
-                    <DockPanel>
-                        <Border DockPanel.Dock="Top" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1">
-                            <TabPanel IsItemsHost="True" KeyboardNavigation.TabIndex="1" Background="{DynamicResource WindowBackgroundBrush}" />
-                        </Border>
-                        <ContentPresenter motion:FluentMotion.TransitionKey="{TemplateBinding SelectedContent}" x:Name="PART_SelectedContentHost" ContentSource="SelectedContent" Margin="20,0,20,20" />
-                    </DockPanel>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
-    <Style TargetType="TabItem">
-        <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
-        <Setter Property="Padding" Value="16,12" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="TabItem">
-                    <Border x:Name="TabChrome" Background="{motion:MotionBinding {x:Static motion:FluentMotion.VisualBackgroundProperty}}" motion:FluentMotion.Background="{DynamicResource TransparentBrush}">
-                    <Grid>
-                        <ContentPresenter ContentSource="Header" Margin="{TemplateBinding Padding}" RecognizesAccessKey="True" />
-                        <Border Opacity="{motion:MotionBinding {x:Static motion:FluentMotion.VisualOpacityProperty}}" x:Name="Underline" Height="2" VerticalAlignment="Bottom" Margin="8,0" Background="{DynamicResource AccentBrush}" motion:FluentMotion.Axis="X" motion:FluentMotion.Reveal="False" />
-                    </Grid>
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="TabChrome" Property="motion:FluentMotion.Background" Value="{DynamicResource ControlHoverBrush}" /></Trigger>
-                        <Trigger Property="IsSelected" Value="True"><Setter TargetName="Underline" Property="motion:FluentMotion.Reveal" Value="True" /><Setter Property="Foreground" Value="{DynamicResource AccentBrush}" /></Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Underline" Property="motion:FluentMotion.Reveal" Value="True" /></Trigger>
-                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="TabChrome" Property="Background" Value="{DynamicResource ControlDisabledBrush}" /><Setter TargetName="TabChrome" Property="TextElement.Foreground" Value="{DynamicResource ControlDisabledTextBrush}" /><Setter TargetName="Underline" Property="Visibility" Value="Hidden" /></Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
     <Style TargetType="ListBox">
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
@@ -386,12 +350,41 @@
             <DataTrigger Binding="{Binding DataContext.Actions.StatusSeverity, RelativeSource={RelativeSource AncestorType=Window}}" Value="{x:Static vm:ApplyStatusSeverity.Error}"><Setter Property="Background" Value="{DynamicResource ErrorBackgroundBrush}" /><Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}" /></DataTrigger>
         </Style.Triggers>
     </Style>
-    <Style x:Key="StatusBarTextStyle" TargetType="TextBlock">
-        <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
-        <Setter Property="FontSize" Value="12" />
-        <Setter Property="Margin" Value="0,0,16,0" />
-        <Setter Property="VerticalAlignment" Value="Center" />
-        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    <Style x:Key="ConnectivityIndicatorStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource DisconnectedBackgroundBrush}" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource DisconnectedBrush}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding ConnectivitySeverity}" Value="{x:Static vm:ApplyStatusSeverity.Success}">
+                <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}" /><Setter Property="TextElement.Foreground" Value="{DynamicResource ConnectedBrush}" />
+            </DataTrigger>
+            <DataTrigger Binding="{Binding ConnectivitySeverity}" Value="{x:Static vm:ApplyStatusSeverity.Warning}">
+                <Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}" /><Setter Property="TextElement.Foreground" Value="{DynamicResource WarningBorderBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="SettingCardStyle" TargetType="Border" BasedOn="{StaticResource CardStyle}">
+        <Style.Triggers><DataTrigger Binding="{Binding IsActive}" Value="True">
+            <Setter Property="BorderThickness" Value="2" /><Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+        </DataTrigger></Style.Triggers>
+    </Style>
+    <Style x:Key="SettingBadgeStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource InfoBackgroundBrush}" /><Setter Property="CornerRadius" Value="12" /><Setter Property="Padding" Value="8,3" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource AccentBrush}" />
+        <Style.Triggers><DataTrigger Binding="{Binding IsActive}" Value="True">
+            <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}" /><Setter Property="TextElement.Foreground" Value="{DynamicResource ConnectedBrush}" />
+        </DataTrigger></Style.Triggers>
+    </Style>
+    <Style x:Key="ViewModeSegmentStyle" TargetType="RadioButton">
+        <Setter Property="Padding" Value="12,6" /><Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+        <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
+            <Border x:Name="Segment" Padding="{TemplateBinding Padding}" CornerRadius="4" Background="{DynamicResource TransparentBrush}" BorderThickness="1">
+                <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" />
+            </Border>
+            <ControlTemplate.Triggers>
+                <Trigger Property="IsChecked" Value="True"><Setter TargetName="Segment" Property="Background" Value="{DynamicResource SurfaceBrush}" /><Setter Property="Foreground" Value="{DynamicResource AccentBrush}" /></Trigger>
+                <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Segment" Property="BorderBrush" Value="{DynamicResource FocusBrush}" /></Trigger>
+            </ControlTemplate.Triggers>
+        </ControlTemplate></Setter.Value></Setter>
     </Style>
     <Style TargetType="ContextMenu"><Setter Property="motion:FluentMotion.Entrance" Value="True" /><Setter Property="Background" Value="{DynamicResource SurfaceBrush}" /><Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" /><Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" /></Style>
     <Style TargetType="MenuItem"><Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" /></Style>

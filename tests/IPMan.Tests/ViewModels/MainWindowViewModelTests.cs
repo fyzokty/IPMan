@@ -25,7 +25,7 @@ public sealed class MainWindowViewModelTests
         Assert.True(harness.ViewModel.IsLoading);
         Assert.False(harness.ViewModel.IsContentVisible);
         Assert.False(harness.ViewModel.IsEmptyStateVisible);
-        Assert.Equal(Strings.StateLoading, harness.ViewModel.StatusBar.ApplicationState);
+        Assert.Equal(Strings.StateLoading, harness.ViewModel.ApplicationState);
     }
 
     [Fact]
@@ -254,7 +254,7 @@ public sealed class MainWindowViewModelTests
         Assert.Empty(harness.ViewModel.Adapters);
         Assert.True(harness.ViewModel.IsEmptyStateVisible);
         Assert.False(harness.ViewModel.IsContentVisible);
-        Assert.Equal(Strings.StatusNoSelectedAdapter, harness.ViewModel.StatusBar.SelectedAdapterState);
+        Assert.Equal(Strings.StatusNoSelectedAdapter, harness.ViewModel.SelectedAdapterState);
     }
 
     [Fact]
@@ -363,7 +363,7 @@ public sealed class MainWindowViewModelTests
         Assert.True(harness.ViewModel.HasRefreshError);
         Assert.Single(harness.ViewModel.Adapters);
         Assert.Equal("{A}", harness.ViewModel.SelectedAdapter?.Id.Value);
-        Assert.Equal(Strings.StateError, harness.ViewModel.StatusBar.ApplicationState);
+        Assert.Equal(Strings.StateError, harness.ViewModel.ApplicationState);
     }
 
     [Fact]
@@ -389,39 +389,39 @@ public sealed class MainWindowViewModelTests
         harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}"));
 
         Assert.False(harness.ViewModel.HasRefreshError);
-        Assert.Equal(Strings.StateReady, harness.ViewModel.StatusBar.ApplicationState);
+        Assert.Equal(Strings.StateReady, harness.ViewModel.ApplicationState);
     }
 
     [Fact]
-    public void StatusBar_ReportsAdministratorStateAndVersion()
+    public void WindowInformation_ReportsAdministratorStateAndVersion()
     {
         using MainWindowHarness harness = MainWindowHarness.Create(isElevated: true, version: "1.2.3");
 
-        Assert.Equal(Strings.StatusAdministratorYes, harness.ViewModel.StatusBar.AdministratorState);
-        Assert.Contains("1.2.3", harness.ViewModel.StatusBar.Version, StringComparison.Ordinal);
+        Assert.Equal(Strings.StatusAdministratorYes, harness.ViewModel.AdministratorState);
+        Assert.Contains("1.2.3", harness.ViewModel.Version, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void StatusBar_ReportsMissingAdministratorRights()
+    public void WindowInformation_ReportsMissingAdministratorRights()
     {
         using MainWindowHarness harness = MainWindowHarness.Create(isElevated: false);
 
-        Assert.Equal(Strings.StatusAdministratorNo, harness.ViewModel.StatusBar.AdministratorState);
+        Assert.Equal(Strings.StatusAdministratorNo, harness.ViewModel.AdministratorState);
     }
 
     [Fact]
-    public void StatusBar_ReportsTheSelectedAdapterAndLastSuccessfulRefresh()
+    public void WindowInformation_ReportsTheSelectedAdapterAndLastSuccessfulRefresh()
     {
         using MainWindowHarness harness = MainWindowHarness.Create();
         harness.ViewModel.Initialize();
 
-        Assert.Equal(Strings.StatusLastRefreshNever, harness.ViewModel.StatusBar.LastRefresh);
+        Assert.Equal(Strings.StatusLastRefreshNever, harness.ViewModel.LastRefresh);
 
         harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}", name: "Ethernet"));
 
-        Assert.Contains("Ethernet", harness.ViewModel.StatusBar.SelectedAdapterState, StringComparison.Ordinal);
-        Assert.Contains("Bağlı", harness.ViewModel.StatusBar.SelectedAdapterState, StringComparison.Ordinal);
-        Assert.NotEqual(Strings.StatusLastRefreshNever, harness.ViewModel.StatusBar.LastRefresh);
+        Assert.Contains("Ethernet", harness.ViewModel.SelectedAdapterState, StringComparison.Ordinal);
+        Assert.Contains(Strings.ConnectionStatusUnknown, harness.ViewModel.SelectedAdapterState, StringComparison.Ordinal);
+        Assert.NotEqual(Strings.StatusLastRefreshNever, harness.ViewModel.LastRefresh);
     }
 
     [Fact]
@@ -471,10 +471,10 @@ public sealed class MainWindowViewModelTests
         using MainWindowHarness harness = MainWindowHarness.Create();
 
         harness.Actions.IsBusy = true;
-        Assert.Equal(Strings.StateApplying, harness.ViewModel.StatusBar.ApplicationState);
+        Assert.Equal(Strings.StateApplying, harness.ViewModel.ApplicationState);
 
         harness.Actions.IsBusy = false;
-        Assert.Equal(Strings.StateReady, harness.ViewModel.StatusBar.ApplicationState);
+        Assert.Equal(Strings.StateReady, harness.ViewModel.ApplicationState);
     }
 
     [Fact]
@@ -487,11 +487,11 @@ public sealed class MainWindowViewModelTests
         harness.Actions.IsBusy = true;
         harness.Actions.IsBusy = false;
 
-        Assert.Equal(Strings.StateError, harness.ViewModel.StatusBar.ApplicationState);
+        Assert.Equal(Strings.StateError, harness.ViewModel.ApplicationState);
     }
 
     [Fact]
-    public void ProfileSelection_WhenAdapterIsSelected_LoadsThatAdaptersDraft()
+    public void SettingEditing_WhenAdapterIsSelected_LoadsThatAdaptersDraft()
     {
         TestProfileCatalog catalog = new()
         {
@@ -502,13 +502,13 @@ public sealed class MainWindowViewModelTests
         harness.ViewModel.Initialize();
         harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}", ipv4Address: "10.0.0.5"));
 
-        harness.ViewModel.ProfilePanel!.SelectedProfile = harness.ViewModel.ProfilePanel.Groups[0].Profiles[0];
+        harness.ViewModel.EditSettingCommand.Execute(harness.ViewModel.ProfilePanel!.Groups[0].Profiles[0]);
 
         Assert.Equal("10.0.0.60", harness.ViewModel.SelectedAdapter!.Draft.Ipv4Address);
     }
 
     [Fact]
-    public void ProfileSelection_WhenDirtyDraftLoadIsDeclined_PreservesDraftAndPreviousSelection()
+    public void SettingEditing_WhenDirtyDraftLoadIsDeclined_PreservesDraftAndPreviousSelection()
     {
         TestProfileCatalog catalog = new()
         {
@@ -525,10 +525,10 @@ public sealed class MainWindowViewModelTests
         harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}"));
         ProfileListItemViewModel first = panel.Groups[0].Profiles[0];
 
-        panel.SelectedProfile = first;
+        panel.EditSetting(first);
         harness.ViewModel.SelectedAdapter!.Draft.Ipv4Address = "10.0.0.99";
         confirmation.Answer = false;
-        panel.SelectedProfile = panel.Groups[0].Profiles[1];
+        Assert.False(panel.EditSetting(panel.Groups[0].Profiles[1]));
 
         Assert.Same(first, panel.SelectedProfile);
         Assert.Equal("10.0.0.99", harness.ViewModel.SelectedAdapter.Draft.Ipv4Address);
@@ -598,7 +598,7 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
-    public void Refresh_WhenSelectedAdapterDisconnects_DisablesQuickActionsAndUpdatesStatusBar()
+    public void Refresh_WhenSelectedAdapterDisconnects_DisablesQuickActionsAndUpdatesConnectionStatus()
     {
         using MainWindowHarness harness = MainWindowHarness.Create();
         harness.ViewModel.Initialize();
@@ -612,7 +612,7 @@ public sealed class MainWindowViewModelTests
         Assert.Equal(Strings.QuickActionAdapterInactive, harness.Actions.PingGatewayDisabledReason);
         Assert.Equal(
             Strings.FormatSelectedAdapter("Kablolu bağlantı (Ethernet)", "Kablo takılı değil"),
-            harness.ViewModel.StatusBar.SelectedAdapterState);
+            harness.ViewModel.SelectedAdapterState);
     }
 
     private static ProfilePanelViewModel CreateProfilePanel(

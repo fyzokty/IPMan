@@ -16,8 +16,8 @@ namespace IPMan.App.Views;
 /// <summary>Main application window and its small amount of window-lifetime coordination.</summary>
 public partial class MainWindow : Window
 {
-    private const double DefaultWidth = 1100;
-    private const double DefaultHeight = 700;
+    private const double DefaultWidth = 1000;
+    private const double DefaultHeight = 680;
 
     private readonly MainWindowViewModel _viewModel;
     private readonly IAppSettingsRepository _settingsRepository;
@@ -33,7 +33,6 @@ public partial class MainWindow : Window
     private bool _isHidingToTray;
     private bool _isExiting;
     private bool _isSessionEnding;
-    private bool _isRestoringProfileSelection;
     private SettingsWindow? _settingsWindow;
 
     /// <summary>Creates the main window and restores the user-scoped preferences.</summary>
@@ -73,7 +72,7 @@ public partial class MainWindow : Window
         _settings = _settingsRepository.LoadAsync(CancellationToken.None).GetAwaiter().GetResult();
         _viewModel.SetLastSelectedAdapterId(_settings.LastSelectedAdapterId);
         _viewModel.SetShowVirtualAdapters(_settings.ShowVirtualAdapters);
-        _viewModel.ProfilePanel?.SetApplyProfileOnSelection(_settings.ApplyProfileOnSelection);
+        _viewModel.PreferredViewMode = _settings.PreferredViewMode;
         _viewModel.SettingsWarningVisible = _settingsRepository.LastLoadFailed;
 
         InitializeComponent();
@@ -88,6 +87,7 @@ public partial class MainWindow : Window
         _trayIconManager.NotificationClicked += OnNotificationClicked;
         _settingsViewModel.SettingsChanged += OnSettingsChanged;
         _viewModel.Actions.PropertyChanged += OnActionsPropertyChanged;
+        _viewModel.ViewModeChanged += OnViewModeChanged;
         _operationNotificationService.SetWindowStateProvider(GetNotificationWindowState);
     }
 
@@ -157,43 +157,24 @@ public partial class MainWindow : Window
         _settingsWindow = null;
     }
 
-    private void OnProfileMouseUp(object sender, System.Windows.Input.MouseButtonEventArgs e)
+    private void OnSettingMenuClicked(object sender, RoutedEventArgs e)
     {
-        if (sender is TextBlock { DataContext: ProfileListItemViewModel item })
+        if (sender is Button { ContextMenu: { } menu } button)
         {
-            _viewModel.ProfilePanel?.ApplyOnExplicitSelection(item);
+            menu.PlacementTarget = button;
+            menu.IsOpen = true;
         }
     }
 
-    private void OnProfileMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e) =>
-        _viewModel.ProfilePanel?.BeginExplicitProfileSelection();
-
-    private void OnProfileSelectionChanged(object sender, SelectionChangedEventArgs e)
+    private void OnViewModeChanged(object? sender, EventArgs e)
     {
-        if (_isRestoringProfileSelection || sender is not ListBox list || _viewModel.ProfilePanel is not { } panel)
+        AppSettings updated = _settingsRepository.LoadAsync(CancellationToken.None).GetAwaiter().GetResult() with
         {
-            return;
-        }
-
-        ProfileListItemViewModel? requested = list.SelectedItem as ProfileListItemViewModel;
-        panel.SelectedProfile = requested;
-        if (!ReferenceEquals(requested, panel.SelectedProfile))
-        {
-            // Restore containers after WPF finishes the rejected selection transaction.
-            _ = list.Dispatcher.InvokeAsync(() =>
-            {
-                _isRestoringProfileSelection = true;
-                try
-                {
-                    list.UnselectAll();
-                    list.GetBindingExpression(ListBox.SelectedItemProperty)?.UpdateTarget();
-                }
-                finally
-                {
-                    _isRestoringProfileSelection = false;
-                }
-            }, System.Windows.Threading.DispatcherPriority.DataBind);
-        }
+            PreferredViewMode = _viewModel.PreferredViewMode
+        };
+        SettingsSaveResult result = _settingsRepository.SaveAsync(updated, CancellationToken.None).GetAwaiter().GetResult();
+        _viewModel.SettingsWarningVisible = !result.IsSuccess;
+        _settings = updated;
     }
 
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
@@ -235,6 +216,7 @@ public partial class MainWindow : Window
             _sessionMarker.Delete();
         }
         _viewModel.Actions.PropertyChanged -= OnActionsPropertyChanged;
+        _viewModel.ViewModeChanged -= OnViewModeChanged;
         PersistSettings();
     }
 
@@ -337,10 +319,12 @@ public partial class MainWindow : Window
 
     private void PersistSettings()
     {
-        AppSettings updated = _settings with
+        AppSettings updated = _settingsRepository.LoadAsync(CancellationToken.None).GetAwaiter().GetResult() with
         {
             WindowPlacement = _settings.RememberWindowState ? CapturePlacement() : null,
-            LastSelectedAdapterId = _viewModel.LastSelectedAdapterId
+            CloseToTray = _settings.CloseToTray,
+            LastSelectedAdapterId = _viewModel.LastSelectedAdapterId,
+            PreferredViewMode = _viewModel.PreferredViewMode
         };
         if (updated == _settings)
         {
@@ -356,7 +340,7 @@ public partial class MainWindow : Window
     {
         _settings = settings;
         _viewModel.SetShowVirtualAdapters(settings.ShowVirtualAdapters);
-        _viewModel.ProfilePanel?.SetApplyProfileOnSelection(settings.ApplyProfileOnSelection);
+        _viewModel.PreferredViewMode = settings.PreferredViewMode;
         _viewModel.SettingsWarningVisible = _settingsViewModel.PersistenceWarning;
     }
 
