@@ -29,6 +29,7 @@ public sealed partial class WindowXamlSmokeTests
             FrameworkElement content = Layout(main);
             ProfileEditorView view = Assert.Single(Descendants(content).OfType<ProfileEditorView>());
             Assert.Same(editor, view.DataContext);
+            AssertEditableTextCommitsOnEveryChange(view, 4);
             Assert.Equal(Visibility.Visible, view.Visibility);
             Assert.Equal(((SolidColorBrush)main.FindResource("PrimaryTextBrush")).Color,
                 ((SolidColorBrush)view.Foreground).Color);

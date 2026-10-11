@@ -11,6 +11,8 @@
     <sys:TimeSpan x:Key="Motion.CopyHold">0:0:1.5</sys:TimeSpan>
     <CubicEase x:Key="Motion.EaseOut" EasingMode="EaseOut" />
     <ElasticEase x:Key="Motion.Spring" EasingMode="EaseOut" Oscillations="1" Springiness="8" />
+    <!-- Tek standart kontrol yüksekliği (Fluent 32px): buton, ikon butonu, metin kutusu, açılır liste ve segment aynı ölçüyü kullanır. -->
+    <sys:Double x:Key="ControlHeight">32</sys:Double>
     <FontFamily x:Key="BodyFont">Segoe UI Variable Text, Segoe UI</FontFamily>
     <FontFamily x:Key="MonoFont">Cascadia Mono, Consolas</FontFamily>
     <FontFamily x:Key="IconFont">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
@@ -63,8 +65,9 @@
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="Padding" Value="12,6" />
-        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Padding" Value="12,4" />
+        <Setter Property="MinHeight" Value="{StaticResource ControlHeight}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Template">
@@ -98,7 +101,6 @@
         <Style.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource ControlHoverBrush}" /></Trigger></Style.Triggers>
     </Style>
     <Style x:Key="SecondaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
-        <Setter Property="Margin" Value="0,0,8,8" />
         <Style.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter Property="Background" Value="{DynamicResource ControlHoverBrush}" /></Trigger></Style.Triggers>
     </Style>
     <Style x:Key="PrimaryActionButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
@@ -117,10 +119,17 @@
         <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
     </Style>
     <Style x:Key="IconButtonStyle" TargetType="Button" BasedOn="{StaticResource SubtleButtonStyle}">
-        <Setter Property="Padding" Value="7" />
-        <Setter Property="Width" Value="32" />
-        <Setter Property="Height" Value="32" />
-        <Setter Property="MinWidth" Value="32" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Width" Value="{StaticResource ControlHeight}" />
+        <Setter Property="Height" Value="{StaticResource ControlHeight}" />
+        <Setter Property="MinWidth" Value="{StaticResource ControlHeight}" />
+        <Setter Property="Margin" Value="0" />
+    </Style>
+    <Style x:Key="SquareButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryActionButtonStyle}">
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="Width" Value="{StaticResource ControlHeight}" />
+        <Setter Property="Height" Value="{StaticResource ControlHeight}" />
+        <Setter Property="MinWidth" Value="{StaticResource ControlHeight}" />
         <Setter Property="Margin" Value="0" />
     </Style>
     <Style x:Key="CopyButtonStyle" TargetType="Button" BasedOn="{StaticResource IconButtonStyle}">
@@ -138,7 +147,7 @@
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="Padding" Value="10,4" />
-        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="MinHeight" Value="{StaticResource ControlHeight}" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Template">
             <Setter.Value>
@@ -220,7 +229,7 @@
         <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
         <Setter Property="Padding" Value="10,4" />
-        <Setter Property="MinHeight" Value="32" />
+        <Setter Property="Height" Value="{StaticResource ControlHeight}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ComboBox">
@@ -229,7 +238,7 @@
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
                                     <Border x:Name="Chrome" CornerRadius="4" Background="{Binding Background, RelativeSource={RelativeSource AncestorType=ComboBox}}" BorderBrush="{Binding BorderBrush, RelativeSource={RelativeSource AncestorType=ComboBox}}" BorderThickness="1">
-                                        <TextBlock x:Name="Chevron" Style="{StaticResource IconStyle}" Text="&#xE70D;" HorizontalAlignment="Right" Margin="10" Foreground="{DynamicResource SecondaryTextBrush}" />
+                                        <TextBlock x:Name="Chevron" Style="{StaticResource IconStyle}" Text="&#xE70D;" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="10,0" Foreground="{DynamicResource SecondaryTextBrush}" />
                                     </Border>
                                     <ControlTemplate.Triggers><Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Chrome" Property="Background" Value="{DynamicResource ControlHoverBrush}" /></Trigger><Trigger Property="IsEnabled" Value="False"><Setter TargetName="Chrome" Property="Background" Value="{DynamicResource ControlDisabledBrush}" /><Setter TargetName="Chrome" Property="BorderBrush" Value="{DynamicResource ControlDisabledBorderBrush}" /><Setter TargetName="Chevron" Property="Foreground" Value="{DynamicResource ControlDisabledTextBrush}" /></Trigger></ControlTemplate.Triggers>
                                 </ControlTemplate>
@@ -295,8 +304,8 @@
                             <ToggleButton DockPanel.Dock="Top" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}" Foreground="{TemplateBinding Foreground}">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
-                                        <Border x:Name="Header" BorderThickness="1" Padding="4" Background="{DynamicResource TransparentBrush}">
-                                            <DockPanel><TextBlock DockPanel.Dock="Left" Style="{StaticResource IconStyle}" Foreground="{DynamicResource WarningBorderBrush}" Text="&#xE7BA;" Margin="0,0,8,0" /><TextBlock x:Name="Arrow" motion:FluentMotion.Angle="0" DockPanel.Dock="Right" Style="{StaticResource IconStyle}" Text="&#xE70D;" Margin="8,0,0,0" /><ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType=Expander}}" /></DockPanel>
+                                        <Border x:Name="Header" BorderThickness="1" Padding="4" MinHeight="{StaticResource ControlHeight}" Background="{DynamicResource TransparentBrush}">
+                                            <DockPanel VerticalAlignment="Center"><TextBlock DockPanel.Dock="Left" Style="{StaticResource IconStyle}" Foreground="{DynamicResource WarningBorderBrush}" Text="&#xE7BA;" Margin="0,0,8,0" /><TextBlock x:Name="Arrow" motion:FluentMotion.Angle="0" DockPanel.Dock="Right" Style="{StaticResource IconStyle}" Text="&#xE70D;" Margin="8,0,0,0" /><ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType=Expander}}" /></DockPanel>
                                         </Border>
                                         <ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Arrow" Property="motion:FluentMotion.Angle" Value="180" /></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Header" Property="BorderBrush" Value="{DynamicResource FocusBrush}" /></Trigger></ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -319,8 +328,8 @@
                             <ToggleButton DockPanel.Dock="Top" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}" Foreground="{TemplateBinding Foreground}">
                                 <ToggleButton.Template>
                                     <ControlTemplate TargetType="ToggleButton">
-                                        <Border x:Name="Header" BorderThickness="1" Padding="4" Background="{DynamicResource TransparentBrush}">
-                                            <DockPanel><TextBlock DockPanel.Dock="Left" Style="{StaticResource IconStyle}" Foreground="{DynamicResource WarningBorderBrush}" Text="&#xE7BA;" Margin="0,0,8,0" /><TextBlock x:Name="Arrow" motion:FluentMotion.Angle="0" DockPanel.Dock="Right" Style="{StaticResource IconStyle}" Text="&#xE70D;" Margin="8,0,0,0" /><ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType=Expander}}" /></DockPanel>
+                                        <Border x:Name="Header" BorderThickness="1" Padding="4" MinHeight="{StaticResource ControlHeight}" Background="{DynamicResource TransparentBrush}">
+                                            <DockPanel VerticalAlignment="Center"><TextBlock DockPanel.Dock="Left" Style="{StaticResource IconStyle}" Foreground="{DynamicResource WarningBorderBrush}" Text="&#xE7BA;" Margin="0,0,8,0" /><TextBlock x:Name="Arrow" motion:FluentMotion.Angle="0" DockPanel.Dock="Right" Style="{StaticResource IconStyle}" Text="&#xE70D;" Margin="8,0,0,0" /><ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" ContentTemplate="{Binding HeaderTemplate, RelativeSource={RelativeSource AncestorType=Expander}}" /></DockPanel>
                                         </Border>
                                         <ControlTemplate.Triggers><Trigger Property="IsChecked" Value="True"><Setter TargetName="Arrow" Property="motion:FluentMotion.Angle" Value="180" /></Trigger><Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Header" Property="BorderBrush" Value="{DynamicResource FocusBrush}" /></Trigger></ControlTemplate.Triggers>
                                     </ControlTemplate>
@@ -368,8 +377,17 @@
             <Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}" /><Setter Property="TextElement.Foreground" Value="{DynamicResource ConnectedBrush}" />
         </DataTrigger></Style.Triggers>
     </Style>
+    <Style x:Key="SegmentedControlStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding" Value="2" />
+        <Setter Property="Height" Value="{StaticResource ControlHeight}" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
     <Style x:Key="ViewModeSegmentStyle" TargetType="RadioButton">
-        <Setter Property="Padding" Value="12,6" /><Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+        <Setter Property="Padding" Value="12,0" /><Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
         <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="RadioButton">
             <Border x:Name="Segment" Padding="{TemplateBinding Padding}" CornerRadius="4" Background="{DynamicResource TransparentBrush}" BorderThickness="1">
                 <ContentPresenter VerticalAlignment="Center" HorizontalAlignment="Center" />
@@ -405,8 +423,8 @@
                                       HorizontalAlignment="Left" Foreground="{TemplateBinding Foreground}">
                             <ToggleButton.Template>
                                 <ControlTemplate TargetType="ToggleButton">
-                                    <Border x:Name="Header" Background="{StaticResource TransparentBrush}" BorderThickness="1" Padding="2,4">
-                                        <StackPanel Orientation="Horizontal">
+                                    <Border x:Name="Header" Background="{StaticResource TransparentBrush}" BorderThickness="1" Padding="2,4" MinHeight="{StaticResource ControlHeight}">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                             <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" />
                                             <TextBlock x:Name="Arrow" Text="&#xE76C;" Style="{StaticResource IconStyle}"
                                                        Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="8,0,0,0" />

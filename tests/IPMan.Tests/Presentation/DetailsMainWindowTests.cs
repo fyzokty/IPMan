@@ -33,6 +33,7 @@ public sealed partial class WindowXamlSmokeTests
             Assert.Single(Descendants(view).OfType<Expander>()).IsExpanded = true;
             Layout(main);
             Assert.Equal(5, Descendants(view).OfType<TextBox>().Count(box => box.DataContext is ManualSettingsFieldViewModel));
+            AssertEditableTextCommitsOnEveryChange(view, automatic ? 0 : 5);
             foreach (var command in new System.Windows.Input.ICommand[] { page.BackCommand, page.ApplyCommand,
                 page.SaveAsSettingCommand, page.CancelCommand, page.Actions.CopyNetworkInfoCommand,
                 page.Actions.PingGatewayCommand, page.Actions.FlushDnsCommand, page.Actions.RenewIpCommand,

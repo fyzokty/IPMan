@@ -37,6 +37,7 @@ public sealed partial class WindowXamlSmokeTests
             fixture.Settings, fixture.Theme, fixture.Notifications, fixture.Dispatcher,
             new FakeWindowSessionMarker(), (Func<DiagnosticsViewModel>)(() => fixture.Diagnostics), fixture.Safety);
         FrameworkElement mainContent = Layout(main);
+        AssertEditableTextCommitsOnEveryChange(mainContent, 1);
         Assert.Equal(900, main.MinWidth);
         Assert.Equal(600, main.MinHeight);
         Assert.Empty(Descendants(mainContent).OfType<TabControl>());
@@ -179,6 +180,20 @@ public sealed partial class WindowXamlSmokeTests
     {
         Assert.False(window.IsVisible);
         Assert.Equal(IntPtr.Zero, new WindowInteropHelper(window).Handle);
+    }
+
+    /// <summary>
+    /// Buttons never take focus from pointer clicks, so a TextBox keeps its focus while Save/Apply is clicked;
+    /// editable text must therefore reach the view model on every change and not rely on LostFocus.
+    /// </summary>
+    private static void AssertEditableTextCommitsOnEveryChange(DependencyObject root, int minimumEditableBoxes)
+    {
+        TextBox[] editable = Descendants(root).OfType<TextBox>()
+            .Where(box => !box.IsReadOnly && box.Name != "PART_EditableTextBox" && BindingOperations.GetBindingExpression(box, TextBox.TextProperty) is not null)
+            .ToArray();
+        Assert.True(editable.Length >= minimumEditableBoxes, $"Expected at least {minimumEditableBoxes} editable text boxes but found {editable.Length}.");
+        Assert.All(editable, box => Assert.Equal(UpdateSourceTrigger.PropertyChanged,
+            BindingOperations.GetBindingExpression(box, TextBox.TextProperty)!.ParentBinding.UpdateSourceTrigger));
     }
 
     private static IEnumerable<DependencyObject> Descendants(DependencyObject root)
