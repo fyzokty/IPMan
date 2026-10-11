@@ -24,14 +24,16 @@ public sealed class FluentMotionTests
             StackPanel host = Host();
             FluentMotion.SetIsEnabled(host, false);
             TestButton button = new() { Content = "Copy", Style = (Style)host.Resources["CopyButtonStyle"] };
-            TabItem first = new() { Header = "Ethernet", Content = "One" };
-            TabItem second = new() { Header = "Ethernet", Content = "Two" };
-            TabControl tabs = new() { Items = { first, second } };
+            RadioButton first = new() { Content = "Card", GroupName = "ViewMode", IsChecked = true, Style = (Style)host.Resources["ViewModeSegmentStyle"] };
+            RadioButton second = new() { Content = "List", GroupName = "ViewMode", Style = (Style)host.Resources["ViewModeSegmentStyle"] };
+            StackPanel segments = new() { Orientation = Orientation.Horizontal };
+            segments.Children.Add(first);
+            segments.Children.Add(second);
             ListBoxItem row = new() { Content = "Profile" };
             ListBox list = new() { Items = { row } };
             Expander expander = new() { Header = "Problems", Content = new TextBlock { Text = "Details" } };
             host.Children.Add(button);
-            host.Children.Add(tabs);
+            host.Children.Add(segments);
             host.Children.Add(list);
             host.Children.Add(expander);
             Layout(host);
@@ -40,8 +42,8 @@ public sealed class FluentMotionTests
             Size rowSize = row.DesiredSize;
             Size expanderSize = expander.DesiredSize;
 
-            first.IsSelected = false;
-            second.IsSelected = true;
+            first.IsChecked = false;
+            second.IsChecked = true;
             row.IsSelected = true;
             expander.IsExpanded = true;
             CopyFeedback.Show(button, true);

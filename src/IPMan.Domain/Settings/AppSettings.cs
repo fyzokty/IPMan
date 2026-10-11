@@ -6,7 +6,7 @@ namespace IPMan.Domain.Settings;
 public sealed record AppSettings(
     int SchemaVersion,
     AppTheme Theme,
-    bool ApplyProfileOnSelection,
+    [property: Obsolete("Profile selection no longer applies settings; use direct switching.")] bool ApplyProfileOnSelection,
     [property: JsonIgnore] bool NotificationsEnabled,
     AppWindowPlacement? WindowPlacement = null,
     string? LastSelectedAdapterId = null,
@@ -15,7 +15,8 @@ public sealed record AppSettings(
     bool RememberWindowState = true,
     bool SkipDhcpQuickActionConfirmation = false,
     NotificationMode NotificationMode = NotificationMode.Disabled,
-    bool NotificationPromptShown = false)
+    bool NotificationPromptShown = false,
+    PreferredViewMode PreferredViewMode = PreferredViewMode.Auto)
 {
     /// <summary>The settings schema version understood by this release.</summary>
     public const int CurrentSchemaVersion = 1;
@@ -34,3 +35,11 @@ public sealed record AppWindowPlacement(
     double? Width,
     double? Height,
     bool? IsMaximized);
+
+/// <summary>The saved settings presentation preference.</summary>
+public enum PreferredViewMode
+{
+    Auto,
+    Card,
+    List
+}

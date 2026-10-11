@@ -10,6 +10,7 @@ using IPMan.Application.Networking;
 using IPMan.Application.Settings;
 using IPMan.Domain.Networking;
 using IPMan.Domain.Settings;
+using IPMan.Domain.Profiles;
 
 namespace IPMan.App.ViewModels;
 
@@ -34,6 +35,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ApplyStaticCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ApplyProfileCommand))]
     [NotifyCanExecuteChangedFor(nameof(ApplyDhcpCommand))]
     [NotifyCanExecuteChangedFor(nameof(RestoreLastCommand))]
     [NotifyCanExecuteChangedFor(nameof(CopyNetworkInfoCommand))]
@@ -45,6 +47,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
     /// <summary>True while one action is calling an application service.</summary>
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ApplyStaticCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ApplyProfileCommand))]
     [NotifyCanExecuteChangedFor(nameof(ApplyDhcpCommand))]
     [NotifyCanExecuteChangedFor(nameof(RestoreLastCommand))]
     [NotifyCanExecuteChangedFor(nameof(CopyNetworkInfoCommand))]
@@ -155,11 +158,21 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         Unsubscribe(CurrentAdapter);
     }
 
-    /// <summary>Shows the concise completion notice for an explicitly selected profile.</summary>
-    public void ShowProfileAppliedNotice()
+    [RelayCommand(CanExecute = nameof(CanExecuteAction))]
+    private async Task ApplyProfileAsync(NetworkProfile? profile, CancellationToken cancellationToken)
     {
-        StatusSeverity = ApplyStatusSeverity.None;
-        SetStatus(Strings.ProfileApplied, ApplyStatusSeverity.Information);
+        if (!CanExecuteAction())
+        {
+            return;
+        }
+
+        if (profile is null || profile.Mode == NetworkConfigurationMode.Dhcp)
+        {
+            await ApplyDhcpAsync(cancellationToken);
+            return;
+        }
+
+        await ApplyStaticConfigurationAsync(CurrentAdapter!, profile.ToStaticConfiguration(), false, cancellationToken);
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteAction))]
@@ -191,6 +204,15 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             return;
         }
 
+        await ApplyStaticConfigurationAsync(adapter, draft.ValidatedConfiguration!, true, cancellationToken);
+    }
+
+    private async Task ApplyStaticConfigurationAsync(
+        AdapterViewModel adapter,
+        StaticIpv4Configuration configuration,
+        bool markDraftApplied,
+        CancellationToken cancellationToken)
+    {
         StaticIpv4ApplyResult? result = null;
         bool succeeded = false;
         bool failedUnexpectedly = false;
@@ -200,7 +222,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         {
             result = await ApplyStaticWithConfirmationsAsync(
                 adapter,
-                draft.ValidatedConfiguration!,
+                configuration,
                 cancellationToken);
 
             if (result is null)
@@ -217,7 +239,10 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
 
             if (result.Status is StaticIpv4ApplyStatus.VerifiedSuccess or StaticIpv4ApplyStatus.NoChange)
             {
-                draft.MarkApplied();
+                if (markDraftApplied)
+                {
+                    adapter.Draft.MarkApplied();
+                }
                 succeeded = true;
             }
         }
@@ -624,6 +649,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
 
         _actionCancelledBecauseAdapterUnavailable = true;
         ApplyStaticCommand.Cancel();
+        ApplyProfileCommand.Cancel();
         ApplyDhcpCommand.Cancel();
         RestoreLastCommand.Cancel();
         PingGatewayCommand.Cancel();
@@ -739,6 +765,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
     private void NotifyCommandsCanExecuteChanged()
     {
         ApplyStaticCommand.NotifyCanExecuteChanged();
+        ApplyProfileCommand.NotifyCanExecuteChanged();
         ApplyDhcpCommand.NotifyCanExecuteChanged();
         RestoreLastCommand.NotifyCanExecuteChanged();
         CopyNetworkInfoCommand.NotifyCanExecuteChanged();

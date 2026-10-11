@@ -8,8 +8,8 @@ using IPMan.Domain.Networking;
 namespace IPMan.App.ViewModels;
 
 /// <summary>
-/// One adapter tab. Keyed by the stable Windows adapter identity, never by tab
-/// index or display name, so a renamed adapter keeps its tab, its details and
+/// One connection. Keyed by the stable Windows adapter identity, never by list
+/// index or display name, so a renamed adapter keeps its details and
 /// its draft.
 /// </summary>
 public sealed partial class AdapterViewModel : ObservableObject
@@ -28,17 +28,10 @@ public sealed partial class AdapterViewModel : ObservableObject
     [ObservableProperty]
     private string _connectionState = string.Empty;
 
-    /// <summary>
-    /// Shape-based tab marker. Deliberately not colour-only: the tab also carries
-    /// <see cref="AccessibleDescription"/> for assistive technology.
-    /// </summary>
-    [ObservableProperty]
-    private string _connectionMarker = string.Empty;
-
     [ObservableProperty]
     private string _accessibleDescription = string.Empty;
 
-    /// <summary>Creates a tab ViewModel for one adapter snapshot.</summary>
+    /// <summary>Creates a connection ViewModel for one adapter snapshot.</summary>
     public AdapterViewModel(
         NetworkAdapterSnapshot snapshot,
         IClipboardService clipboardService,
@@ -56,13 +49,13 @@ public sealed partial class AdapterViewModel : ObservableObject
         Update(snapshot);
     }
 
-    /// <summary>Stable Windows identity of the adapter this tab represents.</summary>
+    /// <summary>Stable Windows identity of the adapter this connection represents.</summary>
     public NetworkAdapterId Id { get; }
 
     /// <summary>
     /// The most recently read Windows state for quick actions. Change
     /// notification is raised only after every derived value has been updated,
-    /// so observers always see a consistent tab.
+    /// so observers always see a consistent connection.
     /// </summary>
     public NetworkAdapterSnapshot Snapshot { get; private set; } = null!;
 
@@ -104,7 +97,7 @@ public sealed partial class AdapterViewModel : ObservableObject
         if (snapshot.Id != Id)
         {
             throw new ArgumentException(
-                "A snapshot for a different adapter cannot update this tab.",
+                "A snapshot for a different adapter cannot update this connection.",
                 nameof(snapshot));
         }
 
@@ -114,7 +107,6 @@ public sealed partial class AdapterViewModel : ObservableObject
         DisplayName = AdapterDisplayFormatter.FormatFriendlyName(snapshot);
         IsConnected = snapshot.IsConnected;
         ConnectionState = AdapterDisplayFormatter.FormatConnectionStatus(snapshot);
-        ConnectionMarker = snapshot.IsConnected ? "●" : "○";
         AccessibleDescription = Strings.FormatAdapterAccessibleDescription(DisplayName, ConnectionState);
 
         Details.Update(snapshot);

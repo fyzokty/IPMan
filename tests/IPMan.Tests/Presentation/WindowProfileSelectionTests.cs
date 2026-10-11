@@ -1,8 +1,10 @@
 using System.Windows;
 using System.Windows.Controls;
 using IPMan.App.Resources;
+using IPMan.App.Presentation;
 using IPMan.App.ViewModels;
 using IPMan.App.Views;
+using IPMan.Domain.Settings;
 using IPMan.Tests.Fakes;
 using Xunit;
 
@@ -15,7 +17,7 @@ public sealed partial class WindowXamlSmokeTests
     [InlineData("Dark", false)]
     [InlineData("Light", true)]
     [InlineData("Dark", true)]
-    public void MainWindow_WhenProfileSelectionCrossesGroups_SelectsOnlyOneItem(string theme, bool selectInView) =>
+    public void MainWindow_WhenEditingAcrossGroups_LoadsOnlyRequestedSetting(string theme, bool useMenu) =>
         WpfTestRunner.Run(() =>
         {
             using WindowFixture fixture = new(theme, RenderProfiles(), RenderAdapters());
@@ -23,40 +25,41 @@ public sealed partial class WindowXamlSmokeTests
             fixture.Main.SelectAdapter(RenderEthernetId);
             FrameworkElement content = Layout(main);
             fixture.Confirmation.Answer = true;
-            ProfileListItemViewModel[] profiles = fixture.Profiles.Groups.SelectMany(group => group.Profiles).ToArray();
-            ProfileListItemViewModel home = Assert.Single(profiles, profile => profile.Id == "home");
-            ProfileListItemViewModel office = Assert.Single(profiles, profile => profile.Id == "office");
-
-            SelectProfile(home);
-            AdapterDraftViewModel draft = Assert.IsType<AdapterViewModel>(fixture.Main.SelectedAdapter).Draft;
+            ProfileListItemViewModel home = fixture.Profiles.Profiles.Single(profile => profile.Id == "home");
+            ProfileListItemViewModel office = fixture.Profiles.Profiles.Single(profile => profile.Id == "office");
+            Edit(home);
+            AdapterDraftViewModel draft = fixture.Main.SelectedAdapter!.Draft;
+            Assert.Equal(Strings.ProfileDhcpGuidance, draft.ProfileGuidance);
             draft.Ipv4Address = "192.168.20.99";
-            Assert.True(draft.IsDirty);
+            fixture.Main.GoBackCommand.Execute(null);
+            Layout(main);
             fixture.Confirmation.Requests.Clear();
-            SelectProfile(office);
-
-            ListBoxItem selected = Assert.Single(Descendants(content).OfType<ListBoxItem>(), item => item.IsSelected);
-            Assert.Same(office, selected.DataContext);
+            Edit(office);
             Assert.Same(office, fixture.Profiles.SelectedProfile);
+            Assert.True(fixture.Main.IsDetailsOpen);
+            Assert.Equal(office.Profile.Ipv4Address, draft.Ipv4Address);
             Assert.Equal(Strings.ConfirmProfileLoadTitle, Assert.Single(fixture.Confirmation.Requests).Title);
-            SelectProfile(office);
-            Assert.Single(fixture.Confirmation.Requests);
             AssertNeverShown(main);
 
-            void SelectProfile(ProfileListItemViewModel profile)
+            void Edit(ProfileListItemViewModel profile)
             {
-                if (selectInView)
+                if (useMenu)
                 {
-                    Assert.Single(Descendants(content).OfType<ListBoxItem>(),
-                        item => ReferenceEquals(item.DataContext, profile)).IsSelected = true;
+                    ResponsiveCardPanel panel = Assert.Single(Descendants(content).OfType<ResponsiveCardPanel>());
+                    Button button = Assert.Single(Descendants(panel).OfType<Button>(), item =>
+                        item.DataContext is SettingItemViewModel setting && setting.StoredSetting?.Id == profile.Id && item.ContextMenu is not null);
+                    ContextMenu menu = button.ContextMenu!;
+                    menu.PlacementTarget = button;
+                    LayoutContent(menu);
+                    MenuItem edit = menu.Items.OfType<MenuItem>().First();
+                    Assert.Same(fixture.Main.EditSettingCommand, edit.Command);
+                    Assert.Same(profile, edit.CommandParameter);
+                    edit.Command.Execute(edit.CommandParameter);
                 }
-                else
-                {
-                    fixture.Profiles.SelectedProfile = profile;
-                }
-
+                else fixture.Main.EditSettingCommand.Execute(profile);
                 Layout(main);
             }
-        }, $"{theme} profile selection timed out.");
+        }, $"{theme} setting editing timed out.");
 
     private static MainWindow CreateProfileSelectionWindow(WindowFixture fixture, string theme) =>
         FakeWindowServices.CreateWindow<MainWindow>(window => AttachResources(window, theme),
@@ -65,100 +68,102 @@ public sealed partial class WindowXamlSmokeTests
             new FakeWindowSessionMarker(), (Func<DiagnosticsViewModel>)(() => fixture.Diagnostics));
 
     [Fact]
-    public void MainWindow_WhenCrossGroupProfileLoadIsDeclined_KeepsPreviousSelection() =>
+    public void MainWindow_WhenDirtyEditIsDeclined_PreservesDraftAndHomePage() =>
         WpfTestRunner.Run(() =>
         {
             using WindowFixture fixture = new("Light", RenderProfiles(), RenderAdapters());
             MainWindow main = CreateProfileSelectionWindow(fixture, "Light");
             fixture.Main.SelectAdapter(RenderEthernetId);
-            FrameworkElement content = Layout(main);
-            fixture.Confirmation.Answer = true;
-            fixture.Profiles.SelectedProfile = Assert.Single(fixture.Profiles.Profiles, profile => profile.Id == "home");
-            AdapterDraftViewModel draft = Assert.IsType<AdapterViewModel>(fixture.Main.SelectedAdapter).Draft;
+            fixture.Main.EditSettingCommand.Execute(fixture.Profiles.Profiles.Single(profile => profile.Id == "home"));
+            AdapterDraftViewModel draft = fixture.Main.SelectedAdapter!.Draft;
             draft.Ipv4Address = "192.168.20.99";
-            fixture.Confirmation.Requests.Clear();
+            fixture.Main.GoBackCommand.Execute(null);
             fixture.Confirmation.Answer = false;
-            Assert.Single(Descendants(content).OfType<ListBoxItem>(),
-                item => item.DataContext is ProfileListItemViewModel { Id: "office" }).IsSelected = true;
-            DrainProfileDispatcher();
+            fixture.Main.EditSettingCommand.Execute(fixture.Profiles.Profiles.Single(profile => profile.Id == "office"));
             Layout(main);
-
             Assert.Equal("home", fixture.Profiles.SelectedProfile?.Id);
-            ListBox list = Assert.Single(Descendants(content).OfType<ListBox>(),
-                box => ReferenceEquals(box.DataContext, fixture.Profiles));
-            Assert.NotNull(list.GetBindingExpression(ListBox.SelectedItemProperty));
-            Assert.Same(fixture.Profiles.SelectedProfile, list.SelectedItem);
-            ListBoxItem selected = Assert.Single(Descendants(content).OfType<ListBoxItem>(), item => item.IsSelected);
-            Assert.Same(fixture.Profiles.SelectedProfile, selected.DataContext);
+            Assert.True(fixture.Main.IsHomeVisible);
             Assert.Equal("192.168.20.99", draft.Ipv4Address);
             Assert.Equal(Strings.ConfirmProfileLoadTitle, Assert.Single(fixture.Confirmation.Requests).Title);
             AssertNeverShown(main);
-        }, "Cancelled profile selection timed out.");
+        }, "Cancelled setting edit timed out.");
 
     [Fact]
-    public void MainWindow_WhenProfilesAreFiltered_PreservesGroupedSelectionAndContextCommands() =>
+    public void MainWindow_WhenSettingsAreFiltered_PreservesAutomaticAndMenuBindings() =>
         WpfTestRunner.Run(() =>
         {
             using WindowFixture fixture = new("Light", RenderProfiles(), RenderAdapters());
             MainWindow main = CreateProfileSelectionWindow(fixture, "Light");
+            fixture.Main.ChooseListViewCommand.Execute(null);
             FrameworkElement content = Layout(main);
-            ListBox list = Assert.Single(Descendants(content).OfType<ListBox>(),
-                box => ReferenceEquals(box.DataContext, fixture.Profiles));
-            Assert.Equal(SelectionMode.Single, list.SelectionMode);
-            Assert.False(list.IsSynchronizedWithCurrentItem);
+            Assert.Equal(PreferredViewMode.List, fixture.SettingsRepository.Settings.PreferredViewMode);
+            Assert.Equal(1, fixture.SettingsRepository.SaveCount);
             Assert.Null(fixture.Profiles.SelectedProfile);
-            Assert.DoesNotContain(Descendants(list).OfType<ListBoxItem>(), item => item.IsSelected);
-            Assert.Empty(fixture.Confirmation.Requests);
-            Assert.Equal(5, list.Items.Count);
-            Assert.Equal(2, Descendants(list).OfType<GroupItem>().Count());
-            Assert.Contains(Descendants(list).OfType<TextBlock>(), block => block.Text == Strings.ProfileGroupFavorites);
-            Assert.Contains(Descendants(list).OfType<TextBlock>(), block => block.Text == Strings.ProfileGroupOthers);
-            Assert.Contains(Descendants(list).OfType<TextBlock>(), block => block.Text == "\uE735");
-            Assert.Contains(Descendants(list).OfType<TextBlock>(), block => block.Text == "\uE734");
-            TextBlock name = Assert.Single(Descendants(list).OfType<TextBlock>(),
-                block => block.DataContext is ProfileListItemViewModel { Id: "office" } && block.Text == "Ofis Ethernet");
-            ContextMenu menu = Assert.IsType<ContextMenu>(name.ContextMenu);
-            menu.PlacementTarget = name;
+            Assert.Contains(Descendants(content).OfType<TextBlock>(), block => block.Text == Strings.ProfileGroupFavorites);
+            Assert.Contains(Descendants(content).OfType<TextBlock>(), block => block.Text == Strings.ProfileGroupOthers);
+            Assert.Equal(6, fixture.Main.Settings.Count);
+            fixture.Profiles.SearchText = "Ofis";
+            Layout(main);
+            Assert.True(fixture.Main.Settings[0].IsBuiltIn);
+            SettingItemViewModel setting = Assert.Single(fixture.Main.Settings.Skip(1));
+            Assert.Equal("office", setting.StoredSetting!.Id);
+            Assert.Null(fixture.Profiles.SelectedProfile);
+            Button button = Descendants(content).OfType<Button>().First(item => ReferenceEquals(item.DataContext, setting) && item.ContextMenu is not null);
+            ContextMenu menu = button.ContextMenu!;
+            menu.PlacementTarget = button;
             LayoutContent(menu);
-            DrainProfileDispatcher();
-            Assert.Same(fixture.Profiles, menu.DataContext);
-            Assert.Collection(menu.Items.Cast<MenuItem>(),
-                item => AssertCommand(item, fixture.Profiles.RenameCommand),
+            Assert.Same(setting, menu.DataContext);
+            Assert.Collection(menu.Items.OfType<MenuItem>(),
+                item => AssertCommand(item, fixture.Main.EditSettingCommand),
                 item => AssertCommand(item, fixture.Profiles.DuplicateCommand),
-                item => AssertCommand(item, fixture.Profiles.ToggleFavoriteCommand),
+                item => AssertCommand(item, fixture.Profiles.RenameCommand),
                 item => AssertCommand(item, fixture.Profiles.ExportCommand),
                 item => AssertCommand(item, fixture.Profiles.DeleteCommand));
-
-            Assert.Single(Descendants(list).OfType<ListBoxItem>(),
-                item => ReferenceEquals(item.DataContext, name.DataContext)).IsSelected = true;
-            Assert.NotNull(list.GetBindingExpression(ListBox.SelectedItemProperty));
-            fixture.Profiles.SearchText = "Ofis";
-            DrainProfileDispatcher();
-            Layout(main);
-            Assert.Single(list.Items.Cast<ProfileListItemViewModel>());
-            Assert.Single(Descendants(list).OfType<GroupItem>());
-            Assert.Equal("office", Assert.IsType<ProfileListItemViewModel>(list.SelectedItem).Id);
-            Assert.Single(Descendants(list).OfType<ListBoxItem>(), item => item.IsSelected);
             fixture.Profiles.SearchText = "Ev Wi-Fi";
-            DrainProfileDispatcher();
             Layout(main);
-            Assert.Equal("home", Assert.Single(list.Items.Cast<ProfileListItemViewModel>()).Id);
-            Assert.Null(fixture.Profiles.SelectedProfile);
-            Assert.DoesNotContain(Descendants(list).OfType<ListBoxItem>(), item => item.IsSelected);
+            Assert.Equal("home", Assert.Single(fixture.Main.Settings.Skip(1)).StoredSetting!.Id);
+            Assert.Empty(fixture.Confirmation.Requests);
+            Assert.True(fixture.Main.IsListView);
             AssertNeverShown(main);
 
             void AssertCommand(MenuItem item, System.Windows.Input.ICommand command)
             {
                 Assert.Same(command, item.Command);
-                Assert.Same(name.DataContext, item.CommandParameter);
+                Assert.Same(setting.StoredSetting, item.CommandParameter);
             }
-        }, "Filtered profile selection timed out.");
+        }, "Filtered settings timed out.");
 
-    private static void DrainProfileDispatcher()
-    {
-        System.Windows.Threading.DispatcherFrame frame = new();
-        _ = System.Windows.Threading.Dispatcher.CurrentDispatcher.BeginInvoke(
-            System.Windows.Threading.DispatcherPriority.Background, new Action(() => frame.Continue = false));
-        System.Windows.Threading.Dispatcher.PushFrame(frame);
-    }
+    [Fact]
+    public void MainWindow_LegacyApplyOnSelectionIsObsoleteAndIgnored() =>
+        WpfTestRunner.Run(() =>
+        {
+            using WindowFixture fixture = new("Light", RenderProfiles(), RenderAdapters());
+            fixture.SettingsRepository.SaveAsync(new AppSettings(1, AppTheme.Light, true, false), CancellationToken.None).GetAwaiter().GetResult();
+            MainWindow main = CreateProfileSelectionWindow(fixture, "Light");
+            AdapterDraftViewModel draft = fixture.Main.SelectedAdapter!.Draft;
+            string previousAddress = draft.Ipv4Address;
+            fixture.Profiles.SelectedProfile = fixture.Profiles.Profiles.Single(profile => profile.Id == "plc");
+            Assert.Equal(previousAddress, draft.Ipv4Address);
+            Assert.Empty(fixture.Confirmation.Requests);
+            Assert.False(fixture.Main.IsBusy);
+            Assert.NotNull(typeof(AppSettings).GetProperty("ApplyProfileOnSelection")!.GetCustomAttributes(typeof(ObsoleteAttribute), false).SingleOrDefault());
+            Layout(main);
+            AssertNeverShown(main);
+        }, "Legacy preference compatibility timed out.");
+
+    [Fact]
+    public void MainWindow_WhenViewPreferenceWasSaved_RestoresItInNextWindow() =>
+        WpfTestRunner.Run(() =>
+        {
+            using WindowFixture fixture = new("Light", RenderProfiles(), RenderAdapters());
+            MainWindow first = CreateProfileSelectionWindow(fixture, "Light");
+            fixture.Main.ChooseListViewCommand.Execute(null);
+            Assert.Equal(PreferredViewMode.List, fixture.SettingsRepository.Settings.PreferredViewMode);
+            fixture.Main.PreferredViewMode = PreferredViewMode.Auto;
+            MainWindow second = CreateProfileSelectionWindow(fixture, "Light");
+            Assert.True(fixture.Main.IsListView);
+            Assert.Equal(1, fixture.SettingsRepository.SaveCount);
+            AssertNeverShown(first);
+            AssertNeverShown(second);
+        }, "View preference restoration timed out.");
 }

@@ -37,36 +37,55 @@ public sealed partial class WindowXamlSmokeTests
             fixture.Settings, fixture.Theme, fixture.Notifications, fixture.Dispatcher,
             new FakeWindowSessionMarker(), (Func<DiagnosticsViewModel>)(() => fixture.Diagnostics));
         FrameworkElement mainContent = Layout(main);
+        Assert.Equal(900, main.MinWidth);
+        Assert.Equal(600, main.MinHeight);
+        Assert.Empty(Descendants(mainContent).OfType<TabControl>());
+        ComboBox selector = Assert.Single(Descendants(mainContent).OfType<ComboBox>());
+        Assert.Same(fixture.Main.SelectedAdapter, selector.SelectedItem);
+        Assert.Contains(Descendants(selector).OfType<TextBlock>(), block => block.Text == fixture.Main.SelectedAdapter!.DisplayName);
+        Assert.Contains(Descendants(mainContent).OfType<TextBlock>(), element => element.Text == fixture.Main.StatusHeadline);
+        SettingItemViewModel automatic = fixture.Main.Settings[0];
+        Assert.True(automatic.IsBuiltIn);
+        Assert.False(automatic.CanManage);
+        Assert.Contains(Descendants(mainContent).OfType<TextBlock>(), element =>
+            ReferenceEquals(element.DataContext, automatic) && element.Text == Strings.ModeDhcp);
+        SettingItemViewModel profile = Assert.Single(fixture.Main.Settings.Skip(1));
+        Assert.Contains(Descendants(mainContent).OfType<TextBlock>(), element =>
+            ReferenceEquals(element.DataContext, profile) && element.Text == profile.Name);
+        ResponsiveCardPanel cardsPanel = Assert.Single(Descendants(mainContent).OfType<ResponsiveCardPanel>());
+        Button menuButton = Assert.Single(Descendants(cardsPanel).OfType<Button>(), button =>
+            ReferenceEquals(button.DataContext, profile) && button.ContextMenu is not null);
+        menuButton.ContextMenu!.PlacementTarget = menuButton;
+        menuButton.ContextMenu.ApplyTemplate();
+        Assert.Equal(5, menuButton.ContextMenu.Items.OfType<MenuItem>().Count());
+        fixture.Main.Actions.IsBusy = true;
+        Layout(main);
+        Assert.False(selector.IsEnabled);
+        Assert.All(Descendants(mainContent).OfType<Button>().Where(button => button.Command is not null &&
+            ReferenceEquals(button.Command, profile.SwitchCommand)), button => Assert.False(button.IsEnabled));
+        fixture.Main.Actions.IsBusy = false;
+
         Expander problems = Assert.Single(Descendants(mainContent).OfType<Expander>());
         problems.IsExpanded = true;
         Layout(main);
-
-        AdapterViewModel adapter = Assert.Single(fixture.Main.Adapters);
-        ProfileListItemViewModel profile = Assert.Single(Assert.Single(fixture.Profiles.Groups).Profiles);
         ProfileProblemListItemViewModel problem = Assert.Single(fixture.Profiles.Problems);
-        Assert.Contains(Descendants(mainContent).OfType<TextBlock>(), element =>
-            ReferenceEquals(element.DataContext, adapter) && element.Text == adapter.DisplayName);
-        Assert.Contains(Descendants(mainContent).OfType<TextBox>(), element =>
-            ReferenceEquals(element.DataContext, adapter.Draft));
+        TextBlock problemText = Assert.Single(Descendants(mainContent).OfType<TextBlock>(),
+            element => ReferenceEquals(element.DataContext, problem));
+        Assert.Contains(problemText.Inlines.OfType<Run>(), run => run.Text == problem.FileName);
+        Assert.Contains(problemText.Inlines.OfType<Run>(), run => run.Text == problem.Reason);
+
+        fixture.Main.OpenDetailsCommand.Execute(null);
+        Layout(main);
+        AdapterViewModel adapter = Assert.Single(fixture.Main.Adapters);
+        Assert.Contains(Descendants(mainContent).OfType<TextBox>(), element => ReferenceEquals(element.DataContext, adapter.Draft));
         TextBlock profileGuidance = Assert.Single(Descendants(mainContent).OfType<TextBlock>(), element =>
             ReferenceEquals(element.DataContext, adapter.Draft) &&
             BindingOperations.GetBinding(element, TextBlock.TextProperty)?.Path.Path == nameof(AdapterDraftViewModel.ProfileGuidance));
         Border guidanceBand = Assert.IsType<Border>(VisualTreeHelper.GetParent(VisualTreeHelper.GetParent(profileGuidance)));
         Assert.Equal(Visibility.Collapsed, guidanceBand.Visibility);
         Assert.Equal(new Size(), guidanceBand.DesiredSize);
-        Assert.Contains(Descendants(mainContent).OfType<TextBlock>(), element =>
-            ReferenceEquals(element.DataContext, profile) && element.Text == profile.Name);
-        TextBlock problemText = Assert.Single(Descendants(mainContent).OfType<TextBlock>(),
-            element => ReferenceEquals(element.DataContext, problem));
-        Assert.Contains(problemText.Inlines.OfType<Run>(), run => run.Text == problem.FileName);
-        Assert.Contains(problemText.Inlines.OfType<Run>(), run => run.Text == problem.Reason);
-
         FluentMotion.SetIsEnabled(mainContent, false);
         TextBox draftBox = Assert.Single(Descendants(mainContent).OfType<TextBox>(), element => element.Name == "Ipv4AddressBox");
-        TextBox dnsBox = Assert.Single(Descendants(mainContent).OfType<TextBox>(), element =>
-            ReferenceEquals(element.DataContext, adapter.Draft) &&
-            System.Windows.Automation.AutomationProperties.GetName(element) == Strings.FieldPrimaryDns);
-        Point originalDnsPosition = dnsBox.TransformToAncestor(mainContent).Transform(new Point());
         Size originalFieldSize = draftBox.RenderSize;
         adapter.Draft.Ipv4Address = "invalid";
         adapter.Draft.MarkAllFieldsTouched();
@@ -76,18 +95,19 @@ public sealed partial class WindowXamlSmokeTests
         fixture.Main.Actions.IsBusy = true;
         Layout(main);
         Assert.Equal(originalFieldSize, draftBox.RenderSize);
-        Assert.Equal(originalDnsPosition, dnsBox.TransformToAncestor(mainContent).Transform(new Point()));
         Border errorLine = (Border)draftBox.Template.FindName("FocusLine", draftBox);
         Assert.Equal(((SolidColorBrush)main.Resources["ErrorBorderBrush"]).Color, ((SolidColorBrush)errorLine.Background).Color);
         Assert.Equal(1, errorLine.Opacity);
-        fixture.Main.Actions.StatusMessage = string.Empty;
-        fixture.Main.Actions.StatusSeverity = ApplyStatusSeverity.None;
+        fixture.Main.Actions.ClearStatusCommand.Execute(null);
         fixture.Main.Actions.IsBusy = false;
+        fixture.Main.GoBackCommand.Execute(null);
+        Assert.True(adapter.Draft.IsDirty);
+        Assert.True(fixture.Main.HasDirtyDrafts);
         Layout(main);
-        Assert.Equal(originalDnsPosition, dnsBox.TransformToAncestor(mainContent).Transform(new Point()));
 
         // Lay out the popup child directly: opening a Popup would create a native window.
-        Popup history = Assert.Single(Descendants(mainContent).OfType<Popup>());
+        Popup history = Assert.Single(Descendants(mainContent).OfType<Popup>(), popup =>
+            BindingOperations.GetBinding(popup, Popup.IsOpenProperty)?.Path.Path == nameof(MainWindowViewModel.IsHistoryOpen));
         Assert.False(history.IsOpen);
         FrameworkElement historyContent = Assert.IsAssignableFrom<FrameworkElement>(history.Child);
         historyContent.DataContext = fixture.Main;
@@ -123,6 +143,7 @@ public sealed partial class WindowXamlSmokeTests
         AttachResources(textInput, theme);
         Assert.Same(input, Assert.Single(Descendants(Layout(textInput)).OfType<TextBox>()));
         Assert.Equal("PLC", input.Text);
+        Assert.Equal(0, fixture.SettingsRepository.SaveCount);
         AssertNeverShown(main);
         AssertNeverShown(settings);
         AssertNeverShown(diagnostics);
@@ -232,6 +253,7 @@ public sealed partial class WindowXamlSmokeTests
             Profiles = new ProfilePanelViewModel(_catalog, dialogs, dialogs, Confirmation, Dispatcher);
             Main = new MainWindowViewModel(Coordinator, Dispatcher, new FakeClipboardService(), sources,
                 sources, sources, actions, new StaticIpv4ConfigurationValidator(), Profiles, Notifications);
+            Main.SetShowVirtualAdapters(SettingsRepository.Settings.ShowVirtualAdapters);
             Main.Initialize();
             Coordinator.PublishRefresh(adapters ?? [TestData.Snapshot()]);
             Settings = new SettingsViewModel(SettingsRepository, Confirmation, Theme);

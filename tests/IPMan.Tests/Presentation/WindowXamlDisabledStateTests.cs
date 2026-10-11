@@ -28,6 +28,7 @@ public sealed partial class WindowXamlSmokeTests
             fixture.Main, fixture.SettingsRepository, fixture.Confirmation, fixture.Tray,
             fixture.Settings, fixture.Theme, fixture.Notifications, fixture.Dispatcher,
             new FakeWindowSessionMarker(), (Func<DiagnosticsViewModel>)(() => fixture.Diagnostics));
+        fixture.Main.OpenDetailsCommand.Execute(null);
         AssertNeverShown(main);
 
         // MainWindow's own HWND hooks need the real tray/theme services, so move its client tree into a

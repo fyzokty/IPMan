@@ -67,6 +67,16 @@ public static class AdapterDisplayFormatter
         };
     }
 
+    public static string FormatConnectionKind(NetworkAdapterSnapshot snapshot) =>
+        AdapterCategoryClassifier.IsVirtual(snapshot) ? Strings.ConnectionKindVirtual :
+        AdapterCategoryClassifier.GetConnectionKind(snapshot) switch
+        {
+            AdapterCategoryClassifier.ConnectionKind.Wireless => Strings.ConnectionKindWireless,
+            AdapterCategoryClassifier.ConnectionKind.Bluetooth => Strings.ConnectionKindBluetooth,
+            AdapterCategoryClassifier.ConnectionKind.Cellular => Strings.ConnectionKindCellular,
+            _ => Strings.ConnectionKindWired
+        };
+
     public static string FormatConfigurationMode(NetworkConfigurationMode mode) => mode switch
     {
         NetworkConfigurationMode.Dhcp => Strings.ModeDhcp,

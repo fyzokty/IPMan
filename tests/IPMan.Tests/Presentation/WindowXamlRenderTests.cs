@@ -52,112 +52,79 @@ public sealed partial class WindowXamlSmokeTests
             fixture.Main, fixture.SettingsRepository, fixture.Confirmation, fixture.Tray,
             fixture.Settings, fixture.Theme, fixture.Notifications, fixture.Dispatcher,
             new FakeWindowSessionMarker(), (Func<DiagnosticsViewModel>)(() => fixture.Diagnostics));
-        main.Width = 1280;
-        main.Height = 800;
+        main.Width = 1000;
+        main.Height = 680;
         Assert.Equal(3, fixture.Main.Adapters.Count);
-        ProfileListItemViewModel[] profiles = fixture.Profiles.Groups.SelectMany(group => group.Profiles).ToArray();
-        Assert.Equal(5, profiles.Length);
-        Assert.Equal(2, profiles.Count(profile => profile.IsFavorite));
-        Assert.Single(fixture.Profiles.Problems);
+        Assert.Equal(5, fixture.Profiles.Profiles.Count);
+        Assert.Equal(2, fixture.Profiles.Profiles.Count(profile => profile.IsFavorite));
         fixture.Main.SelectAdapter(RenderEthernetId);
-        AdapterDraftViewModel draft = Assert.IsType<AdapterViewModel>(fixture.Main.SelectedAdapter).Draft;
+        FrameworkElement content = Layout(main);
+        Assert.Empty(fixture.Confirmation.Requests);
+        string suffix = theme.ToLowerInvariant();
+        RenderWindow(main, directory, $"main-card-{suffix}.png");
+        ResponsiveCardPanel panel = Assert.Single(Descendants(content).OfType<ResponsiveCardPanel>());
+        FrameworkElement[] cards = panel.Children.OfType<FrameworkElement>().ToArray();
+        Assert.Equal(6, cards.Length);
+        Assert.Equal(Position(cards[0], content).Y, Position(cards[2], content).Y);
+        Assert.True(Position(cards[3], content).Y > Position(cards[0], content).Y);
+        main.Width = 900;
+        main.Height = 600;
+        RenderWindow(main, directory, $"main-small-{suffix}.png");
+        Assert.True(Position(cards[2], content).Y > Position(cards[0], content).Y);
+        fixture.Main.ChooseListViewCommand.Execute(null);
+        RenderWindow(main, directory, $"main-list-{suffix}.png");
+        Assert.True(fixture.Main.IsListView);
+        Assert.Contains(Descendants(content).OfType<TextBlock>(), block => block.Text == Strings.ProfileGroupFavorites);
+        Assert.Contains(Descendants(content).OfType<TextBlock>(), block => block.Text == Strings.ProfileGroupOthers);
+        fixture.Coordinator.PublishRefresh(RenderAdapters().Select(adapter => adapter.Id.Value == RenderEthernetId
+            ? adapter with { IsConnected = false } : adapter).ToArray());
+        fixture.Main.ChooseCardViewCommand.Execute(null);
+        Assert.True(fixture.Main.HasWirelessShortcut);
+        RenderWindow(main, directory, $"main-disconnected-{suffix}.png");
+        fixture.Main.SwitchToWirelessCommand.Execute(null);
+        Assert.Equal(RenderAdapters()[1].Id, fixture.Main.SelectedAdapter!.Id);
+        Assert.Empty(fixture.Confirmation.Requests);
+        fixture.Coordinator.PublishRefresh(RenderAdapters());
+        fixture.Main.SelectAdapter(RenderEthernetId);
+        fixture.Main.OpenDetailsCommand.Execute(null);
+        main.Width = 1000;
+        main.Height = 680;
+        AdapterDraftViewModel draft = fixture.Main.SelectedAdapter!.Draft;
         draft.Ipv4Address = "192.168.10.40";
         draft.Gateway = "192.168.10.254";
         Assert.True(draft.IsValid);
-        Assert.True(draft.IsIpv4AddressDifferentFromWindows);
-        Assert.True(draft.IsGatewayDifferentFromWindows);
-
-        FrameworkElement content = Layout(main);
-        Assert.Empty(fixture.Confirmation.Requests);
-        FluentMotion.SetIsEnabled(content, false);
-        Assert.Single(Descendants(content).OfType<Expander>()).IsExpanded = true;
-        string suffix = theme.ToLowerInvariant();
-        RenderWindow(main, directory, $"main-{suffix}.png");
+        Assert.True(draft.IsDirty);
+        RenderWindow(main, directory, $"main-details-{suffix}.png");
         TextBox[] draftFields = Descendants(content).OfType<TextBox>()
             .Where(box => ReferenceEquals(box.DataContext, draft)).ToArray();
-        Point[] draftPositions = draftFields.Select(box => Position(box, content)).ToArray();
         Assert.Equal(5, draftFields.Length);
         Assert.All(draftFields, box => Assert.Equal(32, box.ActualHeight));
+        ScrollViewer detailsScroll = Assert.Single(Descendants(content).OfType<ScrollViewer>(),
+            scroll => scroll.Content is Grid grid && grid.ColumnDefinitions.Count == 3);
+        Assert.True(detailsScroll.ScrollableHeight > 0);
         Button apply = Assert.Single(Descendants(content).OfType<Button>(),
             button => ReferenceEquals(button.Command, fixture.Main.Actions.ApplyStaticCommand));
         Button restore = Assert.Single(Descendants(content).OfType<Button>(),
             button => ReferenceEquals(button.Command, fixture.Main.Actions.RestoreLastCommand));
         Assert.Equal(Position(apply, content).Y, Position(restore, content).Y);
-        ScrollViewer tabScroll = Assert.Single(Descendants(content).OfType<ScrollViewer>(),
-            scroll => scroll.Content is Grid grid && grid.ColumnDefinitions.Count == 3);
-        Assert.Equal(0, tabScroll.ScrollableHeight);
-        File.WriteAllText(Path.Combine(directory, $"layout-{suffix}.txt"),
-            $"Main: {content.ActualWidth}x{content.ActualHeight}; tabs y={Position(Assert.Single(Descendants(content).OfType<TabControl>()), content).Y}; " +
-            $"draft height={draftFields[0].ActualHeight}; apply y={Position(apply, content).Y}; scroll extent={tabScroll.ScrollableHeight}{Environment.NewLine}");
-
         draft.Ipv4Address = "192.168.10.999";
         draft.MarkAllFieldsTouched();
         Assert.NotEmpty(draft.Ipv4AddressError);
-        Assert.Empty(draft.GatewayError);
         RenderWindow(main, directory, $"main-validation-{suffix}.png");
-        Assert.Equal(draftPositions, draftFields.Select(box => Position(box, content)).ToArray());
-
         draft.Ipv4Address = "192.168.10.40";
-        Assert.False(draft.HasErrors);
         fixture.Main.Actions.StatusMessage = Strings.ApplyStaticSuccess;
         fixture.Main.Actions.StatusSeverity = ApplyStatusSeverity.Success;
-        Assert.True(fixture.Main.Actions.HasStatusMessage);
+        RenderWindow(main, directory, $"main-details-banner-{suffix}.png");
+        fixture.Main.GoBackCommand.Execute(null);
+        Assert.True(draft.IsDirty);
         RenderWindow(main, directory, $"main-banner-{suffix}.png");
-        Assert.Equal(draftPositions, draftFields.Select(box => Position(box, content)).ToArray());
-        Button renew = Assert.Single(Descendants(content).OfType<Button>(),
-            button => ReferenceEquals(button.Command, fixture.Main.Actions.RenewIpCommand));
-        Border resultBanner = Assert.Single(Descendants(content).OfType<Border>(),
-            border => System.Windows.Automation.AutomationProperties.GetLiveSetting(border) ==
-                System.Windows.Automation.AutomationLiveSetting.Assertive);
-        Assert.True(Position(renew, content).Y + renew.ActualHeight < Position(resultBanner, content).Y,
-            "Result banner must not obscure quick actions at 1280x800.");
-        File.AppendAllText(Path.Combine(directory, $"layout-{suffix}.txt"),
-            $"Main: quick actions bottom={Position(renew, content).Y + renew.ActualHeight}; result banner y={Position(resultBanner, content).Y}{Environment.NewLine}");
-
-        content.Measure(new Size(1100, 700));
-        content.Arrange(new Rect(0, 0, 1100, 700));
-        content.UpdateLayout();
-        Assert.True(tabScroll.ScrollableHeight > 0, "Small windows must scroll the whole tab content.");
-        Assert.DoesNotContain(Descendants(tabScroll).OfType<ScrollViewer>(), scroll => scroll.Content is Grid);
-
         fixture.Main.Actions.ClearStatusCommand.Execute(null);
         fixture.Confirmation.Answers.Enqueue(true);
-        fixture.Profiles.SelectedProfile = Assert.Single(profiles, profile => profile.Id == "home");
-        Assert.Single(fixture.Confirmation.Requests);
+        fixture.Main.EditSettingCommand.Execute(fixture.Profiles.Profiles.Single(profile => profile.Id == "home"));
         Assert.Equal(Strings.ProfileDhcpGuidance, draft.ProfileGuidance);
-        RenderWindow(main, directory, $"main-dhcp-profile-{suffix}.png");
-        TextBlock profileGuidance = Assert.Single(Descendants(content).OfType<TextBlock>(),
-            block => ReferenceEquals(block.DataContext, draft) && block.Text == Strings.ProfileDhcpGuidance);
-        Border guidanceBand = Assert.IsType<Border>(VisualTreeHelper.GetParent(VisualTreeHelper.GetParent(profileGuidance)));
-        Assert.Equal(Visibility.Visible, guidanceBand.Visibility);
-        Assert.True(guidanceBand.ActualHeight > 0);
-        Assert.Equal(TextWrapping.Wrap, profileGuidance.TextWrapping);
-        fixture.Confirmation.Answers.Enqueue(true);
-        int expectedProfileConfirmations = fixture.Confirmation.Requests.Count + (draft.IsDirty ? 1 : 0);
-        fixture.Profiles.SelectedProfile = Assert.Single(profiles, profile => profile.Id == "office");
-        Assert.Equal(expectedProfileConfirmations, fixture.Confirmation.Requests.Count);
-        RenderWindow(main, directory, $"main-static-profile-{suffix}.png");
-        Assert.Empty(profileGuidance.Text);
-        Assert.Equal(Visibility.Collapsed, guidanceBand.Visibility);
-        Assert.Equal(new Size(), guidanceBand.DesiredSize);
-        fixture.Main.SelectAdapter(RenderAdapters()[1].Id.Value);
-        Assert.Equal(expectedProfileConfirmations, fixture.Confirmation.Requests.Count);
-        RenderWindow(main, directory, $"main-dhcp-adapter-{suffix}.png");
-        Assert.Equal(expectedProfileConfirmations, fixture.Confirmation.Requests.Count);
-        ListBoxItem selectedProfile = Assert.Single(Descendants(content).OfType<ListBoxItem>(), item => item.IsSelected);
-        Assert.Same(fixture.Profiles.SelectedProfile, selectedProfile.DataContext);
-        Assert.Empty(fixture.Profiles.StatusMessage);
-        Assert.DoesNotContain(Descendants(content).OfType<TextBlock>(), block => block.Text == Strings.ProfileLoadCancelled);
-        Button dhcp = Assert.Single(Descendants(content).OfType<Button>(),
-            button => ReferenceEquals(button.Command, fixture.Main.Actions.ApplyDhcpCommand));
-        Button dhcpRenew = Assert.Single(Descendants(content).OfType<Button>(),
-            button => ReferenceEquals(button.Command, fixture.Main.Actions.RenewIpCommand));
-        Assert.False(dhcp.IsEnabled);
-        Assert.True(dhcpRenew.IsEnabled);
-        AssertDisabledButtonBrushes(dhcp, main, theme);
+        RenderWindow(main, directory, $"main-edit-automatic-{suffix}.png");
         fixture.Coordinator.PublishRefresh();
         fixture.Coordinator.PublishFailure();
-        Assert.Empty(fixture.Main.Adapters);
         Assert.True(fixture.Main.IsEmptyStateVisible);
         Assert.True(fixture.Main.HasRefreshError);
         RenderWindow(main, directory, $"main-empty-{suffix}.png");

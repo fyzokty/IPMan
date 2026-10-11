@@ -37,7 +37,7 @@ internal sealed class AppSettingsJsonCodec
         AppSettings settings = new(
             document.SchemaVersion.Value,
             theme,
-            document.ApplyProfileOnSelection ?? defaults.ApplyProfileOnSelection,
+            document.ApplyProfileOnSelection ?? false,
             document.NotificationsEnabled ?? defaults.NotificationsEnabled,
             ReadWindowPlacement(document.WindowPlacement),
             ReadAdapterId(document.LastSelectedAdapterId),
@@ -46,7 +46,8 @@ internal sealed class AppSettingsJsonCodec
             document.RememberWindowState ?? defaults.RememberWindowState,
             document.SkipDhcpQuickActionConfirmation ?? defaults.SkipDhcpQuickActionConfirmation,
             ReadNotificationMode(document.NotificationMode, document.NotificationsEnabled),
-            document.NotificationPromptShown ?? defaults.NotificationPromptShown);
+            document.NotificationPromptShown ?? defaults.NotificationPromptShown,
+            ReadViewMode(document.PreferredViewMode));
         Validate(settings);
         return new AppSettingsReadResult(settings, themeWasCorrected);
     }
@@ -54,7 +55,7 @@ internal sealed class AppSettingsJsonCodec
     private static void Validate(AppSettings settings)
     {
         if (settings.SchemaVersion != AppSettings.CurrentSchemaVersion ||
-            !Enum.IsDefined(settings.Theme))
+            !Enum.IsDefined(settings.Theme) || !Enum.IsDefined(settings.PreferredViewMode))
         {
             throw new JsonException("Settings schema version or theme is not supported.");
         }
@@ -85,6 +86,24 @@ internal sealed class AppSettingsJsonCodec
         }
 
         return (AppTheme.System, true);
+    }
+
+    private static PreferredViewMode ReadViewMode(JsonElement? element)
+    {
+        if (element is { ValueKind: JsonValueKind.String } value &&
+            Enum.TryParse(value.GetString(), ignoreCase: true, out PreferredViewMode mode) &&
+            Enum.IsDefined(mode))
+        {
+            return mode;
+        }
+
+        if (element is { ValueKind: JsonValueKind.Number } number &&
+            number.TryGetInt32(out int numericMode) && Enum.IsDefined((PreferredViewMode)numericMode))
+        {
+            return (PreferredViewMode)numericMode;
+        }
+
+        return PreferredViewMode.Auto;
     }
 
     private static NotificationMode ReadNotificationMode(JsonElement? element, bool? legacyEnabled)
@@ -181,7 +200,8 @@ internal sealed class AppSettingsJsonCodec
         bool? RememberWindowState,
         bool? SkipDhcpQuickActionConfirmation,
         JsonElement? NotificationMode,
-        bool? NotificationPromptShown);
+        bool? NotificationPromptShown,
+        JsonElement? PreferredViewMode);
 }
 
 internal sealed record AppSettingsReadResult(AppSettings Settings, bool ThemeWasCorrected);

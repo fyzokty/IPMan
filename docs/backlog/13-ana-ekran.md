@@ -1,6 +1,6 @@
 # 13 — Profil merkezli ana ekran
 
-- **Durum:** yapılacak
+- **Durum:** bitti
 - **Bağımlılık:** 12
 - **Gereksinimler:** ADR-018 · Ekran 01, 02, 09
 
@@ -21,9 +21,9 @@ Eski sekme ve taslak temelli arayüzü kaldırarak, P1 kullanıcısının tek t�
 - Ana pencere asgari boyutunun 1100×700'den 900×600'e (varsayılan ~1000×680) düşürülmesi; eski sol profil çekmecesinin ve alt durum çubuğunun kaldırılması
 
 ## Bitti sayılır
-- [ ] Ana ekranda bağlantı seçici, durum kartı ve ayar kartları doğru verilerle render ediliyor
-- [ ] "Bu ağa geç" tıklandığında ara taslak olmadan doğrudan uygulama tetikleniyor
-- [ ] 6'dan fazla ayarda otomatik Liste görünümüne geçiliyor; elle yapılan Kart/Liste tercihi kalıcı saklanıyor
-- [ ] Otomatik kartı her zaman ilk sırada ve kullanılabilir durumda yer alıyor
-- [ ] Pencere boyutu asgari 900×600 sınırına uyuyor ve duyarlı yerleşim sağlanıyor
-- [ ] Kablo takılı değilken kartlar tıklanabilir kalıyor ve kablosuz kısayolu çalışıyor
+- [x] Ana ekranda bağlantı seçici, durum kartı ve ayar kartları doğru verilerle render ediliyor
+- [x] "Bu ağa geç" tıklandığında ara taslak olmadan doğrudan uygulama tetikleniyor
+- [x] 6'dan fazla ayarda otomatik Liste görünümüne geçiliyor; elle yapılan Kart/Liste tercihi kalıcı saklanıyor
+- [x] Otomatik kartı her zaman ilk sırada ve kullanılabilir durumda yer alıyor
+- [x] Pencere boyutu asgari 900×600 sınırına uyuyor ve duyarlı yerleşim sağlanıyor
+- [x] Kablo takılı değilken kartlar tıklanabilir kalıyor ve kablosuz kısayolu çalışıyor

@@ -105,7 +105,7 @@ public sealed class AdapterDisplayFormatterTests
 
         string summary = AdapterDisplayFormatter.FormatCopySummary(snapshot);
 
-        Assert.Contains("Bağdaştırıcı adı: Ethernet", summary, StringComparison.Ordinal);
+        Assert.Contains("Bağlantı adı: Ethernet", summary, StringComparison.Ordinal);
         Assert.Contains($"{Strings.FieldConnectionState}: İnternet çalışıyor", summary, StringComparison.Ordinal);
         Assert.DoesNotContain("Kablolu bağlantı", summary, StringComparison.Ordinal);
     }
@@ -235,7 +235,7 @@ public sealed class AdapterDisplayFormatterTests
 
         string text = AdapterDisplayFormatter.FormatCopySummary(snapshot);
 
-        Assert.Contains("Bağdaştırıcı adı: Ethernet", text, StringComparison.Ordinal);
+        Assert.Contains("Bağlantı adı: Ethernet", text, StringComparison.Ordinal);
         Assert.Contains("192.168.1.50 (255.255.255.0)", text, StringComparison.Ordinal);
         Assert.Contains("DNS sunucuları: 192.168.1.1", text, StringComparison.Ordinal);
         Assert.DoesNotContain("IPv6", text, StringComparison.OrdinalIgnoreCase);

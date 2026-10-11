@@ -28,9 +28,6 @@ public sealed partial class SettingsViewModel : ObservableObject
     private NotificationMode _notificationMode;
 
     [ObservableProperty]
-    private bool _applyProfileOnSelection;
-
-    [ObservableProperty]
     private bool _showVirtualAdapters;
 
     [ObservableProperty]
@@ -64,7 +61,6 @@ public sealed partial class SettingsViewModel : ObservableObject
         Theme = settings.Theme;
         CloseToTray = settings.CloseToTray;
         NotificationMode = settings.NotificationMode;
-        ApplyProfileOnSelection = settings.ApplyProfileOnSelection;
         ShowVirtualAdapters = settings.ShowVirtualAdapters;
         RememberWindowState = settings.RememberWindowState;
         PersistenceWarning = _settingsRepository.LastLoadFailed;
@@ -175,7 +171,6 @@ public sealed partial class SettingsViewModel : ObservableObject
         OnPropertyChanged(nameof(IsNotificationModeAlways));
         SaveIfReady();
     }
-    partial void OnApplyProfileOnSelectionChanged(bool value) => SaveIfReady();
     partial void OnShowVirtualAdaptersChanged(bool value) => SaveIfReady();
     partial void OnRememberWindowStateChanged(bool value) => SaveIfReady();
 
@@ -198,11 +193,10 @@ public sealed partial class SettingsViewModel : ObservableObject
         Theme = defaults.Theme;
         CloseToTray = defaults.CloseToTray;
         NotificationMode = defaults.NotificationMode;
-        ApplyProfileOnSelection = defaults.ApplyProfileOnSelection;
         ShowVirtualAdapters = defaults.ShowVirtualAdapters;
         RememberWindowState = defaults.RememberWindowState;
         _isLoading = false;
-        Save();
+        Save(resetToDefaults: true);
     }
 
     private void SaveIfReady()
@@ -213,19 +207,20 @@ public sealed partial class SettingsViewModel : ObservableObject
         }
     }
 
-    private void Save()
+    private void Save(bool resetToDefaults = false)
     {
-        AppSettings settings = _settings with
+        AppSettings current = resetToDefaults ? _settings : _settingsRepository.LoadAsync(CancellationToken.None).GetAwaiter().GetResult();
+        AppSettings settings = current with
         {
             SchemaVersion = AppSettings.CurrentSchemaVersion,
             Theme = Theme,
-            ApplyProfileOnSelection = ApplyProfileOnSelection,
             NotificationsEnabled = NotificationMode != NotificationMode.Disabled,
             NotificationMode = NotificationMode,
+            NotificationPromptShown = _settings.NotificationPromptShown,
             CloseToTray = CloseToTray,
             ShowVirtualAdapters = ShowVirtualAdapters,
             RememberWindowState = RememberWindowState,
-            WindowPlacement = RememberWindowState ? _settings.WindowPlacement : null
+            WindowPlacement = RememberWindowState ? current.WindowPlacement : null
         };
         _themeService.Apply(Theme);
         SettingsSaveResult result = _settingsRepository

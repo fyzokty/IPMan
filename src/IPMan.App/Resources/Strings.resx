@@ -59,22 +59,19 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
 
-  <data name="ApplicationTagline" xml:space="preserve">
-    <value>Ağ bağdaştırıcısı yapılandırması</value>
-  </data>
 
   <data name="CurrentConfigurationHeader" xml:space="preserve">
     <value>Mevcut yapılandırma</value>
   </data>
   <data name="DraftConfigurationHeader" xml:space="preserve">
-    <value>Yapılandırma taslağı</value>
+    <value>Elle ayar</value>
   </data>
 
   <data name="FieldConnectionState" xml:space="preserve">
     <value>Durum</value>
   </data>
   <data name="FieldAdapterName" xml:space="preserve">
-    <value>Bağdaştırıcı adı</value>
+    <value>Bağlantı adı</value>
   </data>
   <data name="FieldDescription" xml:space="preserve">
     <value>Açıklama</value>
@@ -83,19 +80,19 @@
     <value>MAC adresi</value>
   </data>
   <data name="FieldIpv4Address" xml:space="preserve">
-    <value>IPv4 adresi</value>
+    <value>Bilgisayarın adresi</value>
   </data>
   <data name="FieldSubnetMask" xml:space="preserve">
     <value>Alt ağ maskesi</value>
   </data>
   <data name="FieldGateway" xml:space="preserve">
-    <value>Varsayılan ağ geçidi</value>
+    <value>Ağ geçidi (genelde modem adresi)</value>
   </data>
   <data name="FieldPrimaryDns" xml:space="preserve">
-    <value>Birincil DNS</value>
+    <value>Birinci DNS</value>
   </data>
   <data name="FieldSecondaryDns" xml:space="preserve">
-    <value>İkincil DNS</value>
+    <value>İkinci DNS</value>
   </data>
   <data name="FieldConfigurationMode" xml:space="preserve">
     <value>Yapılandırma modu</value>
@@ -116,10 +113,10 @@
     <value>Bağlı Değil</value>
   </data>
   <data name="ModeDhcp" xml:space="preserve">
-    <value>Otomatik (DHCP)</value>
+    <value>Otomatik</value>
   </data>
   <data name="ModeStatic" xml:space="preserve">
-    <value>Elle (Statik)</value>
+    <value>Sabit adres</value>
   </data>
   <data name="ModeUnknown" xml:space="preserve">
     <value>Bilinmiyor</value>
@@ -148,34 +145,34 @@
     <value>Uygula</value>
   </data>
   <data name="CommandUseDhcp" xml:space="preserve">
-    <value>Otomatik Al (DHCP)</value>
+    <value>Otomatik</value>
   </data>
   <data name="CommandRestoreLast" xml:space="preserve">
-    <value>Son Yapılandırmayı Geri Yükle</value>
+    <value>Son değişikliği geri al</value>
   </data>
   <data name="CommandCopyNetworkInfo" xml:space="preserve"><value>Ağ Bilgisini Kopyala</value></data>
-  <data name="CommandPingGateway" xml:space="preserve"><value>Ağ Geçidine Ping</value></data>
-  <data name="CommandRestoreLastCompact" xml:space="preserve"><value>Geri Yükle</value></data>
+  <data name="CommandPingGateway" xml:space="preserve"><value>Modeme ulaşılıyor mu?</value></data>
+  <data name="CommandRestoreLastCompact" xml:space="preserve"><value>Geri al</value></data>
   <data name="CommandFlushDnsCompact" xml:space="preserve"><value>DNS Önbelleğini Temizle</value></data>
   <data name="CommandFlushDns" xml:space="preserve"><value>DNS Önbelleğini Temizle (Tüm sistem)</value></data>
-  <data name="CommandRenewIp" xml:space="preserve"><value>IP Yenile</value></data>
+  <data name="CommandRenewIp" xml:space="preserve"><value>Adresi yenile</value></data>
   <data name="CommandClearStatus" xml:space="preserve"><value>Temizle</value></data>
-  <data name="QuickActionAdapterInactive" xml:space="preserve"><value>Bağdaştırıcı etkin değil</value></data>
+  <data name="QuickActionAdapterInactive" xml:space="preserve"><value>Bağlantı etkin değil</value></data>
   <data name="QuickActionNoIpv4Gateway" xml:space="preserve"><value>IPv4 ağ geçidi yok</value></data>
-  <data name="QuickActionDhcpRequired" xml:space="preserve"><value>IP yenileme için DHCP gerekli</value></data>
-  <data name="QuickActionDhcpAlreadyEnabled" xml:space="preserve"><value>Bağdaştırıcı zaten DHCP kullanıyor</value></data>
-  <data name="QuickActionUnsupportedAdapter" xml:space="preserve"><value>Bu bağdaştırıcı türünde hızlı eylem kullanılamaz</value></data>
+  <data name="QuickActionDhcpRequired" xml:space="preserve"><value>Adresi yenilemek için Otomatik ayar gerekli</value></data>
+  <data name="QuickActionDhcpAlreadyEnabled" xml:space="preserve"><value>Bağlantı zaten Otomatik ayarı kullanıyor</value></data>
+  <data name="QuickActionUnsupportedAdapter" xml:space="preserve"><value>Bu bağlantı türünde hızlı eylem kullanılamaz</value></data>
   <data name="CopyNetworkInfoSuccess" xml:space="preserve"><value>Ağ bilgisi panoya kopyalandı.</value></data>
   <data name="CopyNetworkInfoFailed" xml:space="preserve"><value>Pano erişimi engellendi; ağ bilgisi kopyalanamadı.</value></data>
   <data name="ConfirmFlushDnsTitle" xml:space="preserve"><value>DNS önbelleği temizlensin mi?</value></data>
-  <data name="ConfirmFlushDnsMessage" xml:space="preserve"><value>Bu işlem seçili bağdaştırıcıyla sınırlı değildir; tüm sistemin DNS önbelleğini temizler. Devam etmek istiyor musunuz?</value></data>
-  <data name="ConfirmDhcpTitle" xml:space="preserve"><value>DHCP'ye geçilsin mi?</value></data>
-  <data name="ConfirmDhcpMessage" xml:space="preserve"><value>Seçili bağdaştırıcının statik ayarları otomatik yapılandırmaya geçirilecek. Mevcut değerler: IP {0}, maske {1}, ağ geçidi {2}, DNS {3}. Devam etmek istiyor musunuz?</value></data>
+  <data name="ConfirmFlushDnsMessage" xml:space="preserve"><value>Bu işlem seçili bağlantıyla sınırlı değildir; tüm sistemin DNS önbelleğini temizler. Devam etmek istiyor musunuz?</value></data>
+  <data name="ConfirmDhcpTitle" xml:space="preserve"><value>Otomatik ayara geçilsin mi?</value></data>
+  <data name="ConfirmDhcpMessage" xml:space="preserve"><value>Seçili bağlantının statik ayarları otomatik yapılandırmaya geçirilecek. Mevcut değerler: IP {0}, maske {1}, ağ geçidi {2}, DNS {3}. Devam etmek istiyor musunuz?</value></data>
   <data name="ConfirmDoNotShowAgain" xml:space="preserve"><value>Bu pencereyi bir daha gösterme</value></data>
   <data name="DnsFlushSuccess" xml:space="preserve"><value>Tüm sistem için DNS önbelleği temizlendi.</value></data>
-  <data name="IpRenewSuccess" xml:space="preserve"><value>Seçili bağdaştırıcının DHCP IP kirası yenilendi.</value></data>
+  <data name="IpRenewSuccess" xml:space="preserve"><value>Seçili bağlantının adresi yenilendi.</value></data>
   <data name="IpRenewFailure" xml:space="preserve"><value>IP yenileme tamamlanamadı. Önceki değerler: IP {0}, maske {1}, ağ geçidi {2}. Hata kodu: {3}</value></data>
-  <data name="AdapterActionUnavailable" xml:space="preserve"><value>Bağdaştırıcı artık kullanılamıyor, işlem iptal edildi.</value></data>
+  <data name="AdapterActionUnavailable" xml:space="preserve"><value>Bağlantı artık kullanılamıyor, işlem iptal edildi.</value></data>
   <data name="QuickActionFailure" xml:space="preserve"><value>İşlem tamamlanamadı. Hata kodu: {0}</value></data>
   <data name="PingResult" xml:space="preserve"><value>{0} ping sonucu: gönderilen {1}, alınan {2}, kayıp %{3}, RTT min/ort/maks {4}/{5}/{6} ms. Hata kodu: {7}</value></data>
   <data name="CommandCopyFieldTooltip" xml:space="preserve">
@@ -205,19 +202,19 @@
     <value>Ayarlar zaten istenen değerlerde; hiçbir değişiklik yapılmadı.</value>
   </data>
   <data name="ApplyDhcpSuccess" xml:space="preserve">
-    <value>Adaptör otomatik yapılandırmaya (DHCP) geçirildi.</value>
+    <value>Bağlantı Otomatik ayara geçirildi.</value>
   </data>
   <data name="ApplyDhcpNoChange" xml:space="preserve">
-    <value>Adaptör zaten otomatik yapılandırma kullanıyor.</value>
+    <value>Bağlantı zaten Otomatik ayarı kullanıyor.</value>
   </data>
   <data name="RestoreSuccess" xml:space="preserve">
     <value>Son yapılandırma geri yüklendi ve Windows tarafından doğrulandı.</value>
   </data>
   <data name="RestoreNoChange" xml:space="preserve">
-    <value>Adaptör zaten kayıtlı yapılandırmada; hiçbir değişiklik yapılmadı.</value>
+    <value>Bağlantı zaten kayıtlı yapılandırmada; hiçbir değişiklik yapılmadı.</value>
   </data>
   <data name="RestoreNoSnapshotFound" xml:space="preserve">
-    <value>Bu adaptör için geri yüklenebilecek bir kayıt yok.</value>
+    <value>Bu bağlantı için geri yüklenebilecek bir kayıt yok.</value>
   </data>
   <data name="RestoreSnapshotUnreadable" xml:space="preserve">
     <value>Geri yükleme kaydı okunamadı. Dosya diskte korundu.</value>
@@ -226,13 +223,13 @@
     <value>Kayıt bu sürüm tarafından desteklenmiyor.</value>
   </data>
   <data name="RestoreAdapterIdentityChanged" xml:space="preserve">
-    <value>Adaptör kimliği değişti. Yanlış adaptöre yazmamak için işlem durduruldu.</value>
+    <value>Bağlantı kimliği değişti. Yanlış bağlantıe yazmamak için işlem durduruldu.</value>
   </data>
   <data name="ApplyAdapterUnavailable" xml:space="preserve">
-    <value>Adaptör bulunamadı. Liste yenilendikten sonra yeniden deneyin.</value>
+    <value>Bağlantı bulunamadı. Liste yenilendikten sonra yeniden deneyin.</value>
   </data>
   <data name="ApplyAdapterReadFailed" xml:space="preserve">
-    <value>Adaptör durumu güvenilir şekilde okunamadı. Hiçbir değişiklik yapılmadı.</value>
+    <value>Bağlantı durumu güvenilir şekilde okunamadı. Hiçbir değişiklik yapılmadı.</value>
   </data>
   <data name="ApplyCancelled" xml:space="preserve">
     <value>İşlem, ağ ayarları değiştirilmeden önce iptal edildi.</value>
@@ -241,22 +238,22 @@
     <value>Geri yükleme kaydı diske yazılamadı. Güvenlik gereği hiçbir değişiklik yapılmadı.</value>
   </data>
   <data name="ApplyRecoveryStateUnavailable" xml:space="preserve">
-    <value>Adaptörün mevcut durumu güvenilir bir geri yükleme kaydı için yeterli değil. Hiçbir değişiklik yapılmadı.</value>
+    <value>Bağlantıün mevcut durumu güvenilir bir geri yükleme kaydı için yeterli değil. Hiçbir değişiklik yapılmadı.</value>
   </data>
   <data name="ApplyMutationFailed" xml:space="preserve">
     <value>Windows ayarları kabul etmedi. Yapılandırma değişmedi.</value>
   </data>
   <data name="ActionUnexpectedFailure" xml:space="preserve">
-    <value>İşlem beklenmeyen bir hata nedeniyle tamamlanamadı. Ayrıntılar tanılama günlüğüne yazıldı; bağdaştırıcının güncel ayarlarını kontrol edin.</value>
+    <value>İşlem beklenmeyen bir hata nedeniyle tamamlanamadı. Ayrıntılar tanılama günlüğüne yazıldı; bağlantının güncel ayarlarını kontrol edin.</value>
   </data>
   <data name="ApplyPartialFailure" xml:space="preserve">
-    <value>İşlem yarıda kaldı. Adaptör karma durumda olabilir; "Son Yapılandırmayı Geri Yükle" ile eski duruma dönebilirsiniz.</value>
+    <value>İşlem yarıda kaldı. Bağlantı karma durumda olabilir; "Son Yapılandırmayı Geri Yükle" ile eski duruma dönebilirsiniz.</value>
   </data>
   <data name="ApplyVerificationFailed" xml:space="preserve">
     <value>Değişiklik gönderildi ancak Windows doğrulaması beklenen sonucu vermedi.</value>
   </data>
   <data name="ApplyAdapterUnavailableDuringVerification" xml:space="preserve">
-    <value>Adaptör işlemden sonra kayboldu; sonuç doğrulanamadı.</value>
+    <value>Bağlantı işlemden sonra kayboldu; sonuç doğrulanamadı.</value>
   </data>
   <data name="ActionDeclined" xml:space="preserve">
     <value>İşlem iptal edildi. Ağ ayarları değişmedi.</value>
@@ -269,13 +266,13 @@
   </data>
 
   <data name="SafetyMultipleIpv4Addresses" xml:space="preserve">
-    <value>Bu adaptörde birden fazla IPv4 adresi var. IPMan bu durumu değiştirmeyi güvenli bulmuyor.</value>
+    <value>Bu bağlantıde birden fazla IPv4 adresi var. IPMan bu durumu değiştirmeyi güvenli bulmuyor.</value>
   </data>
   <data name="SafetyMultipleIpv4Gateways" xml:space="preserve">
-    <value>Bu adaptörde birden fazla ağ geçidi var. IPMan bu durumu değiştirmeyi güvenli bulmuyor.</value>
+    <value>Bu bağlantıde birden fazla ağ geçidi var. IPMan bu durumu değiştirmeyi güvenli bulmuyor.</value>
   </data>
   <data name="SafetyTooManyIpv4DnsServers" xml:space="preserve">
-    <value>Bu adaptörde IPMan'in yönetebileceğinden fazla DNS sunucusu var.</value>
+    <value>Bu bağlantıde IPMan'in yönetebileceğinden fazla DNS sunucusu var.</value>
   </data>
   <data name="SafetyNotElevated" xml:space="preserve">
     <value>Ağ ayarlarını değiştirmek için IPMan'in yönetici olarak çalışması gerekiyor.</value>
@@ -297,7 +294,7 @@
     <value>Son yapılandırmaya dönülsün mü?</value>
   </data>
   <data name="ConfirmRestoreMessage" xml:space="preserve">
-    <value>{0} adaptörü, IPMan'in kaydettiği son yapılandırmaya döndürülecek. Devam etmek istiyor musunuz?</value>
+    <value>{0} bağlantıü, IPMan'in kaydettiği son yapılandırmaya döndürülecek. Devam etmek istiyor musunuz?</value>
   </data>
 
   <data name="ValidationRequired" xml:space="preserve">
@@ -328,16 +325,16 @@
     <value>Ağ geçidi, IPv4 adresiyle aynı olamaz.</value>
   </data>
   <data name="LoadingAdapters" xml:space="preserve">
-    <value>Ağ bağdaştırıcıları okunuyor...</value>
+    <value>Ağ bağlantıları okunuyor...</value>
   </data>
   <data name="EmptyStateTitle" xml:space="preserve">
-    <value>Yönetilebilir ağ bağdaştırıcısı bulunamadı</value>
+    <value>Yönetilebilir ağ bağlantısı bulunamadı</value>
   </data>
   <data name="EmptyStateDescription" xml:space="preserve">
-    <value>Windows şu anda görüntülenebilecek bir bağdaştırıcı bildirmiyor. Bir bağdaştırıcı takıldığında liste kendiliğinden güncellenir.</value>
+    <value>Windows şu anda görüntülenebilecek bir bağlantı bildirmiyor. Bir bağlantı takıldığında liste kendiliğinden güncellenir.</value>
   </data>
   <data name="RefreshFailedTitle" xml:space="preserve">
-    <value>Bağdaştırıcı bilgileri yenilenemedi. Görüntülenen değerler son başarılı okumaya aittir.</value>
+    <value>Bağlantı bilgileri yenilenemedi. Görüntülenen değerler son başarılı okumaya aittir.</value>
   </data>
   <data name="ExistingInstanceNotResponding" xml:space="preserve">
     <value>Çalışan IPMan örneğine ulaşılamadı. Lütfen mevcut pencereyi denetleyip yeniden deneyin.</value>
@@ -367,7 +364,7 @@
     <value>Uygulamadan çıkılsın mı?</value>
   </data>
   <data name="ExitConfirmationMessage" xml:space="preserve">
-    <value>Devam eden bir işlem veya kaydedilmemiş taslak değişiklikleri var. Yine de çıkmak istiyor musunuz?</value>
+    <value>Devam eden bir işlem veya kaydedilmemiş değişiklikler var. Yine de çıkmak istiyor musunuz?</value>
   </data>
 
   <data name="StatusAdministratorYes" xml:space="preserve">
@@ -380,7 +377,7 @@
     <value>Seçili: {0} — {1}</value>
   </data>
   <data name="StatusNoSelectedAdapter" xml:space="preserve">
-    <value>Seçili bağdaştırıcı yok</value>
+    <value>Seçili bağlantı yok</value>
   </data>
   <data name="StatusLastRefresh" xml:space="preserve">
     <value>Son yenileme: {0}</value>
@@ -391,48 +388,47 @@
   <data name="StatusVersion" xml:space="preserve">
     <value>Sürüm {0}</value>
   </data>
-  <data name="ProfilePanelHeader" xml:space="preserve"><value>Profiller</value></data>
-  <data name="ProfileSearchPlaceholder" xml:space="preserve"><value>Profil ara</value></data>
+  <data name="ProfileSearchPlaceholder" xml:space="preserve"><value>Ayar ara</value></data>
   <data name="ProfileGroupFavorites" xml:space="preserve"><value>Favoriler</value></data>
-  <data name="ProfileGroupOthers" xml:space="preserve"><value>Diğer profiller</value></data>
+  <data name="ProfileGroupOthers" xml:space="preserve"><value>Diğer</value></data>
   <data name="ProfileNameLabel" xml:space="preserve"><value>Ad</value></data>
   <data name="ProfileDescriptionLabel" xml:space="preserve"><value>Açıklama</value></data>
-  <data name="ProfileUseDhcpLabel" xml:space="preserve"><value>DHCP kullan</value></data>
-  <data name="ProfileProblemsHeader" xml:space="preserve"><value>Okunamayan profil dosyaları ({0})</value></data>
+  <data name="ProfileUseDhcpLabel" xml:space="preserve"><value>Otomatik kullan</value></data>
+  <data name="ProfileProblemsHeader" xml:space="preserve"><value>Okunamayan ayar dosyaları ({0})</value></data>
   <data name="ProfileProblemSeparator" xml:space="preserve"><value> — </value></data>
-  <data name="CommandSaveProfile" xml:space="preserve"><value>Profili kaydet</value></data>
+  <data name="CommandSaveProfile" xml:space="preserve"><value>Ayar olarak kaydet</value></data>
   <data name="CommandImportProfile" xml:space="preserve"><value>İçe aktar</value></data>
   <data name="CommandExportProfile" xml:space="preserve"><value>Dışa aktar</value></data>
   <data name="CommandRenameProfile" xml:space="preserve"><value>Yeniden adlandır</value></data>
-  <data name="CommandDuplicateProfile" xml:space="preserve"><value>Çoğalt</value></data>
+  <data name="CommandDuplicateProfile" xml:space="preserve"><value>Kopyala</value></data>
   <data name="CommandToggleFavorite" xml:space="preserve"><value>Favoriyi aç/kapat</value></data>
   <data name="CommandDeleteProfile" xml:space="preserve"><value>Sil</value></data>
   <data name="CommandOk" xml:space="preserve"><value>Tamam</value></data>
   <data name="CommandCancel" xml:space="preserve"><value>İptal</value></data>
-  <data name="ProfileImportDialogTitle" xml:space="preserve"><value>Profil içe aktar</value></data>
-  <data name="ProfileExportDialogTitle" xml:space="preserve"><value>Profili dışa aktar</value></data>
-  <data name="ProfileJsonFileFilter" xml:space="preserve"><value>IPMan profil dosyası (*.json)|*.json</value></data>
-  <data name="ProfileRenameTitle" xml:space="preserve"><value>Profili yeniden adlandır</value></data>
-  <data name="ProfileNameRequired" xml:space="preserve"><value>Profil adı zorunludur.</value></data>
-  <data name="ProfileDhcpGuidance" xml:space="preserve"><value>Bu profil DHCP kullanır. Uygulamak için Otomatik Al (DHCP) düğmesini kullanın.</value></data>
-  <data name="ConfirmProfileLoadTitle" xml:space="preserve"><value>Taslak değişiklikleri değiştirilsin mi?</value></data>
-  <data name="ConfirmProfileLoadMessage" xml:space="preserve"><value>Kaydedilmemiş taslak değişiklikleri profil değerleriyle değiştirilecek. Devam etmek istiyor musunuz?</value></data>
-  <data name="ProfileLoadCancelled" xml:space="preserve"><value>Profil yükleme iptal edildi.</value></data>
-  <data name="ConfirmProfileDeleteTitle" xml:space="preserve"><value>Profil silinsin mi?</value></data>
-  <data name="ConfirmProfileDeleteMessage" xml:space="preserve"><value>{0} profili kalıcı olarak silinecek. Devam etmek istiyor musunuz?</value></data>
-  <data name="ProfileSaveSuccess" xml:space="preserve"><value>Profil kaydedildi.</value></data>
-  <data name="ProfileDeleteSuccess" xml:space="preserve"><value>Profil silindi.</value></data>
-  <data name="ProfileImportSuccess" xml:space="preserve"><value>Profil içe aktarıldı.</value></data>
-  <data name="ProfileImportSuccessWithName" xml:space="preserve"><value>Profil içe aktarıldı: {0}</value></data>
-  <data name="ProfileExportSuccess" xml:space="preserve"><value>Profil dışa aktarıldı.</value></data>
-  <data name="ProfileApplied" xml:space="preserve"><value>Profil uygulandı.</value></data>
-  <data name="ProfileInvalidContent" xml:space="preserve"><value>Profil içeriği geçerli değil.</value></data>
-  <data name="ProfileAccessDenied" xml:space="preserve"><value>Profil dosyasına erişim reddedildi.</value></data>
-  <data name="ProfileIoFailure" xml:space="preserve"><value>Profil dosyası işlemi tamamlanamadı.</value></data>
-  <data name="ProfileNotFound" xml:space="preserve"><value>Profil bulunamadı.</value></data>
+  <data name="ProfileImportDialogTitle" xml:space="preserve"><value>Ayar içe aktar</value></data>
+  <data name="ProfileExportDialogTitle" xml:space="preserve"><value>Ayarı dışa aktar</value></data>
+  <data name="ProfileJsonFileFilter" xml:space="preserve"><value>IPMan ayar dosyası (*.json)|*.json</value></data>
+  <data name="ProfileRenameTitle" xml:space="preserve"><value>Ayarı yeniden adlandır</value></data>
+  <data name="ProfileNameRequired" xml:space="preserve"><value>Ayar adı boş bırakılamaz. Örnek: Saha PLC, Ofis, Ev</value></data>
+  <data name="ProfileDhcpGuidance" xml:space="preserve"><value>Bu ayarda adresi ağ kendisi verir. Geçmek için Otomatik düğmesini kullanın.</value></data>
+  <data name="ConfirmProfileLoadTitle" xml:space="preserve"><value>Kaydedilmemiş değişiklikler değiştirilsin mi?</value></data>
+  <data name="ConfirmProfileLoadMessage" xml:space="preserve"><value>Kaydedilmemiş değişiklikler ayar değerleriyle değiştirilecek. Devam etmek istiyor musunuz?</value></data>
+  <data name="ProfileLoadCancelled" xml:space="preserve"><value>Ayar yükleme iptal edildi.</value></data>
+  <data name="ConfirmProfileDeleteTitle" xml:space="preserve"><value>Ayar silinsin mi?</value></data>
+  <data name="ConfirmProfileDeleteMessage" xml:space="preserve"><value>{0} ayarı kalıcı olarak silinecek. Devam etmek istiyor musunuz?</value></data>
+  <data name="ProfileSaveSuccess" xml:space="preserve"><value>Ayar kaydedildi.</value></data>
+  <data name="ProfileDeleteSuccess" xml:space="preserve"><value>Ayar silindi.</value></data>
+  <data name="ProfileImportSuccess" xml:space="preserve"><value>Ayar içe aktarıldı.</value></data>
+  <data name="ProfileImportSuccessWithName" xml:space="preserve"><value>Ayar içe aktarıldı: {0}</value></data>
+  <data name="ProfileExportSuccess" xml:space="preserve"><value>Ayar dışa aktarıldı.</value></data>
+  <data name="ProfileApplied" xml:space="preserve"><value>Ayar uygulandı.</value></data>
+  <data name="ProfileInvalidContent" xml:space="preserve"><value>Ayar içeriği geçerli değil.</value></data>
+  <data name="ProfileAccessDenied" xml:space="preserve"><value>Ayar dosyasına erişim reddedildi.</value></data>
+  <data name="ProfileIoFailure" xml:space="preserve"><value>Ayar dosyası işlemi tamamlanamadı.</value></data>
+  <data name="ProfileNotFound" xml:space="preserve"><value>Ayar bulunamadı.</value></data>
   <data name="ProfileProblemMalformedJson" xml:space="preserve"><value>Geçersiz JSON</value></data>
   <data name="ProfileProblemUnsupportedSchema" xml:space="preserve"><value>Desteklenmeyen şema sürümü</value></data>
-  <data name="ProfileProblemInvalidContent" xml:space="preserve"><value>Geçersiz profil içeriği</value></data>
+  <data name="ProfileProblemInvalidContent" xml:space="preserve"><value>Geçersiz ayar içeriği</value></data>
   <data name="ProfileProblemReadFailure" xml:space="preserve"><value>Dosya okunamadı</value></data>
   <data name="SettingsTitle" xml:space="preserve"><value>Ayarlar</value></data>
   <data name="SettingsTheme" xml:space="preserve"><value>Tema</value></data>
@@ -448,8 +444,7 @@
   <data name="SettingsNotificationsDisabled" xml:space="preserve"><value>Kapalı</value></data>
   <data name="SettingsNotificationsWhenUnfocused" xml:space="preserve"><value>Yalnızca pencere odakta değilken</value></data>
   <data name="SettingsNotificationsAlways" xml:space="preserve"><value>Her zaman</value></data>
-  <data name="SettingsApplyOnSelection" xml:space="preserve"><value>Profil seçilince hemen uygula</value></data>
-  <data name="SettingsShowVirtual" xml:space="preserve"><value>Sanal bağdaştırıcıları göster</value></data>
+  <data name="SettingsShowVirtual" xml:space="preserve"><value>Sanal bağlantıları göster</value></data>
   <data name="SettingsRememberWindow" xml:space="preserve"><value>Son pencere durumunu hatırla</value></data>
   <data name="SettingsReset" xml:space="preserve"><value>Varsayılanlara dön</value></data>
   <data name="SettingsResetTitle" xml:space="preserve"><value>Ayarlar sıfırlansın mı?</value></data>
@@ -457,19 +452,18 @@
   <data name="SettingsPersistenceWarning" xml:space="preserve"><value>settings.json yazılamıyor, ayarlarınız şu an kaydedilemiyor</value></data>
   <data name="SettingsHelpTheme" xml:space="preserve"><value>Şimdilik yalnızca açık tema kullanılabilir.&#x0A;Varsayılan: Açık</value></data>
   <data name="SettingsHelpClose" xml:space="preserve"><value>Kapatma düğmesi ve Alt+F4 için davranışı belirler.&#x0A;Varsayılan: İlk kapatmada sor</value></data>
-  <data name="SettingsHelpNotifications" xml:space="preserve"><value>Bağdaştırıcı ayarları değiştiğinde Windows bildiriminin ne zaman gösterileceğini belirler.&#x0A;Varsayılan: Kapalı</value></data>
-  <data name="SettingsHelpApplyOnSelection" xml:space="preserve"><value>Fareyle yeni profil seçildiğinde normal uygulama akışını başlatır.&#x0A;Varsayılan: Kapalı</value></data>
-  <data name="SettingsHelpShowVirtual" xml:space="preserve"><value>Sanal bağdaştırıcı sekmelerini gösterir.&#x0A;Varsayılan: Açık</value></data>
+  <data name="SettingsHelpNotifications" xml:space="preserve"><value>Bağlantı ayarları değiştiğinde Windows bildiriminin ne zaman gösterileceğini belirler.&#x0A;Varsayılan: Kapalı</value></data>
+  <data name="SettingsHelpShowVirtual" xml:space="preserve"><value>Sanal bağlantı sekmelerini gösterir.&#x0A;Varsayılan: Açık</value></data>
   <data name="SettingsHelpRememberWindow" xml:space="preserve"><value>Pencere konumu ve boyutunu sonraki açılış için saklar.&#x0A;Varsayılan: Açık</value></data>
   <data name="NotificationSucceeded" xml:space="preserve"><value>Başarılı</value></data>
   <data name="NotificationFailed" xml:space="preserve"><value>Başarısız</value></data>
   <data name="NotificationOperationApply" xml:space="preserve"><value>Yapılandırma uygula</value></data>
-  <data name="NotificationOperationDhcp" xml:space="preserve"><value>DHCP'ye al</value></data>
+  <data name="NotificationOperationDhcp" xml:space="preserve"><value>Otomatik ayara geç</value></data>
   <data name="NotificationOperationRestore" xml:space="preserve"><value>Son yapılandırmayı geri yükle</value></data>
   <data name="NotificationOperationRenewIp" xml:space="preserve"><value>IP yenile</value></data>
   <data name="OperationNotification" xml:space="preserve"><value>{0}: {1} — {2}</value></data>
   <data name="NotificationHistory" xml:space="preserve"><value>Bildirim geçmişi</value></data>
-  <data name="NotificationHistoryEmpty" xml:space="preserve"><value>Henüz bağdaştırıcı işlemi sonucu yok.</value></data>
+  <data name="NotificationHistoryEmpty" xml:space="preserve"><value>Henüz bağlantı işlemi sonucu yok.</value></data>
   <data name="NotificationHistoryClear" xml:space="preserve"><value>Temizle</value></data>
   <data name="NotificationPromptTitle" xml:space="preserve"><value>Windows bildirimleri</value></data>
   <data name="NotificationPromptMessage" xml:space="preserve"><value>İşlem sonuçları için Windows bildirimleri gösterilsin mi?</value></data>
@@ -486,14 +480,14 @@
   <data name="DiagnosticsAdministrator" xml:space="preserve"><value>Yönetici olarak çalışıyor</value></data>
   <data name="DiagnosticsAdministratorYes" xml:space="preserve"><value>Evet</value></data>
   <data name="DiagnosticsAdministratorNo" xml:space="preserve"><value>Hayır</value></data>
-  <data name="DiagnosticsAdapterCount" xml:space="preserve"><value>Bağdaştırıcı sayısı</value></data>
-  <data name="DiagnosticsProfilesDirectory" xml:space="preserve"><value>Profil klasörü</value></data>
-  <data name="DiagnosticsProfilesDirectoryStatus" xml:space="preserve"><value>Profil klasörü durumu</value></data>
+  <data name="DiagnosticsAdapterCount" xml:space="preserve"><value>Bağlantı sayısı</value></data>
+  <data name="DiagnosticsProfilesDirectory" xml:space="preserve"><value>Ayar klasörü</value></data>
+  <data name="DiagnosticsProfilesDirectoryStatus" xml:space="preserve"><value>Ayar klasörü durumu</value></data>
   <data name="DiagnosticsDirectoryExists" xml:space="preserve"><value>Mevcut</value></data>
   <data name="DiagnosticsDirectoryNotCreated" xml:space="preserve"><value>Henüz oluşturulmadı</value></data>
   <data name="DiagnosticsDirectoryInaccessible" xml:space="preserve"><value>Erişilemiyor</value></data>
-  <data name="DiagnosticsProfileCount" xml:space="preserve"><value>Geçerli profil sayısı</value></data>
-  <data name="DiagnosticsProblemCount" xml:space="preserve"><value>Bozuk profil sayısı</value></data>
+  <data name="DiagnosticsProfileCount" xml:space="preserve"><value>Geçerli ayar sayısı</value></data>
+  <data name="DiagnosticsProblemCount" xml:space="preserve"><value>Bozuk ayar sayısı</value></data>
   <data name="DiagnosticsCriticalLog" xml:space="preserve"><value>Kritik günlük dosyası</value></data>
   <data name="DiagnosticsMissingLogFormat" xml:space="preserve"><value>{0} (henüz oluşturulmadı)</value></data>
   <data name="DiagnosticsCreatedAt" xml:space="preserve"><value>Oluşturulma zamanı</value></data>
@@ -501,10 +495,7 @@
   <data name="DiagnosticsCopySucceeded" xml:space="preserve"><value>Panoya kopyalandı</value></data>
   <data name="DiagnosticsCopyFailed" xml:space="preserve"><value>Panoya kopyalanamadı</value></data>
   <data name="QuickActionsHeader" xml:space="preserve"><value>Hızlı eylemler</value></data>
-  <data name="ProfileSaveHeader" xml:space="preserve"><value>Hızlı yapılandırma</value></data>
   <data name="DraftDifferentHint" xml:space="preserve"><value>Windows’tan farklı</value></data>
-  <data name="ProfileEmptyTitle" xml:space="preserve"><value>Kayıtlı profil bulunamadı</value></data>
-  <data name="ProfileEmptyDescription" xml:space="preserve"><value>Yeni bir profili aşağıdaki alandan kaydedebilirsiniz.</value></data>
   <data name="ConnectionStatusCableDisconnected" xml:space="preserve">
     <value>Kablo takılı değil</value>
   </data>
@@ -535,4 +526,34 @@
   <data name="AdapterAccessibleDescription" xml:space="preserve">
     <value>{0} — {1}</value>
   </data>
+  <data name="ConnectionSelectorLabel" xml:space="preserve"><value>Bağlantı:</value></data>
+  <data name="SettingsQuestion" xml:space="preserve"><value>Hangi ağa geçmek istiyorsunuz?</value></data>
+  <data name="ViewModeCard" xml:space="preserve"><value>Kart</value></data>
+  <data name="ViewModeList" xml:space="preserve"><value>Liste</value></data>
+  <data name="AutomaticSummary" xml:space="preserve"><value>Adresi ağ kendisi verir</value></data>
+  <data name="AutomaticRecommended" xml:space="preserve"><value>Çoğu ağ için önerilir</value></data>
+  <data name="SwitchNetwork" xml:space="preserve"><value>Bu ağa geç</value></data>
+  <data name="SwitchNetworkCompact" xml:space="preserve"><value>Geç</value></data>
+  <data name="SettingCurrentlyUsed" xml:space="preserve"><value>Şu an kullanılıyor</value></data>
+  <data name="SettingActive" xml:space="preserve"><value>Etkin</value></data>
+  <data name="SettingInUse" xml:space="preserve"><value>Kullanılıyor</value></data>
+  <data name="NewSetting" xml:space="preserve"><value>+ Yeni ayar ekle</value></data>
+  <data name="EditSetting" xml:space="preserve"><value>Düzenle</value></data>
+  <data name="DetailsAndManualSettings" xml:space="preserve"><value>Ayrıntılar ve elle ayar →</value></data>
+  <data name="GoBack" xml:space="preserve"><value>← Geri</value></data>
+  <data name="SwitchToWireless" xml:space="preserve"><value>Kablosuz bağlantıya geç</value></data>
+  <data name="CableDisconnectedGuidance" xml:space="preserve"><value>Kabloyu takın. Seçtiğiniz ayar kablo takılınca da geçerli olur.</value></data>
+  <data name="CurrentNetwork" xml:space="preserve"><value>Şu an: {0} ağındasınız</value></data>
+  <data name="ManualSettingName" xml:space="preserve"><value>Elle ayarlanmış adres · {0}</value></data>
+  <data name="StaticSettingSummary" xml:space="preserve"><value>Sabit adres · {0}</value></data>
+  <data name="ConnectionSummary" xml:space="preserve"><value>{0} · {1}</value></data>
+  <data name="ConnectionKindWired" xml:space="preserve"><value>Kablolu bağlantı</value></data>
+  <data name="ConnectionKindWireless" xml:space="preserve"><value>Kablosuz bağlantı</value></data>
+  <data name="ConnectionKindVirtual" xml:space="preserve"><value>Sanal bağlantı</value></data>
+  <data name="ConnectionKindBluetooth" xml:space="preserve"><value>Bluetooth bağlantısı</value></data>
+  <data name="ConnectionKindCellular" xml:space="preserve"><value>Mobil bağlantı</value></data>
+  <data name="SettingMenu" xml:space="preserve"><value>Ayar işlemleri</value></data>
+  <data name="FavoriteSetting" xml:space="preserve"><value>Favori ayar</value></data>
+  <data name="UpdateSetting" xml:space="preserve"><value>Ayarı güncelle</value></data>
+  <data name="ConnectionStatusUnknown" xml:space="preserve"><value>İnternet durumu bilinmiyor</value></data>
 </root>
