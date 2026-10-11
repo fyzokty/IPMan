@@ -25,11 +25,12 @@ public sealed partial class SystemNetworkInterfaceProbe : IAdapterProbe
     public IReadOnlyList<AdapterReadModel> ReadAdapters()
     {
         NetworkInterface[] interfaces = NetworkInterface.GetAllNetworkInterfaces();
+        IReadOnlyDictionary<Guid, uint> media = new WindowsAdapterMediumReader().Read();
         List<AdapterReadModel> adapters = new(interfaces.Length);
 
         foreach (NetworkInterface networkInterface in interfaces)
         {
-            AdapterReadModel? adapter = TryRead(networkInterface);
+            AdapterReadModel? adapter = TryRead(networkInterface, media);
 
             if (adapter is not null)
             {
@@ -40,7 +41,7 @@ public sealed partial class SystemNetworkInterfaceProbe : IAdapterProbe
         return adapters;
     }
 
-    private AdapterReadModel? TryRead(NetworkInterface networkInterface)
+    private AdapterReadModel? TryRead(NetworkInterface networkInterface, IReadOnlyDictionary<Guid, uint> media)
     {
         try
         {
@@ -57,7 +58,8 @@ public sealed partial class SystemNetworkInterfaceProbe : IAdapterProbe
                 ReadIsDhcpEnabled(properties),
                 ReadUnicastAddresses(properties),
                 properties.GatewayAddresses.Select(gateway => gateway.Address.ToString()).ToArray(),
-                properties.DnsAddresses.Select(server => server.ToString()).ToArray());
+                properties.DnsAddresses.Select(server => server.ToString()).ToArray(),
+                WindowsAdapterMediumReader.GetMedium(media, networkInterface.Id));
         }
         catch (NetworkInformationException exception)
         {

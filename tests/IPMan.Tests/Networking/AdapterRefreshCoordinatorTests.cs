@@ -12,6 +12,86 @@ public sealed class AdapterRefreshCoordinatorTests
     /// <summary>Used where the expected outcome is "nothing happens".</summary>
     private static readonly TimeSpan ShortTimeout = TimeSpan.FromMilliseconds(200);
 
+    [Theory]
+    [InlineData(InternetConnectivity.Internet)]
+    [InlineData(InternetConnectivity.LocalNetwork)]
+    [InlineData(InternetConnectivity.None)]
+    public async Task Refresh_FillsWindowsConnectivityAndLeavesUnreportedAdaptersUnknown(InternetConnectivity value)
+    {
+        using CoordinatorHarness harness = CoordinatorHarness.Create();
+        harness.Reader.EnqueueResult(TestData.Snapshot(id: "{A}"), TestData.Snapshot(id: "{B}", isConnected: false));
+        harness.Connectivity.Connectivity = new Dictionary<NetworkAdapterId, InternetConnectivity>
+        {
+            [new NetworkAdapterId("{A}")] = value
+        };
+
+        harness.Coordinator.StartCoordinating();
+        AdapterRefreshedEventArgs refresh = await harness.RunPassAsync();
+
+        Assert.Equal(value, refresh.Adapters[0].InternetConnectivity);
+        Assert.Equal(InternetConnectivity.Unknown, refresh.Adapters[1].InternetConnectivity);
+        Assert.Equal(1, harness.Connectivity.ReadCount);
+    }
+
+    [Fact]
+    public async Task Refresh_WhenConnectivityReadFails_PublishesUnknownWithoutFailure()
+    {
+        using CoordinatorHarness harness = CoordinatorHarness.Create();
+        // Even a reader-supplied stale assessment must be cleared after a failed read.
+        harness.Reader.EnqueueResult(TestData.Snapshot(id: "{A}") with { InternetConnectivity = InternetConnectivity.Internet });
+        harness.Connectivity.Failure = new InvalidOperationException("NLM unavailable.");
+
+        harness.Coordinator.StartCoordinating();
+        AdapterRefreshedEventArgs refresh = await harness.RunPassAsync();
+
+        Assert.Equal(InternetConnectivity.Unknown, Assert.Single(refresh.Adapters).InternetConnectivity);
+        Assert.Equal(0, harness.FailureCount);
+    }
+
+    [Fact]
+    public async Task ConnectivityChanged_TriggersRefreshAndReportsConnectivityOnlyDifference()
+    {
+        using CoordinatorHarness harness = CoordinatorHarness.Create();
+        harness.Reader.EnqueueResult(TestData.Snapshot(id: "{A}"));
+        harness.Connectivity.Connectivity = new Dictionary<NetworkAdapterId, InternetConnectivity>
+        {
+            [new NetworkAdapterId("{A}")] = InternetConnectivity.LocalNetwork
+        };
+        harness.Coordinator.StartCoordinating();
+        await harness.RunPassAsync();
+
+        harness.Connectivity.Connectivity = new Dictionary<NetworkAdapterId, InternetConnectivity>
+        {
+            [new NetworkAdapterId("{A}")] = InternetConnectivity.Internet
+        };
+        harness.Connectivity.RaiseConnectivityChanged();
+        AdapterRefreshedEventArgs refresh = await harness.RunPassAsync();
+
+        Assert.Equal(NetworkChangeReason.ConnectivityChanged, refresh.Reason);
+        Assert.Equal(InternetConnectivity.Internet, Assert.Single(refresh.Changed).InternetConnectivity);
+        Assert.Empty(refresh.Added);
+        Assert.Empty(refresh.Removed);
+    }
+
+    [Fact]
+    public async Task ConnectivityEvents_ArrivingAsABurst_AreDebounced()
+    {
+        using CoordinatorHarness harness = CoordinatorHarness.Create();
+        harness.Coordinator.StartCoordinating();
+        Assert.True(await harness.WaitForDebounceAsync());
+        for (int i = 0; i < 5; i++)
+        {
+            harness.Connectivity.RaiseConnectivityChanged();
+        }
+
+        harness.ReleaseDebounce();
+        AdapterRefreshedEventArgs refresh = await harness.WaitForRefreshAsync();
+
+        Assert.Equal(NetworkChangeReason.ConnectivityChanged, refresh.Reason);
+        Assert.Equal(1, harness.Reader.ReadCount);
+        Assert.Equal(1, harness.Connectivity.ReadCount);
+    }
+
     [Fact]
     public async Task StartCoordinating_StartsMonitoringAndPublishesInitialDiscovery()
     {
@@ -22,6 +102,7 @@ public sealed class AdapterRefreshCoordinatorTests
         AdapterRefreshedEventArgs refresh = await harness.RunPassAsync();
 
         Assert.Equal(1, harness.Monitor.StartCount);
+        Assert.Equal(1, harness.Connectivity.SubscriberCount);
         Assert.Equal(NetworkChangeReason.InitialDiscovery, refresh.Reason);
         Assert.Equal("{A}", Assert.Single(refresh.Adapters).Id.Value);
         Assert.Single(refresh.Added);
@@ -190,8 +271,10 @@ public sealed class AdapterRefreshCoordinatorTests
 
         harness.Coordinator.StopCoordinating();
         harness.Coordinator.RequestRefresh(NetworkChangeReason.ManualRefresh);
+        harness.Connectivity.RaiseConnectivityChanged();
 
         Assert.Equal(1, harness.Monitor.StopCount);
+        Assert.Equal(0, harness.Connectivity.SubscriberCount);
         Assert.False(harness.Monitor.IsMonitoring);
         Assert.False(await harness.WaitForDebounceAsync(ShortTimeout));
         Assert.Equal(1, harness.Reader.ReadCount);
@@ -221,6 +304,7 @@ public sealed class AdapterRefreshCoordinatorTests
         await harness.RunPassAsync();
 
         Assert.Equal(2, harness.Monitor.StartCount);
+        Assert.Equal(1, harness.Connectivity.SubscriberCount);
         Assert.Equal(2, harness.Reader.ReadCount);
     }
 
@@ -235,6 +319,7 @@ public sealed class AdapterRefreshCoordinatorTests
         harness.Dispose();
 
         Assert.Equal(1, harness.Monitor.StopCount);
+        Assert.Equal(0, harness.Connectivity.SubscriberCount);
         Assert.False(harness.Monitor.IsMonitoring);
     }
 
@@ -322,6 +407,7 @@ public sealed class AdapterRefreshCoordinatorTests
 
         Assert.Throws<ArgumentOutOfRangeException>(() => new AdapterRefreshCoordinator(
             new FakeNetworkAdapterReader(),
+            new FakeNetworkConnectivityService(),
             monitor,
             delay,
             new AdapterRefreshCoordinatorOptions
@@ -350,11 +436,13 @@ public sealed class AdapterRefreshCoordinatorTests
 
         private CoordinatorHarness(
             FakeNetworkAdapterReader reader,
+            FakeNetworkConnectivityService connectivity,
             FakeNetworkChangeMonitor monitor,
             FakeDelayProvider delay,
             AdapterRefreshCoordinator coordinator)
         {
             Reader = reader;
+            Connectivity = connectivity;
             Monitor = monitor;
             Delay = delay;
             Coordinator = coordinator;
@@ -364,6 +452,8 @@ public sealed class AdapterRefreshCoordinatorTests
         }
 
         public FakeNetworkAdapterReader Reader { get; }
+
+        public FakeNetworkConnectivityService Connectivity { get; }
 
         public FakeNetworkChangeMonitor Monitor { get; }
 
@@ -382,6 +472,17 @@ public sealed class AdapterRefreshCoordinatorTests
             }
         }
 
+        public int FailureCount
+        {
+            get
+            {
+                lock (_sync)
+                {
+                    return _failures.Count;
+                }
+            }
+        }
+
         public static TimeSpan DebounceWindow => TimeSpan.FromMilliseconds(300);
 
         public static TimeSpan ReconciliationInterval => TimeSpan.FromSeconds(15);
@@ -389,11 +490,13 @@ public sealed class AdapterRefreshCoordinatorTests
         public static CoordinatorHarness Create(TimeSpan? reconciliationInterval = null)
         {
             FakeNetworkAdapterReader reader = new();
+            FakeNetworkConnectivityService connectivity = new();
             FakeNetworkChangeMonitor monitor = new();
             FakeDelayProvider delay = new();
 
             AdapterRefreshCoordinator coordinator = new(
                 reader,
+                connectivity,
                 monitor,
                 delay,
                 new AdapterRefreshCoordinatorOptions
@@ -402,7 +505,7 @@ public sealed class AdapterRefreshCoordinatorTests
                     ReconciliationInterval = reconciliationInterval ?? ReconciliationInterval
                 });
 
-            return new CoordinatorHarness(reader, monitor, delay, coordinator);
+            return new CoordinatorHarness(reader, connectivity, monitor, delay, coordinator);
         }
 
         /// <summary>Releases the pending debounce window and awaits the published result.</summary>

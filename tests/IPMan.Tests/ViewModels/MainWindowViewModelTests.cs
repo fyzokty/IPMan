@@ -89,7 +89,7 @@ public sealed class MainWindowViewModelTests
             TestData.Snapshot(id: "{A}", name: "Ethernet"));
 
         Assert.Equal("{B}", harness.ViewModel.SelectedAdapter?.Id.Value);
-        Assert.Equal("Wi-Fi (yeni ad)", harness.ViewModel.SelectedAdapter?.DisplayName);
+        Assert.Equal("Kablosuz bağlantı (Wi-Fi (yeni ad))", harness.ViewModel.SelectedAdapter?.DisplayName);
         Assert.Equal("{B}", harness.ViewModel.Adapters[0].Id.Value);
     }
 
@@ -155,6 +155,7 @@ public sealed class MainWindowViewModelTests
     public void Refresh_WhenVirtualAdapterInTheMiddleIsHidden_RemovesThatAdapterByIdentity()
     {
         using MainWindowHarness harness = MainWindowHarness.Create();
+        harness.ViewModel.SetShowVirtualAdapters(true);
         harness.ViewModel.Initialize();
         NetworkAdapterSnapshot[] adapters =
         [
@@ -179,6 +180,7 @@ public sealed class MainWindowViewModelTests
     public void DiagnosticsAdapterCount_UsesTheVisibleListIncludingTheSelectedVirtualAdapter(bool selectVirtual, int expected)
     {
         using MainWindowHarness harness = MainWindowHarness.Create();
+        harness.ViewModel.SetShowVirtualAdapters(true);
         harness.ViewModel.Initialize();
         NetworkAdapterSnapshot[] adapters =
         [
@@ -207,6 +209,20 @@ public sealed class MainWindowViewModelTests
         harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}"));
         diagnostics.RefreshCommand.Execute(null);
         Assert.Contains($"{Strings.DiagnosticsAdapterCount}: 1", diagnostics.ReportText, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void FirstRefresh_ByDefault_HidesVirtualAdaptersAndKeepsDisconnectedPhysicalAdapters()
+    {
+        using MainWindowHarness harness = MainWindowHarness.Create();
+        harness.ViewModel.Initialize();
+
+        harness.Coordinator.PublishRefresh(
+            TestData.Snapshot(id: "{V}", name: "vEthernet", description: "Hyper-V Virtual Ethernet Adapter"),
+            TestData.Snapshot(id: "{A}", isConnected: false));
+
+        Assert.Equal("{A}", Assert.Single(harness.ViewModel.Adapters).Id.Value);
+        Assert.Equal("Kablo takılı değil", harness.ViewModel.SelectedAdapter?.ConnectionState);
     }
 
     [Fact]
@@ -595,7 +611,7 @@ public sealed class MainWindowViewModelTests
         Assert.False(harness.Actions.RenewIpCommand.CanExecute(null));
         Assert.Equal(Strings.QuickActionAdapterInactive, harness.Actions.PingGatewayDisabledReason);
         Assert.Equal(
-            Strings.FormatSelectedAdapter("Ethernet", AdapterDisplayFormatter.FormatConnectionState(false)),
+            Strings.FormatSelectedAdapter("Kablolu bağlantı (Ethernet)", "Kablo takılı değil"),
             harness.ViewModel.StatusBar.SelectedAdapterState);
     }
 

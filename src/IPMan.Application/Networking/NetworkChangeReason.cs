@@ -12,6 +12,9 @@ public static class NetworkChangeReason
 
     public const string NetworkAvailabilityChanged = "NetworkAvailabilityChanged";
 
+    /// <summary>Windows reported a change to its connectivity assessment.</summary>
+    public const string ConnectivityChanged = "ConnectivityChanged";
+
     public const string ManualRefresh = "ManualRefresh";
 
     /// <summary>A refresh requested by IPMan immediately after it changed configuration.</summary>

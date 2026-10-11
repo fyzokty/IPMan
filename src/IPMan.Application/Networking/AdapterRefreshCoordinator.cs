@@ -27,6 +27,7 @@ public sealed class AdapterRefreshCoordinator : IAdapterRefreshCoordinator
         Array.Empty<NetworkAdapterSnapshot>();
 
     private readonly INetworkAdapterReader _reader;
+    private readonly INetworkConnectivityService _connectivityService;
     private readonly INetworkChangeMonitor _monitor;
     private readonly IDelayProvider _delayProvider;
     private readonly TimeSpan _debounceWindow;
@@ -48,11 +49,13 @@ public sealed class AdapterRefreshCoordinator : IAdapterRefreshCoordinator
 
     public AdapterRefreshCoordinator(
         INetworkAdapterReader reader,
+        INetworkConnectivityService connectivityService,
         INetworkChangeMonitor monitor,
         IDelayProvider delayProvider,
         AdapterRefreshCoordinatorOptions options)
     {
         ArgumentNullException.ThrowIfNull(reader);
+        ArgumentNullException.ThrowIfNull(connectivityService);
         ArgumentNullException.ThrowIfNull(monitor);
         ArgumentNullException.ThrowIfNull(delayProvider);
         ArgumentNullException.ThrowIfNull(options);
@@ -67,6 +70,7 @@ public sealed class AdapterRefreshCoordinator : IAdapterRefreshCoordinator
         }
 
         _reader = reader;
+        _connectivityService = connectivityService;
         _monitor = monitor;
         _delayProvider = delayProvider;
         _debounceWindow = options.DebounceWindow;
@@ -93,6 +97,7 @@ public sealed class AdapterRefreshCoordinator : IAdapterRefreshCoordinator
             _isRunning = true;
 
             _monitor.Changed += OnNetworkEnvironmentChanged;
+            _connectivityService.ConnectivityChanged += OnConnectivityChanged;
             _monitor.StartMonitoring();
 
             SemaphoreSlim signal = _signal;
@@ -121,6 +126,7 @@ public sealed class AdapterRefreshCoordinator : IAdapterRefreshCoordinator
 
             _isRunning = false;
             _monitor.Changed -= OnNetworkEnvironmentChanged;
+            _connectivityService.ConnectivityChanged -= OnConnectivityChanged;
             _monitor.StopMonitoring();
 
             cancellation = _cancellation;
@@ -178,6 +184,9 @@ public sealed class AdapterRefreshCoordinator : IAdapterRefreshCoordinator
         // Deliberately minimal: no discovery work on the OS event thread.
         RequestRefresh(e.Reason);
     }
+
+    private void OnConnectivityChanged(object? sender, EventArgs e) =>
+        RequestRefresh(NetworkChangeReason.ConnectivityChanged);
 
     private async Task RunAsync(SemaphoreSlim signal, CancellationToken cancellationToken)
     {
@@ -261,6 +270,23 @@ public sealed class AdapterRefreshCoordinator : IAdapterRefreshCoordinator
 
             return;
         }
+
+        IReadOnlyDictionary<NetworkAdapterId, InternetConnectivity>? connectivity = null;
+        try
+        {
+            connectivity = await _connectivityService.GetConnectivityAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Connectivity is informative; an unavailable assessment must not fail discovery.
+        }
+
+        adapters = adapters.Select(adapter => adapter with
+        {
+            InternetConnectivity = connectivity is not null && connectivity.TryGetValue(adapter.Id, out InternetConnectivity value)
+                ? value
+                : InternetConnectivity.Unknown
+        }).ToArray();
 
         if (cancellationToken.IsCancellationRequested)
         {

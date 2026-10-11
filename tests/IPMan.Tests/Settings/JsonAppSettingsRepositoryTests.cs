@@ -10,6 +10,36 @@ namespace IPMan.Tests.Settings;
 public sealed class JsonAppSettingsRepositoryTests
 {
     [Fact]
+    public void Defaults_HideVirtualAdaptersForFactoryAndOptionalParameter()
+    {
+        Assert.False(AppSettings.Default.ShowVirtualAdapters);
+        Assert.False(new AppSettings(AppSettings.CurrentSchemaVersion, AppTheme.System, false, false).ShowVirtualAdapters);
+    }
+
+    [Fact]
+    public async Task LoadAsync_ExistingSettingsWithVirtualAdaptersEnabled_PreservesTrue()
+    {
+        string directory = CreateTestDirectory();
+        try
+        {
+            await File.WriteAllTextAsync(Path.Combine(directory, "settings.json"), """
+                {
+                  "schemaVersion": 1,
+                  "showVirtualAdapters": true
+                }
+                """);
+
+            AppSettings result = await CreateRepository(directory).LoadAsync(CancellationToken.None);
+
+            Assert.True(result.ShowVirtualAdapters);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task LoadAsync_WhenSettingsFileDoesNotExist_ReturnsDefaultsWithoutThrowing()
     {
         string directory = CreateTestDirectory();
@@ -238,6 +268,7 @@ public sealed class JsonAppSettingsRepositoryTests
 
             Assert.Equal(AppSettings.Default, result);
             Assert.False(File.Exists($"{settingsPath}.invalid"));
+            Assert.False(result.ShowVirtualAdapters);
         }
         finally
         {

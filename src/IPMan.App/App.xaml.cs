@@ -146,8 +146,8 @@ public partial class App : System.Windows.Application
 
         _profileCatalog?.StopWatching();
 
-        // Disposes the refresh coordinator and the network change monitor, which
-        // releases the Windows network and profile directory subscriptions.
+        // Disposes the refresh coordinator, network monitors and NLM connectivity
+        // service, releasing Windows network, COM and profile directory subscriptions.
         _serviceProvider?.Dispose();
 
         _singleInstanceGuard?.Release();
@@ -209,6 +209,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<IRecoveryRestoreService, RecoveryRestoreService>();
         services.AddSingleton<IQuickNetworkActionService, WindowsQuickNetworkActionService>();
         services.AddSingleton<INetworkChangeMonitor, NetworkChangeMonitor>();
+        services.AddSingleton<INetworkConnectivityService, WindowsNetworkListConnectivityService>();
         services.AddSingleton(new AdapterRefreshCoordinatorOptions());
         services.AddSingleton<IAdapterRefreshCoordinator, AdapterRefreshCoordinator>();
         services.AddSingleton<IActivationChannelServer, NamedPipeActivationChannelServer>();

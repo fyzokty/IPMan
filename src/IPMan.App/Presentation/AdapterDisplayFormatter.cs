@@ -2,6 +2,7 @@ using System.Globalization;
 using IPMan.App.Resources;
 using IPMan.App.ViewModels;
 using IPMan.Application.Networking;
+using IPMan.Domain.Adapters;
 using IPMan.Domain.Networking;
 
 namespace IPMan.App.Presentation;
@@ -25,6 +26,46 @@ public static class AdapterDisplayFormatter
 
     public static string FormatConnectionState(bool isConnected) =>
         isConnected ? Strings.ConnectionStateConnected : Strings.ConnectionStateDisconnected;
+
+    /// <summary>Formats Windows' assessment without claiming unverified internet access.</summary>
+    public static string FormatConnectionStatus(NetworkAdapterSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        if (!snapshot.IsConnected)
+        {
+            return AdapterCategoryClassifier.GetConnectionKind(snapshot) == AdapterCategoryClassifier.ConnectionKind.Wired
+                ? Strings.ConnectionStatusCableDisconnected
+                : Strings.ConnectionStatusNoConnection;
+        }
+
+        return snapshot.InternetConnectivity switch
+        {
+            InternetConnectivity.Internet => Strings.ConnectionStatusInternet,
+            InternetConnectivity.LocalNetwork or InternetConnectivity.None => Strings.ConnectionStatusLocalNetwork,
+            _ => Strings.ConnectionStateConnected
+        };
+    }
+
+    /// <summary>Formats a plain connection name while preserving the Windows device name.</summary>
+    public static string FormatFriendlyName(NetworkAdapterSnapshot snapshot)
+    {
+        ArgumentNullException.ThrowIfNull(snapshot);
+
+        string name = string.IsNullOrWhiteSpace(snapshot.Name) ? OrUnavailable(snapshot.Description) : snapshot.Name;
+        if (AdapterCategoryClassifier.IsVirtual(snapshot))
+        {
+            return Strings.FormatVirtualConnectionName(name);
+        }
+
+        return AdapterCategoryClassifier.GetConnectionKind(snapshot) switch
+        {
+            AdapterCategoryClassifier.ConnectionKind.Wireless => Strings.FormatWirelessConnectionName(name),
+            AdapterCategoryClassifier.ConnectionKind.Bluetooth => Strings.FormatBluetoothConnectionName(name),
+            AdapterCategoryClassifier.ConnectionKind.Cellular => Strings.FormatCellularConnectionName(name),
+            _ => Strings.FormatWiredConnectionName(name)
+        };
+    }
 
     public static string FormatConfigurationMode(NetworkConfigurationMode mode) => mode switch
     {
@@ -116,7 +157,7 @@ public static class AdapterDisplayFormatter
             Environment.NewLine,
             $"{Strings.FieldAdapterName}: {OrUnavailable(snapshot.Name)}",
             $"{Strings.FieldDescription}: {OrUnavailable(snapshot.Description)}",
-            $"{Strings.FieldConnectionState}: {FormatConnectionState(snapshot.IsConnected)}",
+            $"{Strings.FieldConnectionState}: {FormatConnectionStatus(snapshot)}",
             $"{Strings.FieldMacAddress}: {OrUnavailable(snapshot.MacAddress)}",
             $"{Strings.FieldIpv4Address}: {addresses}",
             $"{Strings.FieldGateway}: {FormatValues(snapshot.Ipv4Gateways)}",

@@ -34,7 +34,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private string? _lastSelectedAdapterId;
     private bool _isInitialized;
     private bool _isDisposed;
-    private bool _showVirtualAdapters = true;
+    private bool _showVirtualAdapters;
 
     /// <summary>True until the first discovery pass completes or fails.</summary>
     [ObservableProperty]

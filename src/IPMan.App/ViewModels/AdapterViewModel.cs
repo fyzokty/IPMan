@@ -1,6 +1,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using IPMan.App.Presentation;
+using IPMan.App.Resources;
 using IPMan.Application.Networking;
 using IPMan.Domain.Networking;
 
@@ -110,11 +111,11 @@ public sealed partial class AdapterViewModel : ObservableObject
         bool snapshotChanged = Snapshot != snapshot;
         Snapshot = snapshot;
 
-        DisplayName = snapshot.Name;
+        DisplayName = AdapterDisplayFormatter.FormatFriendlyName(snapshot);
         IsConnected = snapshot.IsConnected;
-        ConnectionState = AdapterDisplayFormatter.FormatConnectionState(snapshot.IsConnected);
+        ConnectionState = AdapterDisplayFormatter.FormatConnectionStatus(snapshot);
         ConnectionMarker = snapshot.IsConnected ? "●" : "○";
-        AccessibleDescription = $"{snapshot.Name} — {ConnectionState}";
+        AccessibleDescription = Strings.FormatAdapterAccessibleDescription(DisplayName, ConnectionState);
 
         Details.Update(snapshot);
         Draft.UpdateCurrentValues(snapshot);

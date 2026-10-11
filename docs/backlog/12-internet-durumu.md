@@ -1,6 +1,6 @@
 # 12 — İnternet durumu ve bağlantı yok durumu
 
-- **Durum:** yapılacak
+- **Durum:** tamamlandı
 - **Bağımlılık:** yok
 - **Gereksinimler:** ADR-018 · Ekran 01, 09
 
@@ -18,8 +18,10 @@ Kullanıcıya o anki ağ bağlantısının internete erişip erişmediğini ve k
 - Kablo takılı olmadığında bağlı bir kablosuz bağdaştırıcı varsa "Kablosuz bağlantıya geç" kısayol butonu sunulması; bu durumda dahi ayar kartlarının kullanılabilir kalması
 
 ## Bitti sayılır
-- [ ] Windows NLM/NCSI durumu Application soyutlaması arkasında okunabiliyor
-- [ ] Sahte servis (`FakeNetworkConnectivityService`) ile birim testler internetli, internetsiz ve takılı olmayan durumları doğruluyor
-- [ ] `ShowVirtualAdapters` varsayılanı `false` olarak ayarlandı ve sanal bağdaştırıcılar varsayılanda gizleniyor
-- [ ] Kablosuz ve kablolu bağdaştırıcılar sade Türkçe adlarla listeleniyor
-- [ ] Kablo takılı değilken kartlar tıklanabilir kalıyor ve kablosuz kısayolu çalışıyor
+- [x] Windows NLM/NCSI durumu Application soyutlaması arkasında okunabiliyor
+- [x] Sahte servis (`FakeNetworkConnectivityService`) ile birim testler internetli, internetsiz ve takılı olmayan durumları doğruluyor
+- [x] `ShowVirtualAdapters` varsayılanı `false` olarak ayarlandı ve sanal bağdaştırıcılar varsayılanda gizleniyor
+- [x] Kablosuz ve kablolu bağdaştırıcılar sade Türkçe adlarla listeleniyor
+
+Durum metni mevcut sekmelerde ve ayrıntıların Durum satırında gösterilir. Gri durum kartı
+ve "Kablosuz bağlantıya geç" kısayolu 13'e taşındı.

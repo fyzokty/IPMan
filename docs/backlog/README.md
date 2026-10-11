@@ -25,7 +25,7 @@ Sıra, uygulama sırasıdır. Tüm maddeler 1.0 kapsamındadır.
 
 | #  | İş | Durum |
 |----|----|-------|
-| 12 | [İnternet durumu ve bağlantı yok durumu](12-internet-durumu.md) | yapılacak |
+| 12 | [İnternet durumu ve bağlantı yok durumu](12-internet-durumu.md) | tamamlandı |
 | 13 | [Profil merkezli ana ekran](13-ana-ekran.md) | yapılacak |
 | 14 | [Güvenli geçiş: koşullu onay ve geri alma sayacı](14-guvenli-gecis.md) | yapılacak |
 | 15 | [Yeni ve düzenle ayar sayfası](15-yeni-ayar-sayfasi.md) | yapılacak |

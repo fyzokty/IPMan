@@ -52,6 +52,32 @@ public static class Strings
 
     public static string ConnectionStateDisconnected => Get(nameof(ConnectionStateDisconnected));
 
+    public static string ConnectionStatusCableDisconnected => Get(nameof(ConnectionStatusCableDisconnected));
+
+    public static string ConnectionStatusNoConnection => Get(nameof(ConnectionStatusNoConnection));
+
+    public static string ConnectionStatusInternet => Get(nameof(ConnectionStatusInternet));
+
+    public static string ConnectionStatusLocalNetwork => Get(nameof(ConnectionStatusLocalNetwork));
+
+    public static string FormatWiredConnectionName(string name) =>
+        Format(Get("WiredConnectionName"), CultureInfo.CurrentCulture, name);
+
+    public static string FormatWirelessConnectionName(string name) =>
+        Format(Get("WirelessConnectionName"), CultureInfo.CurrentCulture, name);
+
+    public static string FormatBluetoothConnectionName(string name) =>
+        Format(Get("BluetoothConnectionName"), CultureInfo.CurrentCulture, name);
+
+    public static string FormatCellularConnectionName(string name) =>
+        Format(Get("CellularConnectionName"), CultureInfo.CurrentCulture, name);
+
+    public static string FormatVirtualConnectionName(string name) =>
+        Format(Get("VirtualConnectionName"), CultureInfo.CurrentCulture, name);
+
+    public static string FormatAdapterAccessibleDescription(string name, string status) =>
+        Format(Get("AdapterAccessibleDescription"), CultureInfo.CurrentCulture, name, status);
+
     public static string ModeDhcp => Get(nameof(ModeDhcp));
 
     public static string ModeStatic => Get(nameof(ModeStatic));

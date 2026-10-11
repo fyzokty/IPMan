@@ -16,7 +16,9 @@ public static class AdapterCategoryClassifier
     public enum ConnectionKind
     {
         Wired,
-        Wireless
+        Wireless,
+        Bluetooth,
+        Cellular
     }
 
     /// <summary>Returns the broad category, treating unrecognized adapters as physical.</summary>
@@ -28,6 +30,29 @@ public static class AdapterCategoryClassifier
     {
         ArgumentNullException.ThrowIfNull(adapter);
 
+        switch (adapter.Medium)
+        {
+            case AdapterMedium.Wired:
+                return ConnectionKind.Wired;
+            case AdapterMedium.Wireless:
+                return ConnectionKind.Wireless;
+            case AdapterMedium.Bluetooth:
+                return ConnectionKind.Bluetooth;
+            case AdapterMedium.Cellular:
+                return ConnectionKind.Cellular;
+        }
+
+        AdapterMedium namedMedium = GetMediumFromName(adapter.Name, adapter.Description);
+        if (namedMedium == AdapterMedium.Bluetooth)
+        {
+            return ConnectionKind.Bluetooth;
+        }
+
+        if (namedMedium == AdapterMedium.Cellular)
+        {
+            return ConnectionKind.Cellular;
+        }
+
         string value = $"{adapter.Name} {adapter.Description}";
         return value.Contains("wireless", StringComparison.OrdinalIgnoreCase) ||
             value.Contains("wi-fi", StringComparison.OrdinalIgnoreCase) ||
@@ -35,6 +60,22 @@ public static class AdapterCategoryClassifier
             value.Contains("wlan", StringComparison.OrdinalIgnoreCase)
             ? ConnectionKind.Wireless
             : ConnectionKind.Wired;
+    }
+
+    /// <summary>Recognizes Bluetooth and cellular name markers when physical medium is unspecified.</summary>
+    public static AdapterMedium GetMediumFromName(string name, string description)
+    {
+        string value = $"{name} {description}";
+        if (value.Contains("bluetooth", StringComparison.OrdinalIgnoreCase))
+        {
+            return AdapterMedium.Bluetooth;
+        }
+
+        return value.Contains("mobile broadband", StringComparison.OrdinalIgnoreCase) ||
+            value.Contains("cellular", StringComparison.OrdinalIgnoreCase) ||
+            value.Contains("wwan", StringComparison.OrdinalIgnoreCase)
+            ? AdapterMedium.Cellular
+            : AdapterMedium.Unknown;
     }
 
     /// <summary>Returns whether an adapter is virtual based on stable Windows description markers.</summary>

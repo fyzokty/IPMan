@@ -11,7 +11,7 @@ public sealed record AppSettings(
     AppWindowPlacement? WindowPlacement = null,
     string? LastSelectedAdapterId = null,
     bool? CloseToTray = null,
-    bool ShowVirtualAdapters = true,
+    bool ShowVirtualAdapters = false,
     bool RememberWindowState = true,
     bool SkipDhcpQuickActionConfirmation = false,
     NotificationMode NotificationMode = NotificationMode.Disabled,
@@ -23,7 +23,7 @@ public sealed record AppSettings(
     /// <summary>Gets the safe preferences used when no valid settings document exists.</summary>
     public static AppSettings Default { get; } =
         new(CurrentSchemaVersion, AppTheme.System, ApplyProfileOnSelection: false, NotificationsEnabled: false,
-            ShowVirtualAdapters: true, RememberWindowState: true,
+            ShowVirtualAdapters: false, RememberWindowState: true,
             NotificationMode: NotificationMode.Disabled, NotificationPromptShown: false);
 }
 

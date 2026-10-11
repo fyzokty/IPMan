@@ -13,6 +13,104 @@ public sealed class AdapterDisplayFormatterTests
     private static readonly CultureInfo Culture = CultureInfo.InvariantCulture;
 
     [Theory]
+    [InlineData(AdapterMedium.Wired, "Kablolu bağlantı (Ethernet)", "Kablo takılı değil")]
+    [InlineData(AdapterMedium.Wireless, "Kablosuz bağlantı (Ethernet)", "Bağlantı yok")]
+    [InlineData(AdapterMedium.Bluetooth, "Bluetooth bağlantısı (Ethernet)", "Bağlantı yok")]
+    [InlineData(AdapterMedium.Cellular, "Mobil bağlantı (Ethernet)", "Bağlantı yok")]
+    public void Format_UsesPhysicalMediumForFriendlyNameAndDisconnectedStatus(
+        AdapterMedium medium, string expectedName, string expectedStatus)
+    {
+        NetworkAdapterSnapshot snapshot = TestData.Snapshot(isConnected: false) with { Medium = medium };
+
+        Assert.Equal(expectedName, AdapterDisplayFormatter.FormatFriendlyName(snapshot));
+        Assert.Equal(expectedStatus, AdapterDisplayFormatter.FormatConnectionStatus(snapshot));
+    }
+
+    [Theory]
+    [InlineData(AdapterMedium.Bluetooth, InternetConnectivity.Unknown)]
+    [InlineData(AdapterMedium.Bluetooth, InternetConnectivity.None)]
+    [InlineData(AdapterMedium.Bluetooth, InternetConnectivity.LocalNetwork)]
+    [InlineData(AdapterMedium.Bluetooth, InternetConnectivity.Internet)]
+    [InlineData(AdapterMedium.Cellular, InternetConnectivity.Unknown)]
+    [InlineData(AdapterMedium.Cellular, InternetConnectivity.None)]
+    [InlineData(AdapterMedium.Cellular, InternetConnectivity.LocalNetwork)]
+    [InlineData(AdapterMedium.Cellular, InternetConnectivity.Internet)]
+    public void FormatConnectionStatus_WhenBluetoothOrCellularIsDisconnected_UsesNoConnection(
+        AdapterMedium medium, InternetConnectivity connectivity)
+    {
+        NetworkAdapterSnapshot snapshot = TestData.Snapshot(isConnected: false) with
+        {
+            Medium = medium,
+            InternetConnectivity = connectivity
+        };
+
+        Assert.Equal("Bağlantı yok", AdapterDisplayFormatter.FormatConnectionStatus(snapshot));
+    }
+
+    [Theory]
+    [InlineData("Ethernet", true, InternetConnectivity.Unknown, "Bağlı")]
+    [InlineData("Ethernet", true, InternetConnectivity.None, "Yerel ağ — internet yok")]
+    [InlineData("Ethernet", true, InternetConnectivity.LocalNetwork, "Yerel ağ — internet yok")]
+    [InlineData("Ethernet", true, InternetConnectivity.Internet, "İnternet çalışıyor")]
+    [InlineData("Ethernet", false, InternetConnectivity.Unknown, "Kablo takılı değil")]
+    [InlineData("Ethernet", false, InternetConnectivity.None, "Kablo takılı değil")]
+    [InlineData("Ethernet", false, InternetConnectivity.LocalNetwork, "Kablo takılı değil")]
+    [InlineData("Ethernet", false, InternetConnectivity.Internet, "Kablo takılı değil")]
+    [InlineData("Wi-Fi", true, InternetConnectivity.Unknown, "Bağlı")]
+    [InlineData("Wi-Fi", true, InternetConnectivity.None, "Yerel ağ — internet yok")]
+    [InlineData("Wi-Fi", true, InternetConnectivity.LocalNetwork, "Yerel ağ — internet yok")]
+    [InlineData("Wi-Fi", true, InternetConnectivity.Internet, "İnternet çalışıyor")]
+    [InlineData("Wi-Fi", false, InternetConnectivity.Unknown, "Bağlantı yok")]
+    [InlineData("Wi-Fi", false, InternetConnectivity.None, "Bağlantı yok")]
+    [InlineData("Wi-Fi", false, InternetConnectivity.LocalNetwork, "Bağlantı yok")]
+    [InlineData("Wi-Fi", false, InternetConnectivity.Internet, "Bağlantı yok")]
+    public void FormatConnectionStatus_UsesPlainTurkishForEveryState(
+        string name, bool connected, InternetConnectivity connectivity, string expected)
+    {
+        NetworkAdapterSnapshot snapshot = TestData.Snapshot(name: name, isConnected: connected) with
+        {
+            InternetConnectivity = connectivity
+        };
+
+        Assert.Equal(expected, AdapterDisplayFormatter.FormatConnectionStatus(snapshot));
+    }
+
+    [Theory]
+    [InlineData("Ethernet", "Contoso Adapter", "Kablolu bağlantı (Ethernet)")]
+    [InlineData("Wi-Fi", "Contoso Wireless Adapter", "Kablosuz bağlantı (Wi-Fi)")]
+    [InlineData("PAN", "Bluetooth Device (Personal Area Network)", "Bluetooth bağlantısı (PAN)")]
+    [InlineData("Mobile", "Mobile Broadband Adapter", "Mobil bağlantı (Mobile)")]
+    [InlineData("", "Bluetooth PAN", "Bluetooth bağlantısı (Bluetooth PAN)")]
+    [InlineData("", "Cellular Adapter", "Mobil bağlantı (Cellular Adapter)")]
+    [InlineData("vEthernet", "Hyper-V Virtual Ethernet Adapter", "Sanal bağlantı (vEthernet)")]
+    [InlineData("Virtual Wi-Fi", "Virtual Wireless Adapter", "Sanal bağlantı (Virtual Wi-Fi)")]
+    [InlineData("", "Contoso Adapter", "Kablolu bağlantı (Contoso Adapter)")]
+    [InlineData("   ", "Contoso Wireless Adapter", "Kablosuz bağlantı (Contoso Wireless Adapter)")]
+    public void FormatFriendlyName_UsesCategoryAndFallsBackToDescription(string name, string description, string expected)
+    {
+        Assert.Equal(expected, AdapterDisplayFormatter.FormatFriendlyName(TestData.Snapshot(name: name, description: description)));
+    }
+
+    [Fact]
+    public void FormatFriendlyName_WhenNameAndDescriptionAreMissing_UsesPlaceholder()
+    {
+        Assert.Equal($"Kablolu bağlantı ({Strings.ValueUnavailable})",
+            AdapterDisplayFormatter.FormatFriendlyName(TestData.Snapshot(name: "", description: "")));
+    }
+
+    [Fact]
+    public void FormatCopySummary_KeepsWindowsNameAndIncludesConnectivityStatus()
+    {
+        NetworkAdapterSnapshot snapshot = TestData.Snapshot() with { InternetConnectivity = InternetConnectivity.Internet };
+
+        string summary = AdapterDisplayFormatter.FormatCopySummary(snapshot);
+
+        Assert.Contains("Bağdaştırıcı adı: Ethernet", summary, StringComparison.Ordinal);
+        Assert.Contains($"{Strings.FieldConnectionState}: İnternet çalışıyor", summary, StringComparison.Ordinal);
+        Assert.DoesNotContain("Kablolu bağlantı", summary, StringComparison.Ordinal);
+    }
+
+    [Theory]
     [InlineData(null)]
     [InlineData("")]
     [InlineData("   ")]

@@ -15,6 +15,8 @@ namespace IPMan.Domain.Networking;
 /// </param>
 /// <param name="Ipv4Gateways">Every IPv4 default gateway, in Windows-reported order.</param>
 /// <param name="Ipv4DnsServers">Every IPv4 DNS server, in Windows-reported order.</param>
+/// <param name="InternetConnectivity">Windows' IPv4 connectivity assessment, when available.</param>
+/// <param name="Medium">Physical connection medium, when reported.</param>
 public sealed record NetworkAdapterSnapshot(
     NetworkAdapterId Id,
     string Name,
@@ -30,7 +32,9 @@ public sealed record NetworkAdapterSnapshot(
     string? SecondaryDns,
     Ipv4AddressCollection Ipv4Addresses,
     Ipv4AddressValueCollection Ipv4Gateways,
-    Ipv4AddressValueCollection Ipv4DnsServers)
+    Ipv4AddressValueCollection Ipv4DnsServers,
+    InternetConnectivity InternetConnectivity = InternetConnectivity.Unknown,
+    AdapterMedium Medium = AdapterMedium.Unknown)
 {
     /// <summary>
     /// IPv4 addresses configured on the adapter other than <see cref="Ipv4Address"/>.
