@@ -27,6 +27,11 @@ adapters hidden by default (12). The main window is profile-centric (13): connec
 selector, status card with wireless shortcut, Kart/Liste settings with search and a built-in
 Otomatik card; "Bu ağa geç" applies directly. The legacy current/draft view lives behind
 "Ayrıntılar ve elle ayar" until 16.
+Safe switching (14): cards, automatic settings, manual apply and DHCP use conditional
+internet-loss confirmation and a mandatory 15-second topmost countdown. Keep, rollback
+and rollback failure appear in the shared inline banner; notifications wait for the final
+outcome. RecoveryRestoreService handles rollback, and real exit asks how to finish an
+active countdown while hiding to the tray leaves it running. Restore itself starts no countdown.
 Profiles / settings: one JSON file per profile under `Documents\IPMan\Profiles\`,
 settings in `Documents\IPMan\settings.json`; recovery snapshots stay in
 `%LocalAppData%\IPMan\Backup\` (ADR-015 supersedes ADR-012).
@@ -39,13 +44,13 @@ Distribution: win-x64 self-contained portable zip and Inno Setup installer tooli
 Single instance: `Local\` mutex + admin-only pipe activation; mutation serialized
 machine-wide by a `Global\` mutex (ADR-011, ADR-014).
 i18n: `Strings.resx`, single language (Turkish).
-Design: Windows 11 Fluent tokens and simplified component specifications in `docs/03_UI_UX/DESIGN.md`, UX principles in `docs/03_UI_UX/UX-ilkeleri.md`, and 10 canonical reference screens in `docs/03_UI_UX/stitch-karma/` (ADR-018). The legacy technician layout in `docs/03_UI_UX/stitch/` is superseded. The main window follows the new design (13); 14–18 remain. Shared styles live in `Themes/Controls.xaml`.
+Design: Windows 11 Fluent tokens and simplified component specifications in `docs/03_UI_UX/DESIGN.md`, UX principles in `docs/03_UI_UX/UX-ilkeleri.md`, and 10 canonical reference screens in `docs/03_UI_UX/stitch-karma/` (ADR-018). The legacy technician layout in `docs/03_UI_UX/stitch/` is superseded. The main window follows the new design (13); 15–18 remain. Shared styles live in `Themes/Controls.xaml`.
 
 # Next
 Order and details live in `docs/backlog/`:
 1. 10 — portable package and installer
 2. 11 — real-adapter verification on an isolated VM (can run in parallel)
-3. 13–18 — simple-first UX overhaul (ADR-018: main screen and wireless shortcut, safe switching with countdown, setting form, manual details, plain terminology, tray menu)
+3. 15–18 — remaining simple-first UX overhaul (ADR-018: setting form, manual details, plain terminology, tray menu)
 
 # Constraints
 - Destructive network tests are opt-in and must run only on an isolated VM adapter

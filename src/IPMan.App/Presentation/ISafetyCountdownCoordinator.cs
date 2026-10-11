@@ -53,7 +53,7 @@ public enum SafeSwitchExitDecision { Cancel, Keep, Revert }
 
 public interface ISafetyCountdownDialogService
 {
-    /// <summary>Shows the modal until the view-model decision completes.</summary>
+    /// <summary>Keeps the countdown visible until the view-model decision completes.</summary>
     Task ShowAsync(SafetyCountdownViewModel viewModel);
 
     Task<SafeSwitchExitDecision> ConfirmExitAsync(CancellationToken cancellationToken);

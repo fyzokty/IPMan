@@ -27,7 +27,7 @@ public sealed partial class WindowXamlSmokeTests
         MainWindow main = FakeWindowServices.CreateWindow<MainWindow>(window => AttachResources(window, theme),
             fixture.Main, fixture.SettingsRepository, fixture.Confirmation, fixture.Tray,
             fixture.Settings, fixture.Theme, fixture.Notifications, fixture.Dispatcher,
-            new FakeWindowSessionMarker(), (Func<DiagnosticsViewModel>)(() => fixture.Diagnostics));
+            new FakeWindowSessionMarker(), (Func<DiagnosticsViewModel>)(() => fixture.Diagnostics), fixture.Safety);
         fixture.Main.OpenDetailsCommand.Execute(null);
         AssertNeverShown(main);
 

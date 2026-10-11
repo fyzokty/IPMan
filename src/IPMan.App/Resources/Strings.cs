@@ -613,6 +613,12 @@ public static class Strings
     public static string SafeSwitchExitQuestion => Get(nameof(SafeSwitchExitQuestion));
     public static string SafeSwitchExitKeep => Get(nameof(SafeSwitchExitKeep));
     public static string SafeSwitchExitRevert => Get(nameof(SafeSwitchExitRevert));
+    public static string SafeSwitchManualSetting => Get(nameof(SafeSwitchManualSetting));
+    public static string SafeSwitchPreviousSetting => Get(nameof(SafeSwitchPreviousSetting));
+    public static string FormatSafeSwitchKept(string name) =>
+        Format(Get("SafeSwitchKept"), CultureInfo.CurrentCulture, name);
+    public static string FormatSafeSwitchReverted(string name) =>
+        Format(Get("SafeSwitchReverted"), CultureInfo.CurrentCulture, name);
     public static string SafeSwitchBusy => Get(nameof(SafeSwitchBusy));
     public static string SafeSwitchApplyFailed => Get(nameof(SafeSwitchApplyFailed));
     public static string SafeSwitchRevertFailed => Get(nameof(SafeSwitchRevertFailed));

@@ -31,7 +31,7 @@ public sealed class SafeSwitchSettingsCodecTests
     {
         AppSettingsJsonCodec codec = new();
         using MemoryStream stream = new();
-        AppSettings expected = AppSettings.Default with { SkipInternetLossConfirmation = skip };
+        AppSettings expected = AppSettings.Default with { SkipInternetLossConfirmation = skip, PreferredViewMode = PreferredViewMode.List };
         await codec.SerializeAsync(stream, expected, CancellationToken.None);
         stream.Position = 0;
         using (JsonDocument document = await JsonDocument.ParseAsync(stream))

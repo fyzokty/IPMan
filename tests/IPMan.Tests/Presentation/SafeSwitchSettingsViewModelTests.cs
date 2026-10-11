@@ -13,10 +13,12 @@ public sealed class SafeSwitchSettingsViewModelTests
         {
             FakeSafeSwitchSettingsRepository repository = new();
             repository.Settings = repository.Settings with { SkipInternetLossConfirmation = true };
+            repository.Settings = repository.Settings with { PreferredViewMode = IPMan.Domain.Settings.PreferredViewMode.List };
             SettingsViewModel viewModel = new(repository, new FakeUserConfirmationService(), FakeWindowServices.CreateTheme());
             Assert.True(viewModel.ResetInternetLossConfirmationCommand.CanExecute(null));
             viewModel.ResetInternetLossConfirmationCommand.Execute(null);
             Assert.False(repository.Settings.SkipInternetLossConfirmation);
+            Assert.Equal(IPMan.Domain.Settings.PreferredViewMode.List, repository.Settings.PreferredViewMode);
             Assert.False(viewModel.ResetInternetLossConfirmationCommand.CanExecute(null));
             Assert.Single(repository.Saved);
         }, "Safety preference reset timed out.");
@@ -50,4 +52,21 @@ public sealed class SafeSwitchSettingsViewModelTests
             Assert.True(viewModel.ResetInternetLossConfirmationCommand.CanExecute(null));
             Assert.Empty(repository.Saved);
         }, "Safety preference notification timed out.");
+
+    [Fact]
+    public void ResetDefaults_ResetsBothViewModeAndInternetLossPreference() =>
+        WpfTestRunner.Run(() =>
+        {
+            FakeSafeSwitchSettingsRepository repository = new();
+            repository.Settings = repository.Settings with
+            {
+                PreferredViewMode = IPMan.Domain.Settings.PreferredViewMode.List,
+                SkipInternetLossConfirmation = true
+            };
+            SettingsViewModel viewModel = new(repository, new FakeUserConfirmationService { Answer = true }, FakeWindowServices.CreateTheme());
+            viewModel.ResetToDefaultsCommand.Execute(null);
+            Assert.Equal(IPMan.Domain.Settings.AppSettings.Default, repository.Settings);
+            Assert.False(viewModel.SkipInternetLossConfirmation);
+            Assert.False(viewModel.ResetInternetLossConfirmationCommand.CanExecute(null));
+        }, "Combined settings reset timed out.");
 }

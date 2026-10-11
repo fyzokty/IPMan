@@ -641,6 +641,10 @@
     <value>Yeni ayar doğrulanamadı. Bağlantının mevcut durumunu Ayrıntılar bölümünden kontrol edin. Ayarı gözden geçirip yeniden deneyin.</value>
   </data>
   <data name="SafeSwitchRevertFailed" xml:space="preserve">
-    <value>Eski ayara dönüş tamamlanamadı. Bağlantı yeni ayarda kalmış veya kısmen değişmiş olabilir. Ayrıntılar bölümünden durumu kontrol edin; Otomatik ayara geçmeyi veya Son değişikliği geri al seçeneğini yeniden deneyin.</value>
+    <value>Eski ayara dönüş tamamlanamadı. Ağınız şu an yeni ayarda olabilir. Otomatik'e geçerek ya da Ayrıntılar'dan elle düzelterek devam edebilirsiniz.</value>
   </data>
+  <data name="SafeSwitchManualSetting" xml:space="preserve"><value>Elle ayar</value></data>
+  <data name="SafeSwitchPreviousSetting" xml:space="preserve"><value>önceki ayar</value></data>
+  <data name="SafeSwitchKept" xml:space="preserve"><value>{0} ayarına geçildi.</value></data>
+  <data name="SafeSwitchReverted" xml:space="preserve"><value>Eski ayara ({0}) dönüldü. Ağınız eskisi gibi.</value></data>
 </root>

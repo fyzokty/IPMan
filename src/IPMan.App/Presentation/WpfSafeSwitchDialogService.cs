@@ -32,27 +32,34 @@ public sealed class WpfSafeSwitchDialogService(Dispatcher dispatcher, WindowsThe
 
     public async Task ShowAsync(SafetyCountdownViewModel viewModel)
     {
-        await dispatcher.InvokeAsync(() =>
+        SafetyCountdownWindow? window = null;
+        try
         {
-            if (viewModel.Decision.IsCompleted)
+            await dispatcher.InvokeAsync(() =>
             {
-                return;
-            }
-            SafetyCountdownWindow window = countdownFactory(viewModel);
-            Prepare(window);
-            _countdownWindow = window;
-            Task close = CloseAfterDecisionAsync(window, viewModel);
-            try
+                if (viewModel.Decision.IsCompleted)
+                {
+                    return;
+                }
+                window = countdownFactory(viewModel);
+                theme.AttachWindow(window);
+                // An independent topmost window stays visible when the shell hides to the tray.
+                // AdapterActionsViewModel keeps mutations disabled until this task completes.
+                window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                _countdownWindow = window;
+                window.Show();
+            });
+            await viewModel.Decision;
+        }
+        finally
+        {
+            viewModel.Complete(SafetyCountdownDecision.Revert);
+            await dispatcher.InvokeAsync(() =>
             {
-                window.ShowDialog();
-            }
-            finally
-            {
-                viewModel.Complete(SafetyCountdownDecision.Revert);
+                window?.Close();
                 _countdownWindow = null;
-            }
-            _ = close;
-        });
+            });
+        }
     }
 
     public async Task<SafeSwitchExitDecision> ConfirmExitAsync(CancellationToken cancellationToken)
@@ -72,12 +79,6 @@ public sealed class WpfSafeSwitchDialogService(Dispatcher dispatcher, WindowsThe
             cancellationToken.ThrowIfCancellationRequested();
             return window.Decision;
         });
-    }
-
-    private async Task CloseAfterDecisionAsync(Window window, SafetyCountdownViewModel viewModel)
-    {
-        await viewModel.Decision;
-        await dispatcher.InvokeAsync(window.Close);
     }
 
     private void Prepare(Window window)

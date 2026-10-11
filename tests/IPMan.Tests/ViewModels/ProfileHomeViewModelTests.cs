@@ -117,6 +117,11 @@ public sealed class ProfileHomeViewModelTests
         fixture.Static.QueuedResults.Enqueue(new StaticIpv4ApplyResult(StaticIpv4ApplyStatus.VerifiedSuccess));
         fixture.Confirmation.Answer = true;
         await fixture.Main.Settings[1].SwitchCommand.ExecuteAsync(null);
+        SafeSwitchRequest switchRequest = Assert.Single(fixture.Safety.Requests);
+        Assert.Equal(profile.Name, switchRequest.SettingName);
+        Assert.Equal(Strings.SafeSwitchAutomatic, switchRequest.PreviousSettingName);
+        Assert.Equal(profile.ToStaticConfiguration(), switchRequest.Target);
+        Assert.Same(fixture.Main.SelectedAdapter.Snapshot, switchRequest.Adapter);
         Assert.Equal(2, fixture.Static.Requests.Count);
         Assert.All(fixture.Static.Requests, request => Assert.Equal(profile.ToStaticConfiguration(), request.DesiredConfiguration));
         Assert.False(fixture.Static.Requests[0].ConfirmPotentialConflict);
@@ -124,7 +129,7 @@ public sealed class ProfileHomeViewModelTests
         Assert.Empty(fixture.Dhcp.Requests);
         Assert.Equal("invalid", fixture.Main.SelectedAdapter.Draft.Ipv4Address);
         Assert.True(fixture.Main.HasDirtyDrafts);
-        Assert.Equal(ApplyStatusSeverity.Success, fixture.Main.Actions.StatusSeverity);
+        Assert.Equal(ApplyStatusSeverity.Information, fixture.Main.Actions.StatusSeverity);
         Assert.Single(fixture.Coordinator.RefreshRequests);
     }
 
@@ -139,6 +144,9 @@ public sealed class ProfileHomeViewModelTests
         await fixture.Main.Settings[saved ? 1 : 0].SwitchCommand.ExecuteAsync(null);
         Assert.Equal(fixture.Main.SelectedAdapter!.Id, Assert.Single(fixture.Dhcp.Requests).AdapterId);
         Assert.Empty(fixture.Static.Requests);
+        SafeSwitchRequest switchRequest = Assert.Single(fixture.Safety.Requests);
+        Assert.Equal(Strings.SafeSwitchAutomatic, switchRequest.SettingName);
+        Assert.Null(switchRequest.Target);
     }
 
     [Fact]
@@ -186,7 +194,7 @@ public sealed class ProfileHomeViewModelTests
             Catalog.ProfileItems = profiles;
             FakeWindowProfileDialogs dialogs = new();
             Profiles = new(Catalog, dialogs, dialogs, Confirmation, new FakeUiDispatcher());
-            AdapterActionsViewModel actions = new(Static, Dhcp, new FakeRecoveryRestoreService(), Confirmation, Coordinator);
+            AdapterActionsViewModel actions = new(Static, Dhcp, new FakeRecoveryRestoreService(), Confirmation, Coordinator, Safety);
             Main = new(Coordinator, new FakeUiDispatcher(), new FakeClipboardService(),
                 new FakeClock(DateTimeOffset.UtcNow), new FakeElevationStateProvider(true), new FakeApplicationVersionProvider("1.0"),
                 actions, new StaticIpv4ConfigurationValidator(), Profiles);
@@ -197,6 +205,7 @@ public sealed class ProfileHomeViewModelTests
         public FakeAdapterRefreshCoordinator Coordinator { get; } = new();
         public FakeStaticIpv4ApplyService Static { get; } = new();
         public FakeDhcpApplyService Dhcp { get; } = new();
+        public FakeSafetyCountdownCoordinator Safety { get; } = new();
         public FakeUserConfirmationService Confirmation { get; } = new();
         public ProfilePanelViewModel Profiles { get; }
         public MainWindowViewModel Main { get; }
