@@ -69,6 +69,8 @@ public sealed class FluentMotionTests
         {
             StackPanel host = Host();
             Border content = new() { Background = Brushes.White };
+            content.SetBinding(UIElement.OpacityProperty,
+                new Binding { Path = new PropertyPath(FluentMotion.VisualOpacityProperty), Source = content });
             host.Children.Add(content);
             FluentMotion.Enter(content);
             Assert.Equal(SystemParameters.ClientAreaAnimation, content.HasAnimatedProperties);
@@ -200,6 +202,91 @@ public sealed class FluentMotionTests
             CopyFeedback.Show(button, false);
             CopyFeedback.Reset(button);
         }, "Private theme brush replacement timed out.");
+    }
+
+    [Fact]
+    public void Motion_WithOpacityBindingAndNativeBrushTrigger_RestoresDeclarativeValues()
+    {
+        WpfTestRunner.Run(() =>
+        {
+            Assert.True(SystemParameters.ClientAreaAnimation);
+            StackPanel host = Host();
+            DisabledAppearanceTests.ShortenMotion(host);
+            Border content = new() { Width = 100, Height = 32 };
+            Style style = new(typeof(Border));
+            style.Setters.Add(new Setter(UIElement.OpacityProperty, new Binding("Tag") { RelativeSource = RelativeSource.Self }));
+            style.Setters.Add(new Setter(Border.BackgroundProperty, new MotionBinding(FluentMotion.VisualBackgroundProperty)));
+            style.Setters.Add(new Setter(Border.BorderBrushProperty, new MotionBinding(FluentMotion.VisualBorderBrushProperty)));
+            Trigger disabled = new() { Property = UIElement.IsEnabledProperty, Value = false };
+            disabled.Setters.Add(new Setter(Border.BackgroundProperty, Brushes.Gray));
+            disabled.Setters.Add(new Setter(Border.BorderBrushProperty, Brushes.DimGray));
+            style.Triggers.Add(disabled);
+            content.Tag = .45d;
+            content.Style = style;
+            host.Children.Add(content);
+            using System.Windows.Interop.HwndSource source = DisabledAppearanceTests.Show(host);
+            DisabledAppearanceTests.Pump(DisabledAppearanceTests.Settle);
+
+            FluentMotion.SetBackground(content, Brushes.Red);
+            FluentMotion.SetBorderBrush(content, Brushes.Blue);
+            FluentMotion.Enter(content);
+            FluentMotion.SetBusy(content, true);
+            Assert.True(content.HasAnimatedProperties);
+            content.IsEnabled = false;
+            FluentMotion.SetBackground(content, Brushes.Green);
+            FluentMotion.SetBorderBrush(content, Brushes.Yellow);
+            content.Tag = .3d;
+            FluentMotion.SetBusy(content, false);
+            FluentMotion.Enter(content);
+            DisabledAppearanceTests.Pump(DisabledAppearanceTests.Settle);
+            Assert.Equal(.3, content.Opacity);
+            Assert.Equal(.3, content.GetAnimationBaseValue(UIElement.OpacityProperty));
+            Assert.NotNull(BindingOperations.GetBindingExpression(content, UIElement.OpacityProperty));
+            Assert.Equal(Colors.Gray, ((SolidColorBrush)content.Background).Color);
+            Assert.Equal(Colors.DimGray, ((SolidColorBrush)content.BorderBrush).Color);
+
+            content.IsEnabled = true;
+            Assert.Equal(Colors.Green, ((SolidColorBrush)content.Background).Color);
+            Assert.Equal(Colors.Yellow, ((SolidColorBrush)content.BorderBrush).Color);
+            FluentMotion.SetBusy(content, true);
+            FluentMotion.SetIsEnabled(content, false);
+            Assert.Equal(.3, content.Opacity);
+            Assert.False(content.HasAnimatedProperties);
+        }, "Motion declarative values timed out.");
+    }
+
+    [Fact]
+    public void CopyAndReveal_WithMotionOn_SettleOnLatestTemplateState()
+    {
+        WpfTestRunner.Run(() =>
+        {
+            Assert.True(SystemParameters.ClientAreaAnimation);
+            StackPanel host = Host();
+            DisabledAppearanceTests.ShortenMotion(host);
+            Button copy = new() { Style = (Style)host.Resources["CopyButtonStyle"] };
+            CheckBox check = new() { Content = "Check", IsChecked = true };
+            host.Children.Add(copy);
+            host.Children.Add(check);
+            using System.Windows.Interop.HwndSource source = DisabledAppearanceTests.Show(host);
+            DisabledAppearanceTests.Pump(DisabledAppearanceTests.Settle);
+            TextBlock success = (TextBlock)copy.Template.FindName("SuccessGlyph", copy);
+            TextBlock mark = (TextBlock)check.Template.FindName("Mark", check);
+            CopyFeedback.Show(copy, true);
+            check.IsChecked = false;
+            DisabledAppearanceTests.Pump(5);
+            CopyFeedback.Reset(copy);
+            check.IsChecked = true;
+            DisabledAppearanceTests.Pump(5);
+            CopyFeedback.Show(copy, true);
+            check.IsChecked = false;
+            FluentMotion.Enter(mark);
+            DisabledAppearanceTests.Pump(DisabledAppearanceTests.Settle);
+            Assert.Equal(1, success.Opacity);
+            Assert.Equal(0, mark.Opacity);
+            CopyFeedback.Reset(copy);
+            DisabledAppearanceTests.Pump(DisabledAppearanceTests.Settle);
+            Assert.Equal(0, success.Opacity);
+        }, "Copy/reveal latest state timed out.");
     }
 
     private static TestButton CopyButton(StackPanel host, AdapterViewModel adapter)

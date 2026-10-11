@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
+using System.Windows.Data;
 using System.Windows.Media;
 using System.Windows.Media.Animation;
 using System.ComponentModel;
@@ -37,6 +38,19 @@ public static class FluentMotion
     public static readonly DependencyProperty BusyProperty = Register("Busy", typeof(bool), false, OnBusyChanged);
     public static readonly DependencyProperty IsInvalidProperty = DependencyProperty.RegisterAttached(
         "IsInvalid", typeof(bool), typeof(FluentMotion), new PropertyMetadata(false));
+    private static readonly DependencyPropertyKey VisualOpacityPropertyKey = DependencyProperty.RegisterAttachedReadOnly(
+        "VisualOpacity", typeof(double), typeof(FluentMotion), new PropertyMetadata(1d));
+    public static readonly DependencyProperty VisualOpacityProperty = VisualOpacityPropertyKey.DependencyProperty;
+    private static readonly DependencyPropertyKey VisualBackgroundPropertyKey = DependencyProperty.RegisterAttachedReadOnly(
+        "VisualBackground", typeof(Brush), typeof(FluentMotion), new PropertyMetadata(null));
+    public static readonly DependencyProperty VisualBackgroundProperty = VisualBackgroundPropertyKey.DependencyProperty;
+    private static readonly DependencyPropertyKey VisualBorderBrushPropertyKey = DependencyProperty.RegisterAttachedReadOnly(
+        "VisualBorderBrush", typeof(Brush), typeof(FluentMotion), new PropertyMetadata(null));
+    public static readonly DependencyProperty VisualBorderBrushProperty = VisualBorderBrushPropertyKey.DependencyProperty;
+
+    public static double GetVisualOpacity(DependencyObject value) => (double)value.GetValue(VisualOpacityProperty);
+    public static Brush GetVisualBackground(DependencyObject value) => (Brush)value.GetValue(VisualBackgroundProperty);
+    public static Brush GetVisualBorderBrush(DependencyObject value) => (Brush)value.GetValue(VisualBorderBrushProperty);
 
     public static bool GetIsEnabled(DependencyObject value) => (bool)value.GetValue(IsEnabledProperty);
     public static void SetIsEnabled(DependencyObject value, bool enabled) => value.SetValue(IsEnabledProperty, enabled);
@@ -120,16 +134,26 @@ public static class FluentMotion
 
     private static void OnBrushChanged(DependencyObject sender, DependencyPropertyChangedEventArgs args)
     {
-        if (sender is not Border border || args.NewValue is not SolidColorBrush target)
+        if (sender is not Border border)
         {
             return;
         }
 
         DependencyProperty property = args.Property == BackgroundProperty ? Border.BackgroundProperty : Border.BorderBrushProperty;
+        DependencyPropertyKey visualProperty = args.Property == BackgroundProperty ? VisualBackgroundPropertyKey : VisualBorderBrushPropertyKey;
+        if (args.NewValue is not SolidColorBrush target)
+        {
+            border.SetValue(visualProperty, args.NewValue);
+            BindingOperations.GetBindingExpression(border, property)?.UpdateTarget();
+            return;
+        }
+
         Color previous = (border.GetValue(property) as SolidColorBrush)?.Color ?? target.Color;
         // Every target owns its brush. Theme resources may be frozen and are never animated.
         SolidColorBrush local = new(target.Color);
-        border.SetCurrentValue(property, local);
+        // The template binds its base brush to this value; native trigger setters retain precedence.
+        border.SetValue(visualProperty, local);
+        BindingOperations.GetBindingExpression(border, property)?.UpdateTarget();
         if (border.IsLoaded && Duration(border) != TimeSpan.Zero)
         {
             local.BeginAnimation(SolidColorBrush.ColorProperty, new ColorAnimation(previous, target.Color, Duration(border))
@@ -144,8 +168,17 @@ public static class FluentMotion
     {
         if (sender is FrameworkElement element)
         {
-            Animate(element, element, UIElement.OpacityProperty, (double)args.NewValue);
+            UpdateOpacity(element);
         }
+    }
+
+    private static void UpdateOpacity(FrameworkElement element)
+    {
+        double previous = element.Opacity;
+        element.SetValue(VisualOpacityPropertyKey, GetReveal(element) ? GetOpacity(element) : 0d);
+        BindingOperations.GetBindingExpression(element, UIElement.OpacityProperty)?.UpdateTarget();
+        Animate(element, element, UIElement.OpacityProperty,
+            (double)element.GetAnimationBaseValue(UIElement.OpacityProperty), from: element.IsLoaded ? previous : null);
     }
 
     private static TransformGroup Transforms(FrameworkElement element)
@@ -172,7 +205,7 @@ public static class FluentMotion
         bool reveal = GetReveal(element);
         ScaleTransform scale = (ScaleTransform)Transforms(element).Children[0];
         string axis = GetAxis(element);
-        Animate(element, element, UIElement.OpacityProperty, reveal ? 1 : 0);
+        UpdateOpacity(element);
         if (axis is "X" or "Both")
         {
             Animate(element, scale, ScaleTransform.ScaleXProperty, reveal ? 1 : 0);
@@ -283,7 +316,8 @@ public static class FluentMotion
     private static void Enter(FrameworkElement element, bool scale)
     {
         TransformGroup group = Transforms(element);
-        Animate(element, element, UIElement.OpacityProperty, 1, from: 0);
+        Animate(element, element, UIElement.OpacityProperty,
+            (double)element.GetAnimationBaseValue(UIElement.OpacityProperty), from: 0);
         Animate(element, (TranslateTransform)group.Children[2], TranslateTransform.YProperty, 0, from: scale ? 0 : 4);
         if (scale)
         {
@@ -327,7 +361,8 @@ public static class FluentMotion
             if ((bool)args.NewValue && Duration(element) != TimeSpan.Zero)
             {
                 TimeSpan pulse = element.TryFindResource("Motion.Busy") as TimeSpan? ?? TimeSpan.FromSeconds(.8);
-                element.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(.35, 1, pulse)
+                double opacity = (double)element.GetAnimationBaseValue(UIElement.OpacityProperty);
+                element.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(.35 * opacity, opacity, pulse)
                 {
                     AutoReverse = true,
                     RepeatBehavior = RepeatBehavior.Forever,
@@ -342,7 +377,8 @@ public static class FluentMotion
     {
         double previous = from ?? (double)target.GetValue(property);
         target.BeginAnimation(property, null);
-        target.SetCurrentValue(property, to);
+        // These are private transform components, never a control's styled properties.
+        target.SetValue(property, to);
         if ((owner.IsLoaded || from.HasValue) && Duration(owner, key) != TimeSpan.Zero)
         {
             target.BeginAnimation(property, new DoubleAnimation(previous, to, Duration(owner, key))
@@ -357,7 +393,6 @@ public static class FluentMotion
     {
         double previous = from ?? (double)target.GetValue(property);
         target.BeginAnimation(property, null);
-        target.SetCurrentValue(property, to);
         if ((owner.IsLoaded || from.HasValue) && Duration(owner) != TimeSpan.Zero)
         {
             DoubleAnimation animation = new(previous, to, Duration(owner))
@@ -365,11 +400,8 @@ public static class FluentMotion
                 EasingFunction = owner.TryFindResource("Motion.EaseOut") as IEasingFunction,
                 FillBehavior = FillBehavior.Stop
             };
-            Storyboard.SetTarget(animation, target);
-            Storyboard.SetTargetProperty(animation, new PropertyPath(property));
-            Storyboard storyboard = new();
-            storyboard.Children.Add(animation);
-            storyboard.Begin(target);
+            // Animate only the effective value. FillBehavior.Stop restores the binding/style/trigger base.
+            target.BeginAnimation(property, animation);
         }
     }
 

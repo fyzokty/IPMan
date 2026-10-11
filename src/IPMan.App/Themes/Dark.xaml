@@ -8,6 +8,8 @@
     <SolidColorBrush x:Key="ControlBackgroundBrush" Color="#242424" />
     <SolidColorBrush x:Key="ControlHoverBrush" Color="#383838" />
     <SolidColorBrush x:Key="ControlDisabledBrush" Color="#333333" />
+    <SolidColorBrush x:Key="ControlDisabledBorderBrush" Color="#414141" />
+    <SolidColorBrush x:Key="ControlDisabledTextBrush" Color="#777777" />
     <SolidColorBrush x:Key="AccentBrush" Color="#4CC2FF" />
     <SolidColorBrush x:Key="AccentHoverBrush" Color="#62CDFF" />
     <SolidColorBrush x:Key="FocusBrush" Color="#4CC2FF" />

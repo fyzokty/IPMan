@@ -136,6 +136,15 @@ public sealed partial class WindowXamlSmokeTests
         Assert.Empty(profileGuidance.Text);
         Assert.Equal(Visibility.Collapsed, guidanceBand.Visibility);
         Assert.Equal(new Size(), guidanceBand.DesiredSize);
+        fixture.Main.SelectAdapter(RenderAdapters()[1].Id.Value);
+        RenderWindow(main, directory, $"main-dhcp-adapter-{suffix}.png");
+        Button dhcp = Assert.Single(Descendants(content).OfType<Button>(),
+            button => ReferenceEquals(button.Command, fixture.Main.Actions.ApplyDhcpCommand));
+        Button dhcpRenew = Assert.Single(Descendants(content).OfType<Button>(),
+            button => ReferenceEquals(button.Command, fixture.Main.Actions.RenewIpCommand));
+        Assert.False(dhcp.IsEnabled);
+        Assert.True(dhcpRenew.IsEnabled);
+        AssertDisabledButtonBrushes(dhcp, main, theme);
         fixture.Coordinator.PublishRefresh();
         fixture.Coordinator.PublishFailure();
         Assert.Empty(fixture.Main.Adapters);
