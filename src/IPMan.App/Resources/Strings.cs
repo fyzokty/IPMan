@@ -66,6 +66,12 @@ public static class Strings
     public static string FormatWirelessConnectionName(string name) =>
         Format(Get("WirelessConnectionName"), CultureInfo.CurrentCulture, name);
 
+    public static string FormatBluetoothConnectionName(string name) =>
+        Format(Get("BluetoothConnectionName"), CultureInfo.CurrentCulture, name);
+
+    public static string FormatCellularConnectionName(string name) =>
+        Format(Get("CellularConnectionName"), CultureInfo.CurrentCulture, name);
+
     public static string FormatVirtualConnectionName(string name) =>
         Format(Get("VirtualConnectionName"), CultureInfo.CurrentCulture, name);
 

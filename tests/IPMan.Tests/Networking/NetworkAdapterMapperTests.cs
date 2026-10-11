@@ -7,6 +7,114 @@ namespace IPMan.Tests.Networking;
 
 public sealed class NetworkAdapterMapperTests
 {
+    [Theory]
+    [InlineData(0u, AdapterMedium.Unknown)]
+    [InlineData(1u, AdapterMedium.Wireless)]
+    [InlineData(2u, AdapterMedium.Other)]
+    [InlineData(3u, AdapterMedium.Other)]
+    [InlineData(4u, AdapterMedium.Other)]
+    [InlineData(5u, AdapterMedium.Other)]
+    [InlineData(6u, AdapterMedium.Other)]
+    [InlineData(7u, AdapterMedium.Other)]
+    [InlineData(8u, AdapterMedium.Cellular)]
+    [InlineData(9u, AdapterMedium.Wireless)]
+    [InlineData(10u, AdapterMedium.Bluetooth)]
+    [InlineData(11u, AdapterMedium.Other)]
+    [InlineData(12u, AdapterMedium.Wireless)]
+    [InlineData(13u, AdapterMedium.Other)]
+    [InlineData(14u, AdapterMedium.Wired)]
+    [InlineData(15u, AdapterMedium.Other)]
+    [InlineData(16u, AdapterMedium.Other)]
+    [InlineData(17u, AdapterMedium.Other)]
+    [InlineData(18u, AdapterMedium.Other)]
+    [InlineData(19u, AdapterMedium.Other)]
+    [InlineData(20u, AdapterMedium.Other)]
+    [InlineData(uint.MaxValue, AdapterMedium.Other)]
+    public void MapMedium_MapsEveryNdisPhysicalMedium(uint medium, AdapterMedium expected)
+    {
+        Assert.Equal(expected, NetworkAdapterMapper.MapMedium(medium, NetworkInterfaceType.Unknown));
+    }
+
+    [Theory]
+    [InlineData(NetworkInterfaceType.Wireless80211, AdapterMedium.Wireless)]
+    [InlineData(NetworkInterfaceType.Ethernet, AdapterMedium.Wired)]
+    [InlineData(NetworkInterfaceType.GigabitEthernet, AdapterMedium.Wired)]
+    [InlineData(NetworkInterfaceType.FastEthernetT, AdapterMedium.Wired)]
+    [InlineData(NetworkInterfaceType.FastEthernetFx, AdapterMedium.Wired)]
+    [InlineData(NetworkInterfaceType.Ethernet3Megabit, AdapterMedium.Wired)]
+    [InlineData(NetworkInterfaceType.Wwanpp, AdapterMedium.Cellular)]
+    [InlineData(NetworkInterfaceType.Wwanpp2, AdapterMedium.Cellular)]
+    [InlineData(NetworkInterfaceType.Unknown, AdapterMedium.Unknown)]
+    [InlineData(NetworkInterfaceType.Ppp, AdapterMedium.Unknown)]
+    [InlineData(NetworkInterfaceType.Tunnel, AdapterMedium.Unknown)]
+    public void MapMedium_WhenUnspecified_FallsBackToInterfaceType(
+        NetworkInterfaceType interfaceType, AdapterMedium expected)
+    {
+        Assert.Equal(expected, NetworkAdapterMapper.MapMedium(0, interfaceType));
+    }
+
+    [Theory]
+    [InlineData("", "Bluetooth Device (Personal Area Network)", AdapterMedium.Bluetooth)]
+    [InlineData("BLUETOOTH PAN", "Contoso Adapter", AdapterMedium.Bluetooth)]
+    [InlineData("", "Mobile Broadband Adapter", AdapterMedium.Cellular)]
+    [InlineData("CELLULAR", "Contoso Adapter", AdapterMedium.Cellular)]
+    [InlineData("", "WWAN Wireless Adapter", AdapterMedium.Cellular)]
+    public void Map_WhenMediumIsUnspecified_NameMarkersTakePrecedenceOverEthernet(
+        string name, string description, AdapterMedium expected)
+    {
+        NetworkAdapterSnapshot snapshot = NetworkAdapterMapper.Map(TestData.Adapter(
+            name: name,
+            description: description,
+            interfaceType: NetworkInterfaceType.Ethernet) with { PhysicalMediumType = 0 });
+
+        Assert.Equal(expected, snapshot.Medium);
+    }
+
+    [Theory]
+    [InlineData(14u, AdapterMedium.Wired)]
+    [InlineData(1u, AdapterMedium.Wireless)]
+    [InlineData(8u, AdapterMedium.Cellular)]
+    [InlineData(10u, AdapterMedium.Bluetooth)]
+    [InlineData(19u, AdapterMedium.Other)]
+    public void Map_WhenMediumIsSpecified_TakesPrecedenceOverNameMarkers(uint medium, AdapterMedium expected)
+    {
+        NetworkAdapterSnapshot snapshot = NetworkAdapterMapper.Map(TestData.Adapter(
+            name: "Bluetooth Cellular WWAN",
+            description: "Bluetooth Device (Personal Area Network)",
+            interfaceType: NetworkInterfaceType.Ethernet) with { PhysicalMediumType = medium });
+
+        Assert.Equal(expected, snapshot.Medium);
+    }
+
+    [Theory]
+    [InlineData(10u, NetworkInterfaceType.Ethernet, AdapterMedium.Bluetooth)]
+    [InlineData(14u, NetworkInterfaceType.Wireless80211, AdapterMedium.Wired)]
+    [InlineData(1u, NetworkInterfaceType.Ethernet, AdapterMedium.Wireless)]
+    [InlineData(8u, NetworkInterfaceType.Ethernet, AdapterMedium.Cellular)]
+    [InlineData(19u, NetworkInterfaceType.Ethernet, AdapterMedium.Other)]
+    public void MapMedium_WhenSpecified_TakesPrecedenceOverInterfaceType(
+        uint medium, NetworkInterfaceType interfaceType, AdapterMedium expected)
+    {
+        Assert.Equal(expected, NetworkAdapterMapper.MapMedium(medium, interfaceType));
+    }
+
+    [Theory]
+    [InlineData(0u, AdapterMedium.Wired)]
+    [InlineData(1u, AdapterMedium.Wireless)]
+    [InlineData(8u, AdapterMedium.Cellular)]
+    [InlineData(10u, AdapterMedium.Bluetooth)]
+    [InlineData(14u, AdapterMedium.Wired)]
+    [InlineData(19u, AdapterMedium.Other)]
+    public void Map_CarriesPhysicalMediumIntoSnapshot(uint medium, AdapterMedium expected)
+    {
+        NetworkAdapterSnapshot snapshot = NetworkAdapterMapper.Map(TestData.Adapter() with
+        {
+            PhysicalMediumType = medium
+        });
+
+        Assert.Equal(expected, snapshot.Medium);
+    }
+
     private static readonly string[] UnspecifiedGateway = { "0.0.0.0" };
 
     private static readonly string[] Ipv6ThenIpv4Gateways = { "fe80::1", "192.168.9.254" };

@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using IPMan.Domain.Adapters;
 using IPMan.Domain.Networking;
 
 namespace IPMan.Infrastructure.Networking;
@@ -47,7 +48,42 @@ public static class NetworkAdapterMapper
             dnsServers.Count > 1 ? dnsServers[1] : null,
             MapAllIpv4Addresses(adapter.UnicastAddresses),
             gateways,
-            dnsServers);
+            dnsServers,
+            Medium: MapMedium(adapter.PhysicalMediumType, adapter.InterfaceType, adapter.Name, adapter.Description));
+    }
+
+    /// <summary>Maps NDIS physical medium, falling back to name markers and interface type only when unspecified.</summary>
+    public static AdapterMedium MapMedium(
+        uint physicalMediumType, NetworkInterfaceType interfaceType, string name = "", string description = "")
+    {
+        if (physicalMediumType == 0)
+        {
+            AdapterMedium namedMedium = AdapterCategoryClassifier.GetMediumFromName(name, description);
+            if (namedMedium != AdapterMedium.Unknown)
+            {
+                return namedMedium;
+            }
+        }
+
+        return physicalMediumType switch
+        {
+            14 => AdapterMedium.Wired,
+            1 or 9 or 12 => AdapterMedium.Wireless,
+            10 => AdapterMedium.Bluetooth,
+            8 => AdapterMedium.Cellular,
+            0 => interfaceType switch
+            {
+                NetworkInterfaceType.Wireless80211 => AdapterMedium.Wireless,
+                NetworkInterfaceType.Ethernet or
+                    NetworkInterfaceType.GigabitEthernet or
+                    NetworkInterfaceType.FastEthernetT or
+                    NetworkInterfaceType.FastEthernetFx or
+                    NetworkInterfaceType.Ethernet3Megabit => AdapterMedium.Wired,
+                NetworkInterfaceType.Wwanpp or NetworkInterfaceType.Wwanpp2 => AdapterMedium.Cellular,
+                _ => AdapterMedium.Unknown
+            },
+            _ => AdapterMedium.Other
+        };
     }
 
     /// <summary>

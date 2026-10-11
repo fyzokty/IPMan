@@ -58,9 +58,13 @@ public static class AdapterDisplayFormatter
             return Strings.FormatVirtualConnectionName(name);
         }
 
-        return AdapterCategoryClassifier.GetConnectionKind(snapshot) == AdapterCategoryClassifier.ConnectionKind.Wireless
-            ? Strings.FormatWirelessConnectionName(name)
-            : Strings.FormatWiredConnectionName(name);
+        return AdapterCategoryClassifier.GetConnectionKind(snapshot) switch
+        {
+            AdapterCategoryClassifier.ConnectionKind.Wireless => Strings.FormatWirelessConnectionName(name),
+            AdapterCategoryClassifier.ConnectionKind.Bluetooth => Strings.FormatBluetoothConnectionName(name),
+            AdapterCategoryClassifier.ConnectionKind.Cellular => Strings.FormatCellularConnectionName(name),
+            _ => Strings.FormatWiredConnectionName(name)
+        };
     }
 
     public static string FormatConfigurationMode(NetworkConfigurationMode mode) => mode switch

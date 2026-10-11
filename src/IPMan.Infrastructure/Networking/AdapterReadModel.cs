@@ -34,4 +34,5 @@ public sealed record AdapterReadModel(
     bool? IsDhcpEnabled,
     IReadOnlyList<AdapterUnicastAddressReadModel> UnicastAddresses,
     IReadOnlyList<string> GatewayAddresses,
-    IReadOnlyList<string> DnsAddresses);
+    IReadOnlyList<string> DnsAddresses,
+    uint PhysicalMediumType = 0);
