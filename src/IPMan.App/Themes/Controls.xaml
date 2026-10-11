@@ -435,4 +435,116 @@
             </Setter.Value>
         </Setter>
     </Style>
+    <Style x:Key="ProfileEditorErrorTextStyle" TargetType="TextBlock" BasedOn="{StaticResource FieldErrorTextStyle}">
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="TextTrimming" Value="None" />
+        <Setter Property="Margin" Value="0,4,0,0" />
+    </Style>
+    <Style x:Key="ProfileEditorInputStyle" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+        <Setter Property="motion:FluentMotion.IsInvalid" Value="True" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Grid>
+                        <Border x:Name="Chrome" CornerRadius="4" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}">
+                            <ScrollViewer x:Name="PART_ContentHost" />
+                        </Border>
+                        <Border x:Name="Underline" Height="2" Margin="1,0,1,0" VerticalAlignment="Bottom" Background="{DynamicResource SecondaryTextBrush}" />
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocusWithin" Value="True"><Setter TargetName="Underline" Property="Background" Value="{DynamicResource AccentBrush}" /></Trigger>
+                        <Trigger Property="motion:FluentMotion.IsInvalid" Value="True"><Setter TargetName="Underline" Property="Background" Value="{DynamicResource ErrorBorderBrush}" /></Trigger>
+                        <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Chrome" Property="Background" Value="{DynamicResource ControlDisabledBrush}" /><Setter Property="Foreground" Value="{DynamicResource ControlDisabledTextBrush}" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="Tag" Value=""><Setter Property="motion:FluentMotion.IsInvalid" Value="False" /></Trigger>
+            <Trigger Property="Tag" Value="{x:Null}"><Setter Property="motion:FluentMotion.IsInvalid" Value="False" /></Trigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="ProfileEditorAddressStyle" TargetType="TextBox" BasedOn="{StaticResource ProfileEditorInputStyle}">
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+    </Style>
+    <Style x:Key="ProfileEditorRadioCardStyle" TargetType="RadioButton" BasedOn="{StaticResource {x:Type RadioButton}}">
+        <Setter Property="Margin" Value="0" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Border x:Name="Card" CornerRadius="8" Padding="12" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                        <Grid>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="24"/></Grid.ColumnDefinitions>
+                            <ContentPresenter />
+                            <Grid Grid.Column="1" VerticalAlignment="Top" Width="18" Height="18">
+                                <Ellipse Stroke="{DynamicResource SecondaryTextBrush}"/>
+                                <Ellipse x:Name="Dot" Visibility="Collapsed" Width="10" Height="10" Fill="{DynamicResource AccentBrush}"/>
+                            </Grid>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsChecked" Value="True"><Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource AccentBrush}"/><Setter TargetName="Card" Property="BorderThickness" Value="2"/><Setter TargetName="Card" Property="Padding" Value="11"/><Setter TargetName="Dot" Property="Visibility" Value="Visible"/></Trigger>
+                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Card" Property="Background" Value="{DynamicResource ControlHoverBrush}"/></Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Card" Property="BorderBrush" Value="{DynamicResource FocusBrush}"/></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <Style x:Key="ProfileEditorLabelStyle" TargetType="Label">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        <Setter Property="Padding" Value="0,0,0,4" />
+    </Style>
+    <Style x:Key="ProfileEditorGatewayWarningStyle" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{DynamicResource WarningBorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,2" />
+        <Style.Triggers><Trigger Property="Tag" Value=""><Setter Property="BorderThickness" Value="0" /></Trigger></Style.Triggers>
+    </Style>
+    <Style x:Key="ProfileEditorSuggestionBadgeStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource WarningBackgroundBrush}" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="6,4" />
+        <Style.Triggers><DataTrigger Binding="{Binding IsSuggestionVerified}" Value="True"><Setter Property="Background" Value="{DynamicResource SuccessBackgroundBrush}" /></DataTrigger></Style.Triggers>
+    </Style>
+    <Style x:Key="ProfileEditorSuggestionTextStyle" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource WarningBorderBrush}" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="FontSize" Value="12" />
+        <Style.Triggers><DataTrigger Binding="{Binding IsSuggestionVerified}" Value="True"><Setter Property="Foreground" Value="{DynamicResource SuccessBorderBrush}" /></DataTrigger></Style.Triggers>
+    </Style>
+    <Style x:Key="ProfileEditorAdvancedStyle" TargetType="Expander" BasedOn="{StaticResource {x:Type Expander}}">
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Expander">
+                    <Border CornerRadius="8" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="1">
+                        <DockPanel>
+                            <ToggleButton DockPanel.Dock="Top" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}" Foreground="{TemplateBinding Foreground}">
+                                <ToggleButton.Template>
+                                    <ControlTemplate TargetType="ToggleButton">
+                                        <Border x:Name="Header" BorderThickness="1" Padding="12" Background="Transparent">
+                                            <DockPanel>
+                                                <TextBlock x:Name="Arrow" DockPanel.Dock="Left" Style="{StaticResource IconStyle}" Text="&#xE76C;" Margin="0,0,8,0" />
+                                                <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" />
+                                            </DockPanel>
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsChecked" Value="True"><Setter TargetName="Arrow" Property="Text" Value="&#xE70D;" /></Trigger>
+                                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Header" Property="Background" Value="{DynamicResource ControlHoverBrush}" /></Trigger>
+                                            <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Header" Property="BorderBrush" Value="{DynamicResource FocusBrush}" /></Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </ToggleButton.Template>
+                            </ToggleButton>
+                            <ContentPresenter x:Name="Body" Visibility="Collapsed" />
+                        </DockPanel>
+                    </Border>
+                    <ControlTemplate.Triggers><Trigger Property="IsExpanded" Value="True"><Setter TargetName="Body" Property="Visibility" Value="Visible" /></Trigger></ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

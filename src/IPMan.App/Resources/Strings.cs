@@ -628,4 +628,40 @@ public static class Strings
         Format(SafeSwitchCountdownTitle, CultureInfo.CurrentCulture, name);
     public static string FormatSafeSwitchCountdownBody(int seconds, string name) =>
         Format(SafeSwitchCountdownBody, CultureInfo.CurrentCulture, seconds, name);
+    // ProfileEditor
+    public static string ProfileEditorNewTitle => Get(nameof(ProfileEditorNewTitle));
+    public static string ProfileEditorEditTitle => Get(nameof(ProfileEditorEditTitle));
+    public static string ProfileEditorBack => Get(nameof(ProfileEditorBack));
+    public static string ProfileEditorNameLabel => Get(nameof(ProfileEditorNameLabel));
+    public static string ProfileEditorNameHint => Get(nameof(ProfileEditorNameHint));
+    public static string ProfileEditorModeLabel => Get(nameof(ProfileEditorModeLabel));
+    public static string ProfileEditorAutomatic => Get(nameof(ProfileEditorAutomatic));
+    public static string ProfileEditorAutomaticHint => Get(nameof(ProfileEditorAutomaticHint));
+    public static string ProfileEditorStatic => Get(nameof(ProfileEditorStatic));
+    public static string ProfileEditorStaticHint => Get(nameof(ProfileEditorStaticHint));
+    public static string ProfileEditorDeviceLabel => Get(nameof(ProfileEditorDeviceLabel));
+    public static string ProfileEditorDeviceHint => Get(nameof(ProfileEditorDeviceHint));
+    public static string ProfileEditorSuggestionLabel => Get(nameof(ProfileEditorSuggestionLabel));
+    public static string ProfileEditorVerified => Get(nameof(ProfileEditorVerified));
+    public static string ProfileEditorUnverified => Get(nameof(ProfileEditorUnverified));
+    public static string ProfileEditorUseSuggestion => Get(nameof(ProfileEditorUseSuggestion));
+    public static string ProfileEditorAddressLabel => Get(nameof(ProfileEditorAddressLabel));
+    public static string ProfileEditorGatewayLabel => Get(nameof(ProfileEditorGatewayLabel));
+    public static string ProfileEditorGatewayHint => Get(nameof(ProfileEditorGatewayHint));
+    public static string ProfileEditorAdvanced => Get(nameof(ProfileEditorAdvanced));
+    public static string ProfileEditorMaskLabel => Get(nameof(ProfileEditorMaskLabel));
+    public static string ProfileEditorMaskAutoFilled => Get(nameof(ProfileEditorMaskAutoFilled));
+    public static string ProfileEditorPrimaryDnsLabel => Get(nameof(ProfileEditorPrimaryDnsLabel));
+    public static string ProfileEditorSecondaryDnsLabel => Get(nameof(ProfileEditorSecondaryDnsLabel));
+    public static string ProfileEditorSaveOnly => Get(nameof(ProfileEditorSaveOnly));
+    public static string ProfileEditorSaveAndSwitch => Get(nameof(ProfileEditorSaveAndSwitch));
+    public static string ProfileEditorNameRequired => Get(nameof(ProfileEditorNameRequired));
+    public static string ProfileEditorDuplicateName => Get(nameof(ProfileEditorDuplicateName));
+    public static string ProfileEditorOctetError => Get(nameof(ProfileEditorOctetError));
+    public static string ProfileEditorAddressFormatError => Get(nameof(ProfileEditorAddressFormatError));
+    public static string ProfileEditorAddressExample => Get(nameof(ProfileEditorAddressExample));
+    public static string ProfileEditorMaskExample => Get(nameof(ProfileEditorMaskExample));
+    public static string ProfileEditorGatewayWarning => Get(nameof(ProfileEditorGatewayWarning));
+    public static string ProfileEditorSaveFailed => Get(nameof(ProfileEditorSaveFailed));
+    public static string ProfileEditorSaveCancelled => Get(nameof(ProfileEditorSaveCancelled));
 }
