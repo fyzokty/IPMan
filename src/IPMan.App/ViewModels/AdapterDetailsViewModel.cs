@@ -66,7 +66,7 @@ public sealed partial class AdapterDetailsViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(snapshot);
 
         IsConnected = snapshot.IsConnected;
-        ConnectionState = AdapterDisplayFormatter.FormatConnectionState(snapshot.IsConnected);
+        ConnectionState = AdapterDisplayFormatter.FormatConnectionStatus(snapshot);
         Name = snapshot.Name;
         Description = AdapterDisplayFormatter.OrUnavailable(snapshot.Description);
         MacAddress = AdapterDisplayFormatter.OrUnavailable(snapshot.MacAddress);

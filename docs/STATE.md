@@ -21,6 +21,9 @@ Windows toast notifications for adapter-changing outcomes, switchable in setting
 critical-only log under `%LocalAppData%\IPMan\logs\` and an unclean-exit marker that
 starts after the first change (07); a diagnostics window behind settings with a
 copyable plain-text report (08).
+Adapter tabs and details now show Windows NLM/NCSI's IPv4 internet assessment,
+without IPMan ping/HTTP/DNS probes, with plain Turkish connection names and virtual
+adapters hidden by default (12). The status card and wireless shortcut await 13.
 Profiles / settings: one JSON file per profile under `Documents\IPMan\Profiles\`,
 settings in `Documents\IPMan\settings.json`; recovery snapshots stay in
 `%LocalAppData%\IPMan\Backup\` (ADR-015 supersedes ADR-012).
@@ -39,7 +42,7 @@ Design: Windows 11 Fluent tokens and simplified component specifications in `doc
 Order and details live in `docs/backlog/`:
 1. 10 — portable package and installer
 2. 11 — real-adapter verification on an isolated VM (can run in parallel)
-3. 12–18 — simple-first UX overhaul (ADR-018: connectivity indication, main screen, safe switching with countdown, setting form, manual details, plain terminology, tray menu)
+3. 13–18 — simple-first UX overhaul (ADR-018: main screen and wireless shortcut, safe switching with countdown, setting form, manual details, plain terminology, tray menu)
 
 # Constraints
 - Destructive network tests are opt-in and must run only on an isolated VM adapter

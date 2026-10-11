@@ -505,4 +505,28 @@
   <data name="DraftDifferentHint" xml:space="preserve"><value>Windows’tan farklı</value></data>
   <data name="ProfileEmptyTitle" xml:space="preserve"><value>Kayıtlı profil bulunamadı</value></data>
   <data name="ProfileEmptyDescription" xml:space="preserve"><value>Yeni bir profili aşağıdaki alandan kaydedebilirsiniz.</value></data>
+  <data name="ConnectionStatusCableDisconnected" xml:space="preserve">
+    <value>Kablo takılı değil</value>
+  </data>
+  <data name="ConnectionStatusNoConnection" xml:space="preserve">
+    <value>Bağlantı yok</value>
+  </data>
+  <data name="ConnectionStatusInternet" xml:space="preserve">
+    <value>İnternet çalışıyor</value>
+  </data>
+  <data name="ConnectionStatusLocalNetwork" xml:space="preserve">
+    <value>Yerel ağ — internet yok</value>
+  </data>
+  <data name="WiredConnectionName" xml:space="preserve">
+    <value>Kablolu bağlantı ({0})</value>
+  </data>
+  <data name="WirelessConnectionName" xml:space="preserve">
+    <value>Kablosuz bağlantı ({0})</value>
+  </data>
+  <data name="VirtualConnectionName" xml:space="preserve">
+    <value>Sanal bağlantı ({0})</value>
+  </data>
+  <data name="AdapterAccessibleDescription" xml:space="preserve">
+    <value>{0} — {1}</value>
+  </data>
 </root>
