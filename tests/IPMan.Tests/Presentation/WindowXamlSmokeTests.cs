@@ -77,32 +77,19 @@ public sealed partial class WindowXamlSmokeTests
         fixture.Main.OpenDetailsCommand.Execute(null);
         Layout(main);
         AdapterViewModel adapter = Assert.Single(fixture.Main.Adapters);
-        Assert.Contains(Descendants(mainContent).OfType<TextBox>(), element => ReferenceEquals(element.DataContext, adapter.Draft));
-        TextBlock profileGuidance = Assert.Single(Descendants(mainContent).OfType<TextBlock>(), element =>
-            ReferenceEquals(element.DataContext, adapter.Draft) &&
-            BindingOperations.GetBinding(element, TextBlock.TextProperty)?.Path.Path == nameof(AdapterDraftViewModel.ProfileGuidance));
-        Border guidanceBand = Assert.IsType<Border>(VisualTreeHelper.GetParent(VisualTreeHelper.GetParent(profileGuidance)));
-        Assert.Equal(Visibility.Collapsed, guidanceBand.Visibility);
-        Assert.Equal(new Size(), guidanceBand.DesiredSize);
-        FluentMotion.SetIsEnabled(mainContent, false);
-        TextBox draftBox = Assert.Single(Descendants(mainContent).OfType<TextBox>(), element => element.Name == "Ipv4AddressBox");
-        Size originalFieldSize = draftBox.RenderSize;
-        adapter.Draft.Ipv4Address = "invalid";
-        adapter.Draft.MarkAllFieldsTouched();
-        Assert.NotEmpty(adapter.Draft.Ipv4AddressError);
-        fixture.Main.Actions.StatusMessage = string.Join(Environment.NewLine, Enumerable.Repeat("Result", 4));
-        fixture.Main.Actions.StatusSeverity = ApplyStatusSeverity.Error;
-        fixture.Main.Actions.IsBusy = true;
+        AdapterDetailsPage detailsView = Assert.Single(Descendants(mainContent).OfType<AdapterDetailsPage>());
+        Assert.Same(fixture.Main.DetailsPage, detailsView.DataContext);
+        fixture.Main.DetailsPage!.IsStatic = true;
+        fixture.Main.DetailsPage.Fields[0].Value = "invalid";
         Layout(main);
-        Assert.Equal(originalFieldSize, draftBox.RenderSize);
-        Border errorLine = (Border)draftBox.Template.FindName("FocusLine", draftBox);
-        Assert.Equal(((SolidColorBrush)main.Resources["ErrorBorderBrush"]).Color, ((SolidColorBrush)errorLine.Background).Color);
-        Assert.Equal(1, errorLine.Opacity);
-        fixture.Main.Actions.ClearStatusCommand.Execute(null);
-        fixture.Main.Actions.IsBusy = false;
+        Assert.NotEmpty(fixture.Main.DetailsPage.Fields[0].Error);
+        Assert.False(fixture.Main.DetailsPage.ApplyCommand.CanExecute(null));
+        fixture.Confirmation.Answer = true;
         fixture.Main.GoBackCommand.Execute(null);
-        Assert.True(adapter.Draft.IsDirty);
-        Assert.True(fixture.Main.HasDirtyDrafts);
+        Assert.False(adapter.Draft.IsDirty);
+        Assert.False(fixture.Main.HasUnappliedChanges);
+        Assert.Null(fixture.Main.DetailsPage);
+        fixture.Confirmation.Requests.Clear();
         Layout(main);
 
         // Lay out the popup child directly: opening a Popup would create a native window.
@@ -246,7 +233,7 @@ public sealed partial class WindowXamlSmokeTests
             });
             FakeDiagnosticsSources sources = new();
             Notifications = new OperationNotificationService(SettingsRepository, sources);
-            Notifications.Report(Strings.CommandApply, TestData.Snapshot().Id.Value, "Ethernet", true);
+            Notifications.Report(Strings.DetailsApply, TestData.Snapshot().Id.Value, "Ethernet", true);
             AdapterActionsViewModel actions = new(new FakeStaticIpv4ApplyService(), new FakeDhcpApplyService(),
                 new FakeRecoveryRestoreService(), Confirmation, Coordinator, Safety);
             FakeWindowProfileDialogs dialogs = new();

@@ -6,13 +6,13 @@ adapter through the two apply services, with per-adapter pruning (ADR-016). **Th
 and restore paths have never run against a real adapter** — only unit tests through the
 fake WMI seam; real proof needs an isolated VM with the `IPMAN_*` opt-in (backlog 11).
 
-UI: the selected adapter tab applies. `Uygula`, `Otomatik Al (DHCP)` and
-`Son Yapılandırmayı Geri Yükle` run through one shared `AdapterActionsViewModel`
-whose `IsBusy` locks the edit fields; the draft validates live and shows per-field
-Turkish errors once a field is edited. Conflict overrides and restore ask through
-`IUserConfirmationService`; every outcome is inline text with a severity.
+UI: Home/Details/ProfileEditor navigation uses a connection selector and saved-setting cards.
+Details (16) loads the selected connection, shows live field differences and validation, and
+applies static or automatic settings through the shared safe-switch coordinator. Cancel resets
+the fields; save-as-setting prefills the new editor. Results and retry stay inline, unsaved
+back/close prompts are shared, and losing the adapter returns Home and disposes the page.
 Profiles: setting cards over `IProfileCatalog` — favorites first, search,
-context menu (rename, duplicate, favorite, export, delete), inline save, single-profile
+context menu (rename, duplicate, favorite, export, delete), full-page save, single-profile
 JSON import/export, malformed files listed separately (backlog 01).
 Shell: tray icon with close-to-tray choice asked once, persisted window bounds and last
 adapter (02); settings window behind the gear (03); follow-Windows / light / dark theme
@@ -21,12 +21,11 @@ Windows toast notifications for adapter-changing outcomes, switchable in setting
 critical-only log under `%LocalAppData%\IPMan\logs\` and an unclean-exit marker that
 starts after the first change (07); a diagnostics window behind settings with a
 copyable plain-text report (08).
-Adapter tabs and details now show Windows NLM/NCSI's IPv4 internet assessment,
+Connections and details show Windows NLM/NCSI's IPv4 internet assessment,
 without IPMan ping/HTTP/DNS probes, with plain Turkish connection names and virtual
 adapters hidden by default (12). The main window is profile-centric (13): connection
 selector, status card with wireless shortcut, Kart/Liste settings with search and a built-in
-Otomatik card; "Bu ağa geç" applies directly. The legacy current/draft view lives behind
-"Ayrıntılar ve elle ayar" until 16.
+Otomatik card; "Bu ağa geç" applies directly. "Ayrıntılar ve elle ayar" opens the manual page.
 Safe switching (14): cards, automatic settings, manual apply and DHCP use conditional
 internet-loss confirmation and a mandatory 15-second topmost countdown. Keep, rollback
 and rollback failure appear in the shared inline banner; notifications wait for the final
@@ -35,7 +34,6 @@ active countdown while hiding to the tray leaves it running. Restore itself star
 Setting editor (15): new/edit open a full-page form in the main window's Home/Details/ProfileEditor navigation.
 Save-only returns to the refreshed catalog; save-and-switch uses the shared safe-switch command for static and DHCP targets.
 Suggestions exclude the gateway captured on opening; unsaved back/close prompts and adapter-busy switch gating are covered by fakes and light/dark host renders.
-The legacy inline draft save remains until Details is replaced in backlog 16.
 Profiles / settings: one JSON file per profile under `Documents\IPMan\Profiles\`,
 settings in `Documents\IPMan\settings.json`; recovery snapshots stay in
 `%LocalAppData%\IPMan\Backup\` (ADR-015 supersedes ADR-012).
@@ -48,13 +46,13 @@ Distribution: win-x64 self-contained portable zip and Inno Setup installer tooli
 Single instance: `Local\` mutex + admin-only pipe activation; mutation serialized
 machine-wide by a `Global\` mutex (ADR-011, ADR-014).
 i18n: `Strings.resx`, single language (Turkish).
-Design: Windows 11 Fluent tokens and simplified component specifications in `docs/03_UI_UX/DESIGN.md`, UX principles in `docs/03_UI_UX/UX-ilkeleri.md`, and 10 canonical reference screens in `docs/03_UI_UX/stitch-karma/` (ADR-018). The legacy technician layout in `docs/03_UI_UX/stitch/` is superseded. The main window follows the new design (13); 16–18 remain. Shared styles live in `Themes/Controls.xaml`.
+Design: Windows 11 Fluent tokens and simplified component specifications in `docs/03_UI_UX/DESIGN.md`, UX principles in `docs/03_UI_UX/UX-ilkeleri.md`, and 10 canonical reference screens in `docs/03_UI_UX/stitch-karma/` (ADR-018). The legacy technician layout in `docs/03_UI_UX/stitch/` is superseded. The main window follows the new design (13); 17–18 remain. Shared styles live in `Themes/Controls.xaml`.
 
 # Next
 Order and details live in `docs/backlog/`:
 1. 10 — portable package and installer
 2. 11 — real-adapter verification on an isolated VM (can run in parallel)
-3. 16–18 — remaining simple-first UX overhaul (ADR-018: manual details, plain terminology, tray menu)
+3. 17–18 — remaining simple-first UX overhaul (ADR-018: plain terminology, tray menu)
 
 # Constraints
 - Destructive network tests are opt-in and must run only on an isolated VM adapter

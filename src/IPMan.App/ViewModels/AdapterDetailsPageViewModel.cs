@@ -16,6 +16,7 @@ public sealed partial class AdapterDetailsPageViewModel : ObservableObject, IDis
 {
     private readonly IAsyncRelayCommand<ManualSettingsRequest>? _applyBoundary;
     private ManualSettingsRequest? _lastRequest;
+    private ManualSettingsRequest? _appliedRequest;
     private NetworkConfigurationMode _baselineMode;
     [ObservableProperty]
     private bool _isAutomatic;
@@ -70,6 +71,7 @@ public sealed partial class AdapterDetailsPageViewModel : ObservableObject, IDis
     public NetworkConfigurationMode Mode => IsAutomatic ? NetworkConfigurationMode.Dhcp : NetworkConfigurationMode.Static;
     public bool IsModeChanged => Mode != Adapter.Snapshot.Mode;
     public int ChangeCount => Fields.Count(field => field.IsChanged) + (IsModeChanged ? 1 : 0);
+    public bool HasUnappliedChanges => ChangeCount > 0 && CreateRequest() != _appliedRequest;
     public string ChangeSummary => ChangeCount == 0 ? Strings.DetailsNoChanges :
         Strings.FormatDetailsChangeCount(ChangeCount);
     public string ModeCurrentText => Strings.FormatDetailsModeCurrent(
@@ -81,7 +83,8 @@ public sealed partial class AdapterDetailsPageViewModel : ObservableObject, IDis
         Adapter.Snapshot.InternetConnectivity is InternetConnectivity.LocalNetwork or InternetConnectivity.None
             ? ApplyStatusSeverity.Warning : ApplyStatusSeverity.None;
     public bool HasFailure => Failure is not null;
-    public ManualSettingsRequest CreateRequest() => new(Adapter.Id, Mode, Adapter.Draft.ToValues());
+    public bool HasActionStatus => !HasFailure && Actions.HasStatusMessage;
+    public ManualSettingsRequest CreateRequest() => new(Adapter.Id, Mode, IsAutomatic ? DraftValues.FromSnapshot(Adapter.Snapshot) : Adapter.Draft.ToValues());
 
     /// <summary>Accepts a structured failure and the exact operation the retry must replay.</summary>
     public void ShowFailure(DetailsFailureMessage message, ManualSettingsRequest request)
@@ -101,17 +104,24 @@ public sealed partial class AdapterDetailsPageViewModel : ObservableObject, IDis
         ArgumentNullException.ThrowIfNull(request);
         if (request.AdapterId != Adapter.Id) throw new ArgumentException("Request belongs to another adapter.", nameof(request));
         _lastRequest = request;
+        if (message is null) _appliedRequest = request;
         Failure = message;
+        Refresh();
         RetryCommand.NotifyCanExecuteChanged();
     }
 
     private void ApplyCompleted(object? sender, bool succeeded)
     {
-        if (succeeded && ReferenceEquals(Actions.CurrentAdapter, Adapter)) Failure = null;
+        if (succeeded && ReferenceEquals(Actions.CurrentAdapter, Adapter))
+        {
+            _appliedRequest = _lastRequest;
+            Failure = null;
+            Refresh();
+        }
     }
 
     [RelayCommand] private void Back() => BackRequested?.Invoke(this, EventArgs.Empty);
-    [RelayCommand] private void SaveAsSetting() => SaveAsSettingRequested?.Invoke(this, CreateRequest());
+    [RelayCommand(CanExecute = nameof(CanEdit))] private void SaveAsSetting() => SaveAsSettingRequested?.Invoke(this, CreateRequest());
     private bool CanCancel() => !IsBusy && ChangeCount > 0;
     [RelayCommand(CanExecute = nameof(CanCancel))] private void Cancel()
     {
@@ -126,11 +136,12 @@ public sealed partial class AdapterDetailsPageViewModel : ObservableObject, IDis
     {
         ShowTechnicalDetails = false;
         OnPropertyChanged(nameof(HasFailure));
+        OnPropertyChanged(nameof(HasActionStatus));
         RetryCommand.NotifyCanExecuteChanged();
     }
     partial void OnIsAutomaticChanged(bool value) => Refresh();
 
-    private bool CanApply() => !IsBusy && ChangeCount > 0 && (IsAutomatic || Adapter.Draft.IsValid) && CanExecute(CreateRequest());
+    private bool CanApply() => !IsBusy && HasUnappliedChanges && (IsAutomatic || Adapter.Draft.IsValid) && CanExecute(CreateRequest());
     private bool CanRetry() => !IsBusy && HasFailure && _lastRequest is not null && CanExecute(_lastRequest);
     private bool CanExecute(ManualSettingsRequest request) => ReferenceEquals(Actions.CurrentAdapter, Adapter) &&
         (_applyBoundary?.CanExecute(request) ?? (request.Mode == NetworkConfigurationMode.Dhcp
@@ -165,6 +176,7 @@ public sealed partial class AdapterDetailsPageViewModel : ObservableObject, IDis
             bool followsMode = Mode == _baselineMode;
             _baselineMode = Adapter.Snapshot.Mode;
             if (followsMode) IsAutomatic = _baselineMode == NetworkConfigurationMode.Dhcp;
+            if (ChangeCount == 0) _appliedRequest = null;
         }
         Refresh();
     }
@@ -184,10 +196,13 @@ public sealed partial class AdapterDetailsPageViewModel : ObservableObject, IDis
         OnPropertyChanged(nameof(IsModeChanged));
         OnPropertyChanged(nameof(ModeCurrentText));
         OnPropertyChanged(nameof(ChangeCount));
+        OnPropertyChanged(nameof(HasUnappliedChanges));
         OnPropertyChanged(nameof(ChangeSummary));
         OnPropertyChanged(nameof(StatusText));
         OnPropertyChanged(nameof(ConnectivitySeverity));
+        OnPropertyChanged(nameof(HasActionStatus));
         CancelCommand.NotifyCanExecuteChanged();
+        SaveAsSettingCommand.NotifyCanExecuteChanged();
         ApplyCommand.NotifyCanExecuteChanged();
         RetryCommand.NotifyCanExecuteChanged();
     }

@@ -189,7 +189,7 @@ public partial class MainWindow : Window
             e.Cancel = true;
             return;
         }
-        if (!_isExiting && !_viewModel.ConfirmEditorExit())
+        if (!_isExiting && !_viewModel.ConfirmEditorExit(_safetyCoordinator.IsCountdownActive))
         {
             e.Cancel = true;
             return;
@@ -284,7 +284,7 @@ public partial class MainWindow : Window
 
     private async void OnTrayExitRequested(object? sender, EventArgs e)
     {
-        if (_exitCheckPending || !_viewModel.ConfirmEditorExit()) return;
+        if (_exitCheckPending || !_viewModel.ConfirmEditorExit(_safetyCoordinator.IsCountdownActive)) return;
         if (_safetyCoordinator.IsCountdownActive)
         {
             _exitCheckPending = true;
@@ -360,7 +360,7 @@ public partial class MainWindow : Window
         }
     }
 
-    private bool RequiresExitConfirmation() => _viewModel.IsBusy || _viewModel.HasDirtyDrafts;
+    private bool RequiresExitConfirmation() => _viewModel.IsBusy;
 
     private void PersistSettings()
     {

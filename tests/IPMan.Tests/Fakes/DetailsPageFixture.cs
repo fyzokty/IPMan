@@ -12,7 +12,8 @@ internal sealed class DetailsPageFixture : IDisposable
         Adapter = new AdapterViewModel(snapshot ?? TestData.Snapshot(mode: NetworkConfigurationMode.Static),
             new FakeClipboardService(), new StaticIpv4ConfigurationValidator());
         Actions = new AdapterActionsViewModel(StaticApply, DhcpApply, new FakeRecoveryRestoreService(),
-            new FakeUserConfirmationService { Answer = true }, new FakeAdapterRefreshCoordinator());
+            new FakeUserConfirmationService { Answer = true }, new FakeAdapterRefreshCoordinator(),
+            new FakeSafetyCountdownCoordinator());
         Actions.Attach(Adapter);
         Page = new AdapterDetailsPageViewModel(Adapter, Actions, boundary);
     }

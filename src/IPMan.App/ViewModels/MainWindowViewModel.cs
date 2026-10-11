@@ -183,8 +183,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     /// <summary>Connection selection remains fixed while an action targets the selected adapter.</summary>
     public bool IsConnectionSelectionEnabled => !IsBusy && !IsProfileEditorOpen;
 
-    /// <summary>Gets whether any adapter draft contains unapplied changes.</summary>
-    public bool HasDirtyDrafts => Adapters.Any(adapter => adapter.Draft.IsDirty);
+    /// <summary>Gets whether the manual page contains unapplied changes.</summary>
+    public bool HasUnappliedChanges => DetailsPage?.HasUnappliedChanges == true;
 
     /// <summary>Sets the adapter identity restored from application settings before discovery.</summary>
     public void SetLastSelectedAdapterId(string? adapterId)
@@ -247,6 +247,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
         _isDisposed = true;
         CloseEditor();
+        CloseDetails();
 
         _refreshCoordinator.Refreshed -= OnAdaptersRefreshed;
         _refreshCoordinator.RefreshFailed -= OnAdapterRefreshFailed;
@@ -262,11 +263,15 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     partial void OnSelectedAdapterChanged(AdapterViewModel? value)
     {
+        if (DetailsPage is not null && !ReferenceEquals(DetailsPage.Adapter, value))
+        {
+            CloseDetails();
+            CurrentPage = MainWindowPage.Home;
+        }
         _lastSelectedAdapterId = value?.Id.Value;
         UpdateSelectedAdapterStatus();
         Actions.Attach(value);
         UpdateEditorAvailability();
-        ProfilePanel?.SetDraft(value?.Draft);
         UpdateHome();
     }
 
@@ -432,7 +437,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
                     : Strings.StateReady;
         }
 
-        OnPropertyChanged(nameof(HasDirtyDrafts));
+        OnPropertyChanged(nameof(HasUnappliedChanges));
     }
 
     private void NotifyStateVisibilityChanged()
@@ -452,6 +457,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private ProfileEditorViewModel? _profileEditor;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasUnappliedChanges))]
+    private AdapterDetailsPageViewModel? _detailsPage;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsCardView))]
@@ -502,7 +511,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             NetworkAdapterSnapshot snapshot = SelectedAdapter.Snapshot;
             string name = snapshot.Mode == NetworkConfigurationMode.Dhcp ? Strings.ModeDhcp :
                 new ActiveSettingMatcher().Find(snapshot, ProfilePanel?.AllProfiles ?? [])?.Name ??
-                Strings.FormatManualSettingName(snapshot.Ipv4Address ?? Strings.ValueUnavailable);
+                Strings.SafeSwitchManualSetting;
             return Strings.FormatCurrentNetwork(name);
         }
     }
@@ -515,9 +524,16 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void OpenDetails()
     {
-        if (ConfirmEditorExit())
+        if (SelectedAdapter is not null && ConfirmEditorExit())
         {
             CloseEditor();
+            CloseDetails();
+            SelectedAdapter.Draft.GetCurrentValues();
+            DetailsPage = new(SelectedAdapter, Actions,
+                new AsyncRelayCommand<ManualSettingsRequest>(ApplyDetailsAsync));
+            DetailsPage.BackRequested += OnEditorBackRequested;
+            DetailsPage.SaveAsSettingRequested += OnDetailsSaveRequested;
+            DetailsPage.PropertyChanged += OnDetailsPropertyChanged;
             CurrentPage = MainWindowPage.Details;
         }
     }
@@ -527,6 +543,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         if (!ConfirmEditorExit()) return;
         CloseEditor();
+        CloseDetails();
         CurrentPage = MainWindowPage.Home;
     }
 
@@ -543,6 +560,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         if (_editorFactory is null || !ConfirmEditorExit()) return;
         CloseEditor();
+        CloseDetails();
         _editorAdapterId = SelectedAdapter?.Id;
         ProfileEditor = _editorFactory(profile, SelectedAdapter?.Snapshot.Gateway);
         UpdateEditorAvailability();
@@ -553,9 +571,87 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     /// <summary>Shared guard for editor navigation and window/tray exit.</summary>
-    public bool ConfirmEditorExit() => ProfileEditor?.IsBusy != true &&
-        (ProfileEditor?.IsDirty != true || _confirmationService?.Confirm(new UserConfirmationRequest(
-            Strings.ProfileEditorDiscardTitle, Strings.ProfileEditorDiscardMessage)) == true);
+    public bool ConfirmEditorExit(bool allowActiveSwitch = false)
+    {
+        if (allowActiveSwitch && DetailsPage?.IsBusy == true) return true;
+        if (ProfileEditor?.IsBusy == true || DetailsPage?.IsBusy == true) return false;
+        if (ProfileEditor?.IsDirty == true)
+            return _confirmationService?.Confirm(new UserConfirmationRequest(
+                Strings.ProfileEditorDiscardTitle, Strings.ProfileEditorDiscardMessage)) == true;
+        return !HasUnappliedChanges || _confirmationService?.Confirm(new UserConfirmationRequest(
+            Strings.ProfileEditorDiscardTitle, Strings.DetailsDiscardMessage)) == true;
+    }
+
+    private async Task ApplyDetailsAsync(ManualSettingsRequest? request)
+    {
+        AdapterDetailsPageViewModel? page = DetailsPage;
+        if (page is null || request is null || SelectedAdapter?.Id != request.AdapterId || IsBusy) return;
+        NetworkAdapterSnapshot snapshot = page.Adapter.Snapshot;
+        string previousName = snapshot.Mode == NetworkConfigurationMode.Dhcp ? Strings.SafeSwitchAutomatic :
+            new ActiveSettingMatcher().Find(snapshot, ProfilePanel?.AllProfiles ?? [])?.Name ?? Strings.SafeSwitchManualSetting;
+        string settingName = request.Mode == NetworkConfigurationMode.Dhcp ? Strings.SafeSwitchAutomatic : Strings.SafeSwitchManualSetting;
+        page.IsAutomatic = request.Mode == NetworkConfigurationMode.Dhcp;
+        if (request.Mode == NetworkConfigurationMode.Dhcp)
+            await Actions.ApplyDhcpCommand.ExecuteAsync(null);
+        else
+        {
+            AdapterDraftViewModel values = page.Adapter.Draft;
+            values.Ipv4Address = request.Values.Ipv4Address;
+            values.SubnetMask = request.Values.SubnetMask;
+            values.Gateway = request.Values.Gateway;
+            values.PrimaryDns = request.Values.PrimaryDns;
+            values.SecondaryDns = request.Values.SecondaryDns;
+            await Actions.ApplyStaticCommand.ExecuteAsync(null);
+        }
+        if (!ReferenceEquals(page, DetailsPage)) return;
+        if (Actions.LastSwitchOutcome?.Status == SafeSwitchStatus.ApplyFailed)
+        {
+            if (Actions.LastStaticApplyResult is { } staticResult)
+                page.PresentResult(staticResult, request, settingName, previousName);
+            else if (Actions.LastDhcpApplyResult is { } dhcpResult)
+                page.PresentResult(dhcpResult, request, settingName, previousName);
+            else
+                page.ShowFailure(new(Strings.FormatDetailsFailureTitle(settingName), Actions.StatusMessage,
+                    Strings.DetailsUncertain, Actions.LastSwitchOutcome.ToString()), request);
+        }
+        else if (Actions.LastSwitchOutcome?.Status == SafeSwitchStatus.RevertFailed)
+            page.ShowFailure(new(Strings.FormatDetailsFailureTitle(settingName), Actions.StatusMessage,
+                Strings.DetailsUncertain, Actions.LastSwitchOutcome.ToString()), request);
+        else if (Actions.LastSwitchOutcome?.Status is SafeSwitchStatus.Kept or SafeSwitchStatus.NoChange)
+        {
+            if (Actions.LastStaticApplyResult is { } staticResult)
+                page.PresentResult(staticResult, request, settingName, previousName);
+            else if (Actions.LastDhcpApplyResult is { } dhcpResult)
+                page.PresentResult(dhcpResult, request, settingName, previousName);
+        }
+        else if (Actions.LastSwitchOutcome?.Status == SafeSwitchStatus.Reverted)
+            page.DismissFailureCommand.Execute(null);
+    }
+
+    private void OnDetailsPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(AdapterDetailsPageViewModel.HasUnappliedChanges))
+            OnPropertyChanged(nameof(HasUnappliedChanges));
+    }
+
+    private void OnDetailsSaveRequested(object? sender, ManualSettingsRequest request)
+    {
+        if (_editorFactory is null || DetailsPage?.IsBusy != false) return;
+        CloseDetails();
+        OpenEditor(null);
+        ProfileEditor?.Prefill(request.Mode, request.Values);
+    }
+
+    private void CloseDetails()
+    {
+        if (DetailsPage is null) return;
+        DetailsPage.BackRequested -= OnEditorBackRequested;
+        DetailsPage.SaveAsSettingRequested -= OnDetailsSaveRequested;
+        DetailsPage.PropertyChanged -= OnDetailsPropertyChanged;
+        DetailsPage.Dispose();
+        DetailsPage.Adapter.Draft.GetCurrentValues();
+        DetailsPage = null;
+    }
 
     private void OnEditorBackRequested(object? sender, EventArgs e) => GoBack();
 

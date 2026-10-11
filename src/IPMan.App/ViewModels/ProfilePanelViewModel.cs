@@ -11,7 +11,7 @@ using IPMan.Domain.Profiles;
 
 namespace IPMan.App.ViewModels;
 
-/// <summary>Coordinates profile list, persistence commands and draft loading.</summary>
+/// <summary>Coordinates profile list, persistence commands.</summary>
 public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposable
 {
     private readonly IProfileCatalog _catalog;
@@ -19,7 +19,6 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     private readonly IUserTextInputService _textInputService;
     private readonly IUserConfirmationService _confirmationService;
     private readonly IUiDispatcher _uiDispatcher;
-    private AdapterDraftViewModel? _draft;
     private bool _isDisposed;
 
     [ObservableProperty]
@@ -31,16 +30,6 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
 
     [ObservableProperty]
     private ProfileListItemViewModel? _selectedProfile;
-
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
-    private string _newProfileName = string.Empty;
-
-    [ObservableProperty]
-    private string _newProfileDescription = string.Empty;
-
-    [ObservableProperty]
-    private bool _newProfileUsesDhcp;
 
     /// <summary>Creates the profile panel and begins observing catalog changes.</summary>
     public ProfilePanelViewModel(
@@ -81,13 +70,6 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
 
     public IReadOnlyList<NetworkProfile> AllProfiles => _catalog.Profiles;
 
-    /// <summary>Associates the selected adapter draft; null disables draft-specific commands.</summary>
-    public void SetDraft(AdapterDraftViewModel? draft)
-    {
-        _draft = draft;
-        SaveCommand.NotifyCanExecuteChanged();
-    }
-
     public void Dispose()
     {
         if (_isDisposed)
@@ -100,29 +82,6 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     }
 
     partial void OnSearchTextChanged(string value) => RefreshFromCatalog();
-
-    [RelayCommand(CanExecute = nameof(CanSave))]
-    private async Task SaveAsync()
-    {
-        if (_draft is null)
-        {
-            return;
-        }
-
-        if (string.IsNullOrWhiteSpace(NewProfileName))
-        {
-            StatusMessage = Strings.ProfileNameRequired;
-            return;
-        }
-
-        NetworkProfile profile = _draft.CreateProfile(NewProfileName, NewProfileDescription, NewProfileUsesDhcp);
-        ProfileSaveResult result = await _catalog.SaveAsync(profile, CancellationToken.None);
-        StatusMessage = ProfileResultMessageFormatter.Describe(result.Status);
-        if (result.IsSuccess && result.Profile is not null)
-        {
-            ClearFilterAndSelect(result.Profile.ProfileId);
-        }
-    }
 
     [RelayCommand]
     private async Task RenameAsync(ProfileListItemViewModel? item)
@@ -250,7 +209,6 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
         StatusMessage = ProfileResultMessageFormatter.Describe(result.Status);
     }
 
-    private bool CanSave() => _draft is not null && !string.IsNullOrWhiteSpace(NewProfileName);
 
     private NetworkProfile? GetProfile(ProfileListItemViewModel? item) =>
         (item ?? SelectedProfile)?.Profile;

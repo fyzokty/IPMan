@@ -29,6 +29,7 @@ public sealed partial class WindowXamlSmokeTests
             fixture.Settings, fixture.Theme, fixture.Notifications, fixture.Dispatcher,
             new FakeWindowSessionMarker(), (Func<DiagnosticsViewModel>)(() => fixture.Diagnostics), fixture.Safety);
         fixture.Main.OpenDetailsCommand.Execute(null);
+        fixture.Main.DetailsPage!.IsAutomatic = true;
         AssertNeverShown(main);
 
         // MainWindow's own HWND hooks need the real tray/theme services, so move its client tree into a
@@ -38,15 +39,19 @@ public sealed partial class WindowXamlSmokeTests
         main.Content = null;
         Window host = new() { DataContext = main.DataContext, Width = 1280, Height = 800, ShowActivated = false };
         AttachResources(host, theme);
+        host.Resources.MergedDictionaries.Add(main.Resources);
         DisabledAppearanceTests.ShortenMotion(host);
         host.Content = content;
+        LayoutContent(content);
+        Assert.Single(Descendants(content).OfType<Expander>(),
+            expander => ReferenceEquals(expander.DataContext, fixture.Main.DetailsPage)).IsExpanded = true;
         using HwndSource source = DisabledAppearanceTests.Show(content);
         try
         {
             LayoutContent(content);
             DisabledAppearanceTests.Pump(DisabledAppearanceTests.Settle);
             Button dhcp = Assert.Single(Descendants(content).OfType<Button>(),
-                button => ReferenceEquals(button.Command, fixture.Main.Actions.ApplyDhcpCommand));
+                button => ReferenceEquals(button.Command, fixture.Main.DetailsPage!.ApplyCommand));
             Button renew = Assert.Single(Descendants(content).OfType<Button>(),
                 button => ReferenceEquals(button.Command, fixture.Main.Actions.RenewIpCommand));
             Assert.True(dhcp.IsLoaded);
