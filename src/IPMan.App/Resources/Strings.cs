@@ -699,4 +699,12 @@ public static class Strings
         Format(Get("ProfileEditorOctetError"), CultureInfo.CurrentCulture, example);
     public static string FormatProfileEditorAddressFormatError(string example) =>
         Format(Get("ProfileEditorAddressFormatError"), CultureInfo.CurrentCulture, example);
+    // Safe switch review fixes
+    public static string FormatSafeSwitchUnverifiedCountdownTitle(string name) =>
+        Format(Get("SafeSwitchUnverifiedCountdownTitle"), CultureInfo.CurrentCulture, name);
+    public static string FormatSafeSwitchKeptUnverified(string name) =>
+        Format(Get("SafeSwitchKeptUnverified"), CultureInfo.CurrentCulture, name);
+    public static string SafeSwitchExitDeferred => Get(nameof(SafeSwitchExitDeferred));
+    public static string FormatDetailsUnverifiedTitle(string name) =>
+        Format(Get("DetailsUnverifiedTitleFormat"), CultureInfo.CurrentCulture, name);
 }

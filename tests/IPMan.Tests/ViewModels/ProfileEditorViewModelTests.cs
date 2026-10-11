@@ -16,8 +16,9 @@ public sealed class ProfileEditorViewModelTests
 {
     private static ProfileEditorViewModel Create(FakeProfileEditorCatalog? catalog = null,
         NetworkProfile? profile = null, SequenceIpv4ConflictProbe? probe = null, IDelayProvider? delay = null,
-        string? gateway = null) => new(catalog ?? new(), new StaticIpv4ConfigurationValidator(),
-            new(probe ?? new()), delay ?? new ImmediateDelayProvider(), profile, gateway);
+        string? gateway = null, string? adapterAddress = "192.168.1.20", string? adapterMask = "255.255.255.0") =>
+        new(catalog ?? new(), new StaticIpv4ConfigurationValidator(), new(probe ?? new()),
+            delay ?? new ImmediateDelayProvider(), profile, gateway, adapterAddress, adapterMask);
 
     [Fact]
     public void Address_ValidAndMaskEmpty_FillsMaskAndClearsTagAfterManualEdit()
@@ -308,7 +309,7 @@ public sealed class ProfileEditorViewModelTests
     {
         using FakeDelayProvider delay = new();
         SequenceIpv4ConflictProbe probe = new();
-        using ProfileEditorViewModel editor = Create(probe: probe, delay: delay);
+        using ProfileEditorViewModel editor = Create(probe: probe, delay: delay, adapterAddress: "10.0.0.20");
         editor.DeviceAddress = "192.168.1.10";
         Task previous = editor.SuggestionTask;
         editor.DeviceAddress = "10.0.0.10";
@@ -365,5 +366,44 @@ public sealed class ProfileEditorViewModelTests
         await editor.SuggestionTask.WaitAsync(TimeSpan.FromSeconds(5));
         Assert.Empty(probe.Addresses);
         Assert.False(editor.CanSave);
+    }
+
+    [Fact]
+    public async Task Suggestion_DeviceOutsideAdapterSubnet_IsUnverifiedWithoutProbe()
+    {
+        SequenceIpv4ConflictProbe probe = new();
+        using ProfileEditorViewModel editor = Create(probe: probe, adapterAddress: "10.0.0.20");
+        editor.DeviceAddress = "192.168.1.10";
+        await editor.SuggestionTask;
+        Assert.Equal("192.168.1.50", editor.Suggestion!.Address);
+        Assert.False(editor.IsSuggestionVerified);
+        Assert.Equal(Strings.ProfileEditorUnverified, editor.SuggestionStatusText);
+        Assert.Empty(probe.Addresses);
+    }
+
+    [Fact]
+    public async Task Suggestion_FormGatewayIsExcludedAndChangesRefreshSuggestion()
+    {
+        SequenceIpv4ConflictProbe probe = new();
+        using ProfileEditorViewModel editor = Create(probe: probe, gateway: "192.168.1.52");
+        editor.Gateway = "192.168.1.50";
+        editor.DeviceAddress = "192.168.1.10";
+        await editor.SuggestionTask;
+        Assert.Equal("192.168.1.51", editor.Suggestion!.Address);
+        Assert.DoesNotContain("192.168.1.50", probe.Addresses);
+
+        editor.Gateway = "192.168.1.51";
+        await editor.SuggestionTask;
+        Assert.Equal("192.168.1.50", editor.Suggestion!.Address);
+
+        Task current = editor.SuggestionTask;
+        editor.Gateway = " 192.168.1.51";
+        editor.Gateway = "192.168.1.51";
+        Assert.Same(current, editor.SuggestionTask);
+
+        editor.Gateway = "192.168.1.5";
+        await editor.SuggestionTask;
+        Assert.Equal("192.168.1.50", editor.Suggestion!.Address);
+        Assert.DoesNotContain("192.168.1.52", probe.Addresses);
     }
 }

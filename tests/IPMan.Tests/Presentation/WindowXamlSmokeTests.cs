@@ -240,8 +240,9 @@ public sealed partial class WindowXamlSmokeTests
             Profiles = new ProfilePanelViewModel(_catalog, dialogs, dialogs, Confirmation, Dispatcher);
             Main = new MainWindowViewModel(Coordinator, Dispatcher, new FakeClipboardService(), sources,
                 sources, sources, actions, new StaticIpv4ConfigurationValidator(), Profiles, Notifications,
-                (profile, gateway) => new(_catalog, new StaticIpv4ConfigurationValidator(),
-                    new(new SequenceIpv4ConflictProbe()), new ImmediateDelayProvider(), profile, gateway), Confirmation);
+                (profile, adapter) => new(_catalog, new StaticIpv4ConfigurationValidator(),
+                    new(new SequenceIpv4ConflictProbe()), new ImmediateDelayProvider(), profile, adapter?.Gateway,
+                    adapter?.Ipv4Address, adapter?.SubnetMask), Confirmation);
             Main.SetShowVirtualAdapters(SettingsRepository.Settings.ShowVirtualAdapters);
             Main.Initialize();
             Coordinator.PublishRefresh(adapters ?? [TestData.Snapshot()]);

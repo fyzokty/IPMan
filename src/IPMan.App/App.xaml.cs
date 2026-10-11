@@ -171,6 +171,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<ISessionMarker>(_ => new FileSessionMarker(AppStorageLayout.SessionMarkerFile));
 
         services.AddSingleton<IClock, SystemClock>();
+        services.AddSingleton<IMonotonicClock, SystemMonotonicClock>();
         services.AddSingleton<IDelayProvider, SystemDelayProvider>();
         services.AddSingleton<IElevationStateProvider, WindowsElevationStateProvider>();
         services.AddSingleton<ISystemDiagnosticsProvider, WindowsSystemDiagnosticsProvider>();
@@ -237,7 +238,9 @@ public partial class App : System.Windows.Application
             uiDispatcher, provider.GetRequiredService<WindowsThemeService>(),
             provider.GetRequiredService<Func<InternetLossConfirmationViewModel, InternetLossConfirmationWindow>>(),
             provider.GetRequiredService<Func<SafetyCountdownViewModel, SafetyCountdownWindow>>(),
-            provider.GetRequiredService<Func<SafeSwitchExitWindow>>()));
+            provider.GetRequiredService<Func<SafeSwitchExitWindow>>(),
+            text => provider.GetRequiredService<TrayIconManager>().ShowSystemNotification(
+                IPMan.App.Resources.Strings.ApplicationName, text, isError: false)));
         services.AddSingleton<IInternetLossConfirmationService>(provider => provider.GetRequiredService<WpfSafeSwitchDialogService>());
         services.AddSingleton<ISafetyCountdownDialogService>(provider => provider.GetRequiredService<WpfSafeSwitchDialogService>());
         services.AddSingleton<ISafetyCountdownCoordinator, SafeSwitchCoordinator>();
@@ -246,12 +249,13 @@ public partial class App : System.Windows.Application
         services.AddSingleton<OperationNotificationService>();
         services.AddSingleton<AdapterActionsViewModel>();
         services.AddSingleton<ProfilePanelViewModel>();
-        services.AddSingleton<Func<IPMan.Domain.Profiles.NetworkProfile?, string?, ProfileEditorViewModel>>(provider =>
-            (profile, gateway) => new ProfileEditorViewModel(
+        services.AddSingleton<Func<IPMan.Domain.Profiles.NetworkProfile?, IPMan.Domain.Networking.NetworkAdapterSnapshot?, ProfileEditorViewModel>>(provider =>
+            (profile, adapter) => new ProfileEditorViewModel(
                 provider.GetRequiredService<IProfileCatalog>(),
                 provider.GetRequiredService<IStaticIpv4ConfigurationValidator>(),
                 provider.GetRequiredService<Ipv4AddressSuggestionService>(),
-                provider.GetRequiredService<IDelayProvider>(), profile, gateway));
+                provider.GetRequiredService<IDelayProvider>(), profile, adapter?.Gateway,
+                adapter?.Ipv4Address, adapter?.SubnetMask));
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<DiagnosticsViewModel>(provider => new DiagnosticsViewModel(

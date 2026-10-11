@@ -6,15 +6,20 @@ using IPMan.Application.Common;
 
 namespace IPMan.App.ViewModels;
 
-/// <summary>Uses an absolute deadline so delayed dispatcher ticks never extend the safety window.</summary>
+/// <summary>
+/// Uses an absolute monotonic deadline so delayed dispatcher ticks never extend the safety
+/// window and wall-clock changes can neither freeze nor shorten it.
+/// </summary>
 public sealed partial class SafetyCountdownViewModel : ObservableObject, IDisposable
 {
     public const int DurationSeconds = 15;
-    private readonly IClock _clock;
+    private static readonly TimeSpan Duration = TimeSpan.FromSeconds(DurationSeconds);
+    private readonly IMonotonicClock _clock;
     private readonly ITimerService _timerService;
     private readonly TaskCompletionSource<SafetyCountdownDecision> _decision = new(TaskCreationOptions.RunContinuationsAsynchronously);
     private IDisposable? _timer;
-    private DateTimeOffset _deadline;
+    private TimeSpan _deadline;
+    private TimeSpan? _pausedRemaining;
     private bool _started;
 
     [ObservableProperty]
@@ -23,19 +28,26 @@ public sealed partial class SafetyCountdownViewModel : ObservableObject, IDispos
     [ObservableProperty]
     private double _progress = 1;
 
-    public SafetyCountdownViewModel(SafeSwitchRequest request, IClock clock, ITimerService timerService)
+    /// <param name="unverified">The mutation ran but could not be verified; the title says so.</param>
+    public SafetyCountdownViewModel(SafeSwitchRequest request, IMonotonicClock clock, ITimerService timerService,
+        bool unverified = false)
     {
         ArgumentNullException.ThrowIfNull(request);
         ArgumentNullException.ThrowIfNull(clock);
         ArgumentNullException.ThrowIfNull(timerService);
         _clock = clock;
         _timerService = timerService;
-        Title = Strings.FormatSafeSwitchCountdownTitle(request.SettingName);
+        IsUnverified = unverified;
+        Title = unverified
+            ? Strings.FormatSafeSwitchUnverifiedCountdownTitle(request.SettingName)
+            : Strings.FormatSafeSwitchCountdownTitle(request.SettingName);
         Body = Strings.FormatSafeSwitchCountdownBody(DurationSeconds, request.PreviousSettingName);
     }
 
     public string Title { get; }
     public string Body { get; }
+    public bool IsUnverified { get; }
+    public bool IsPaused => _pausedRemaining is not null;
     public Task<SafetyCountdownDecision> Decision => _decision.Task;
 
     public void Start()
@@ -45,8 +57,35 @@ public sealed partial class SafetyCountdownViewModel : ObservableObject, IDispos
             return;
         }
         _started = true;
-        _deadline = _clock.UtcNow.AddSeconds(DurationSeconds);
+        _deadline = _clock.Elapsed + Duration;
         _timer = _timerService.Start(TimeSpan.FromMilliseconds(100), Tick);
+    }
+
+    /// <summary>Freezes the remaining time, e.g. while the exit question is open.</summary>
+    public void Pause()
+    {
+        if (!_started || Decision.IsCompleted || _pausedRemaining is not null)
+        {
+            return;
+        }
+        _pausedRemaining = Remaining();
+        Publish(_pausedRemaining.Value);
+    }
+
+    /// <summary>Continues from the remaining time captured by <see cref="Pause"/>.</summary>
+    public void Resume()
+    {
+        if (_pausedRemaining is not TimeSpan remaining)
+        {
+            return;
+        }
+        _pausedRemaining = null;
+        if (Decision.IsCompleted)
+        {
+            return;
+        }
+        _deadline = _clock.Elapsed + remaining;
+        Tick();
     }
 
     [RelayCommand]
@@ -55,20 +94,38 @@ public sealed partial class SafetyCountdownViewModel : ObservableObject, IDispos
     [RelayCommand]
     private void Revert() => Complete(SafetyCountdownDecision.Revert);
 
-    public void Complete(SafetyCountdownDecision decision)
+    /// <summary>Returns false when an earlier decision already won.</summary>
+    public bool Complete(SafetyCountdownDecision decision)
     {
         if (_decision.TrySetResult(decision))
         {
             Dispose();
+            return true;
         }
+        return false;
+    }
+
+    private TimeSpan Remaining()
+    {
+        TimeSpan remaining = _deadline - _clock.Elapsed;
+        return remaining < TimeSpan.Zero ? TimeSpan.Zero : remaining > Duration ? Duration : remaining;
+    }
+
+    private void Publish(TimeSpan remaining)
+    {
+        RemainingSeconds = (int)Math.Ceiling(remaining.TotalSeconds);
+        Progress = remaining.TotalSeconds / DurationSeconds;
     }
 
     private void Tick()
     {
-        double remaining = Math.Clamp((_deadline - _clock.UtcNow).TotalSeconds, 0, DurationSeconds);
-        RemainingSeconds = (int)Math.Ceiling(remaining);
-        Progress = remaining / DurationSeconds;
-        if (remaining <= 0)
+        if (_pausedRemaining is not null || Decision.IsCompleted)
+        {
+            return;
+        }
+        TimeSpan remaining = Remaining();
+        Publish(remaining);
+        if (remaining <= TimeSpan.Zero)
         {
             Complete(SafetyCountdownDecision.TimedOut);
         }

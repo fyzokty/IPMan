@@ -37,11 +37,20 @@ public sealed class FakeSafetyCountdownDialogService : ISafetyCountdownDialogSer
         await viewModel.Decision;
     }
 
+    public int ExitDeferredCount { get; private set; }
+
     public Task<SafeSwitchExitDecision> ConfirmExitAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         ExitPromptCount++;
         DuringExitPrompt?.Invoke();
         return Task.FromResult(ExitDecision);
+    }
+
+    public Task ShowExitDeferredAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        ExitDeferredCount++;
+        return Task.CompletedTask;
     }
 }

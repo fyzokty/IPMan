@@ -34,6 +34,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
     private readonly ISafetyCountdownCoordinator _safetyCoordinator;
     private IReadOnlyList<NetworkProfile> _availableSettings = [];
     private bool _actionCancelledBecauseAdapterUnavailable;
+    private bool _isSwitchRunning;
     private bool _isDisposed;
 
     [ObservableProperty]
@@ -176,6 +177,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
     [RelayCommand(CanExecute = nameof(CanExecuteAction))]
     private async Task ApplyProfileAsync(NetworkProfile? profile, CancellationToken cancellationToken)
     {
+        ClearSwitchResult();
         if (!CanExecuteAction())
         {
             return;
@@ -193,6 +195,8 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
     [RelayCommand(CanExecute = nameof(CanExecuteAction))]
     private async Task ApplyStaticAsync(CancellationToken cancellationToken)
     {
+        // Early returns must not leave an older outcome for readers such as the details page.
+        ClearSwitchResult();
         AdapterViewModel? adapter = CurrentAdapter;
 
         if (adapter is null || !CanExecuteAction())
@@ -237,12 +241,8 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
                     return null;
                 }
                 SetStatus(ApplyResultMessageFormatter.Describe(result));
-                return result.Status switch
-                {
-                    StaticIpv4ApplyStatus.VerifiedSuccess => SafeSwitchApplyResult.Applied,
-                    StaticIpv4ApplyStatus.NoChange => SafeSwitchApplyResult.NoChange,
-                    _ => SafeSwitchApplyResult.Failed
-                };
+                return MapApplyResult(result.Status == StaticIpv4ApplyStatus.VerifiedSuccess,
+                    result.Status == StaticIpv4ApplyStatus.NoChange, result.Recovery, result.Mutation);
             }, cancellationToken);
         if (succeeded && markDraftApplied)
         {
@@ -272,12 +272,8 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
                 DhcpApplyResult result = await _dhcpApplyService.ApplyAsync(new DhcpApplyRequest(adapter.Id), token);
                 LastDhcpApplyResult = result;
                 SetStatus(ApplyResultMessageFormatter.Describe(result));
-                return result.Status switch
-                {
-                    DhcpApplyStatus.VerifiedSuccess => SafeSwitchApplyResult.Applied,
-                    DhcpApplyStatus.NoChange => SafeSwitchApplyResult.NoChange,
-                    _ => SafeSwitchApplyResult.Failed
-                };
+                return MapApplyResult(result.Status == DhcpApplyStatus.VerifiedSuccess,
+                    result.Status == DhcpApplyStatus.NoChange, result.Recovery, result.Mutation);
             }, cancellationToken);
         ApplyCompleted?.Invoke(this, succeeded);
     }
@@ -292,6 +288,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             new ActiveSettingMatcher().Find(snapshot, _availableSettings)?.Name ?? Strings.SafeSwitchManualSetting;
         SafeSwitchRequest request = new(snapshot, settingName, previousName, target);
         bool applyCompleted = false;
+        _isSwitchRunning = true;
         IsBusy = true;
         ClearStatusCore();
         try
@@ -312,20 +309,27 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
                 }
             }, cancellationToken);
             LastSwitchOutcome = outcome;
+            if (outcome.Status != SafeSwitchStatus.Cancelled)
+            {
+                // The real switch or rollback result must not be replaced by the generic
+                // "connection unavailable" message raised while the action was cancelled.
+                _actionCancelledBecauseAdapterUnavailable = false;
+            }
             switch (outcome.Status)
             {
+                case SafeSwitchStatus.Kept when outcome.Unverified:
+                    SetStatus(Strings.FormatSafeSwitchKeptUnverified(settingName), ApplyStatusSeverity.Warning);
+                    ReportOperation(operation, adapter, succeeded: false);
+                    break;
                 case SafeSwitchStatus.Kept:
-                    _actionCancelledBecauseAdapterUnavailable = false;
                     SetStatus(Strings.FormatSafeSwitchKept(settingName), ApplyStatusSeverity.Information);
                     ReportOperation(operation, adapter, succeeded: true);
                     break;
                 case SafeSwitchStatus.Reverted:
-                    _actionCancelledBecauseAdapterUnavailable = false;
                     SetStatus(Strings.FormatSafeSwitchReverted(previousName), ApplyStatusSeverity.Information);
                     ReportOperation(Strings.NotificationOperationRestore, adapter, succeeded: true);
                     break;
                 case SafeSwitchStatus.RevertFailed:
-                    _actionCancelledBecauseAdapterUnavailable = false;
                     SetStatus(Strings.SafeSwitchRevertFailed, ApplyStatusSeverity.Error);
                     ReportOperation(Strings.NotificationOperationRestore, adapter, succeeded: false);
                     break;
@@ -363,9 +367,21 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             {
                 _refreshCoordinator.RequestRefresh(NetworkChangeReason.ConfigurationApplied);
             }
+            _isSwitchRunning = false;
             IsBusy = false;
         }
     }
+
+    /// <summary>
+    /// A recovery snapshot plus an attempted mutation means the network may have changed even
+    /// when the service reports failure; such results are protected by the countdown as well.
+    /// </summary>
+    private static SafeSwitchApplyResult MapApplyResult(bool verified, bool noChange,
+        RecoverySnapshotReference? recovery, NetworkApplyResult? mutation) =>
+        verified ? SafeSwitchApplyResult.Applied :
+        noChange ? SafeSwitchApplyResult.NoChange :
+        recovery is not null && mutation?.WasMutationAttempted == true
+            ? SafeSwitchApplyResult.AppliedUnverified : SafeSwitchApplyResult.Failed;
 
     private void ClearSwitchResult()
     {
@@ -706,10 +722,15 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
 
     private bool CanExecuteAction() => !IsBusy && CurrentAdapter is not null;
 
-    /// <summary>Cancels an in-flight action after discovery loses its target adapter.</summary>
-    public void CancelUnavailableAction()
+    /// <summary>
+    /// Cancels an in-flight action after discovery loses its target adapter. When the adapter
+    /// is still present but only reports no link (<paramref name="adapterRemoved"/> false), a
+    /// safe switch keeps running: changing the address can briefly reset the link, and
+    /// cancelling would trigger a premature rollback.
+    /// </summary>
+    public void CancelUnavailableAction(bool adapterRemoved = true)
     {
-        if (!IsBusy)
+        if (!IsBusy || (!adapterRemoved && _isSwitchRunning))
         {
             return;
         }

@@ -33,7 +33,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly IClock _clock;
     private readonly IStaticIpv4ConfigurationValidator _validator;
     private readonly OperationNotificationService? _operationNotificationService;
-    private readonly Func<NetworkProfile?, string?, ProfileEditorViewModel>? _editorFactory;
+    private readonly Func<NetworkProfile?, NetworkAdapterSnapshot?, ProfileEditorViewModel>? _editorFactory;
     private readonly IUserConfirmationService? _confirmationService;
     private NetworkAdapterId? _editorAdapterId;
 
@@ -95,7 +95,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         IStaticIpv4ConfigurationValidator validator,
         ProfilePanelViewModel? profilePanel,
         OperationNotificationService? operationNotificationService = null,
-        Func<NetworkProfile?, string?, ProfileEditorViewModel>? editorFactory = null,
+        Func<NetworkProfile?, NetworkAdapterSnapshot?, ProfileEditorViewModel>? editorFactory = null,
         IUserConfirmationService? confirmationService = null)
     {
         ArgumentNullException.ThrowIfNull(refreshCoordinator);
@@ -205,6 +205,11 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     public void SelectAdapter(string adapterId)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(adapterId);
+        // An action targets the selected adapter; notification clicks must not retarget it.
+        if (IsBusy)
+        {
+            return;
+        }
         if (Guid.TryParse(adapterId, out Guid parsed))
         {
             string normalizedAdapterId = parsed.ToString("B");
@@ -318,10 +323,19 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     /// </summary>
     private void MergeAdapters(IReadOnlyList<NetworkAdapterSnapshot> adapters)
     {
-        if (Actions.IsBusy && Actions.CurrentAdapter is AdapterViewModel activeAdapter &&
-            !adapters.Any(adapter => adapter.Id == activeAdapter.Id && (!activeAdapter.IsConnected || adapter.IsConnected)))
+        if (Actions.IsBusy && Actions.CurrentAdapter is AdapterViewModel activeAdapter)
         {
-            Actions.CancelUnavailableAction();
+            NetworkAdapterSnapshot? latest = adapters.FirstOrDefault(adapter => adapter.Id == activeAdapter.Id);
+            if (latest is null)
+            {
+                Actions.CancelUnavailableAction();
+            }
+            else if (activeAdapter.IsConnected && !latest.IsConnected)
+            {
+                // A link that merely drops (e.g. while the driver applies a new address) does not
+                // end a safe switch; only a vanished adapter does.
+                Actions.CancelUnavailableAction(adapterRemoved: false);
+            }
         }
 
         IReadOnlyList<NetworkAdapterSnapshot> displayedAdapters = AdapterVisibilityFilter
@@ -562,7 +576,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         CloseEditor();
         CloseDetails();
         _editorAdapterId = SelectedAdapter?.Id;
-        ProfileEditor = _editorFactory(profile, SelectedAdapter?.Snapshot.Gateway);
+        ProfileEditor = _editorFactory(profile, SelectedAdapter?.Snapshot);
         UpdateEditorAvailability();
         ProfileEditor.BackRequested += OnEditorBackRequested;
         ProfileEditor.SaveRequested += OnEditorSaved;
@@ -617,6 +631,18 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         else if (Actions.LastSwitchOutcome?.Status == SafeSwitchStatus.RevertFailed)
             page.ShowFailure(new(Strings.FormatDetailsFailureTitle(settingName), Actions.StatusMessage,
                 Strings.DetailsUncertain, Actions.LastSwitchOutcome.ToString()), request);
+        else if (Actions.LastSwitchOutcome is { Status: SafeSwitchStatus.Kept, Unverified: true })
+        {
+            // Kept, but the apply result was never verified: keep the band honest about it.
+            DetailsFailureMessage? message = Actions.LastStaticApplyResult is { } staticResult
+                ? DetailsFailureMessageFormatter.Describe(staticResult, settingName, previousName)
+                : Actions.LastDhcpApplyResult is { } dhcpResult
+                    ? DetailsFailureMessageFormatter.Describe(dhcpResult, settingName, previousName)
+                    : null;
+            page.ShowFailure((message ?? new(string.Empty, Actions.StatusMessage, Strings.DetailsUncertain,
+                Actions.LastSwitchOutcome.ToString())) with { Title = Strings.FormatDetailsUnverifiedTitle(settingName) },
+                request);
+        }
         else if (Actions.LastSwitchOutcome?.Status is SafeSwitchStatus.Kept or SafeSwitchStatus.NoChange)
         {
             if (Actions.LastStaticApplyResult is { } staticResult)

@@ -178,6 +178,131 @@ public sealed class SafeSwitchActionsTests
         await first;
     }
 
+    private static readonly RecoverySnapshotReference Snapshot = new("snapshot-1", "backup.json");
+
+    private static NetworkApplyResult Mutation(bool attempted) => new(
+        new(attempted ? NetworkMutationStepStatus.Succeeded : NetworkMutationStepStatus.NotAttempted),
+        new(attempted ? NetworkMutationStepStatus.Failed : NetworkMutationStepStatus.NotAttempted),
+        NetworkMutationStepResult.NotAttempted(),
+        attempted ? NetworkMutationFailureKind.OperationalFailure : NetworkMutationFailureKind.AdapterUnavailable);
+
+    [Theory]
+    [InlineData(StaticIpv4ApplyStatus.PartialFailure)]
+    [InlineData(StaticIpv4ApplyStatus.MutationFailed)]
+    [InlineData(StaticIpv4ApplyStatus.VerificationFailed)]
+    [InlineData(StaticIpv4ApplyStatus.AdapterUnavailableDuringVerification)]
+    public async Task StaticMutationAttemptedButUnverified_OpensHonestCountdown(StaticIpv4ApplyStatus status)
+    {
+        using Fixture fixture = new();
+        fixture.Static.Result = new(status, Recovery: Snapshot, Mutation: Mutation(attempted: true));
+        await AssertUnverifiedCountdownAsync(fixture, fixture.Actions.ApplyStaticCommand.ExecuteAsync(null),
+            Strings.SafeSwitchManualSetting);
+    }
+
+    [Theory]
+    [InlineData(DhcpApplyStatus.PartialFailure)]
+    [InlineData(DhcpApplyStatus.MutationFailed)]
+    [InlineData(DhcpApplyStatus.VerificationFailed)]
+    [InlineData(DhcpApplyStatus.AdapterUnavailableDuringVerification)]
+    public async Task DhcpMutationAttemptedButUnverified_OpensHonestCountdown(DhcpApplyStatus status)
+    {
+        using Fixture fixture = new();
+        fixture.Dhcp.Result = new(status, Recovery: Snapshot, Mutation: Mutation(attempted: true));
+        await AssertUnverifiedCountdownAsync(fixture, fixture.Actions.ApplyDhcpCommand.ExecuteAsync(null),
+            Strings.SafeSwitchAutomatic);
+    }
+
+    private static async Task AssertUnverifiedCountdownAsync(Fixture fixture, Task apply, string settingName)
+    {
+        await fixture.Dialogs.CountdownShown.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        Assert.True(fixture.Countdown.IsUnverified);
+        Assert.Equal(Strings.FormatSafeSwitchUnverifiedCountdownTitle(settingName), fixture.Countdown.Title);
+        fixture.Countdown.KeepCommand.Execute(null);
+        await apply;
+        Assert.Equal(Strings.FormatSafeSwitchKeptUnverified(settingName), fixture.Actions.StatusMessage);
+        Assert.Equal(ApplyStatusSeverity.Warning, fixture.Actions.StatusSeverity);
+        Assert.True(fixture.Actions.LastSwitchOutcome!.Unverified);
+        Assert.False(Assert.Single(fixture.Notifications.History).Succeeded);
+        Assert.Empty(fixture.Restore.Requests);
+    }
+
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    public async Task FailureWithoutSnapshotProtectedMutation_StaysFailedWithoutCountdown(bool snapshot, bool attempted)
+    {
+        using Fixture fixture = new();
+        fixture.Static.Result = new(StaticIpv4ApplyStatus.MutationFailed, Recovery: snapshot ? Snapshot : null,
+            Mutation: Mutation(attempted));
+        fixture.Dhcp.Result = new(DhcpApplyStatus.MutationFailed, Recovery: snapshot ? Snapshot : null,
+            Mutation: Mutation(attempted));
+        await fixture.Actions.ApplyStaticCommand.ExecuteAsync(null);
+        Assert.Equal(SafeSwitchStatus.ApplyFailed, fixture.Actions.LastSwitchOutcome!.Status);
+        await fixture.Actions.ApplyDhcpCommand.ExecuteAsync(null);
+        Assert.Equal(SafeSwitchStatus.ApplyFailed, fixture.Actions.LastSwitchOutcome!.Status);
+        Assert.Empty(fixture.Dialogs.Countdowns);
+    }
+
+    [Fact]
+    public async Task UnverifiedTimeout_RevertsToPreviousSetting()
+    {
+        using Fixture fixture = new();
+        fixture.Static.Result = new(StaticIpv4ApplyStatus.VerificationFailed, Recovery: Snapshot, Mutation: Mutation(true));
+        Task apply = fixture.Actions.ApplyStaticCommand.ExecuteAsync(null);
+        await fixture.Dialogs.CountdownShown.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        fixture.Timer.Advance(TimeSpan.FromSeconds(15));
+        await apply;
+        Assert.Single(fixture.Restore.Requests);
+        Assert.Equal(Strings.FormatSafeSwitchReverted(Strings.SafeSwitchManualSetting), fixture.Actions.StatusMessage);
+    }
+
+    [Fact]
+    public async Task LinkDropDuringCountdown_KeepsCountdownRunningAndResult()
+    {
+        using Fixture fixture = new();
+        Task apply = fixture.Actions.ApplyStaticCommand.ExecuteAsync(null);
+        await fixture.Dialogs.CountdownShown.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        fixture.Actions.CancelUnavailableAction(adapterRemoved: false);
+        Assert.False(fixture.Countdown.Decision.IsCompleted);
+        Assert.True(fixture.Coordinator.IsCountdownActive);
+        Assert.NotEqual(Strings.AdapterActionUnavailable, fixture.Actions.StatusMessage);
+        fixture.Countdown.KeepCommand.Execute(null);
+        await apply;
+        Assert.Empty(fixture.Restore.Requests);
+        Assert.Equal(Strings.FormatSafeSwitchKept(Strings.SafeSwitchManualSetting), fixture.Actions.StatusMessage);
+    }
+
+    [Fact]
+    public async Task AdapterLostDuringCountdown_RestoreSuccessMessageIsNotOverwritten()
+    {
+        using Fixture fixture = new();
+        Task apply = fixture.Actions.ApplyStaticCommand.ExecuteAsync(null);
+        await fixture.Dialogs.CountdownShown.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        fixture.Actions.CancelUnavailableAction();
+        await apply;
+        Assert.Single(fixture.Restore.Requests);
+        Assert.Equal(Strings.FormatSafeSwitchReverted(Strings.SafeSwitchManualSetting), fixture.Actions.StatusMessage);
+        Assert.Equal(ApplyStatusSeverity.Information, fixture.Actions.StatusSeverity);
+    }
+
+    [Fact]
+    public async Task ApplyStatic_InvalidDraftAfterEarlierSwitch_ClearsStaleOutcome()
+    {
+        using Fixture fixture = new();
+        Task apply = fixture.Actions.ApplyStaticCommand.ExecuteAsync(null);
+        await fixture.Dialogs.CountdownShown.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        fixture.Countdown.KeepCommand.Execute(null);
+        await apply;
+        Assert.NotNull(fixture.Actions.LastSwitchOutcome);
+        Assert.NotNull(fixture.Actions.LastStaticApplyResult);
+        fixture.Adapter.Draft.Ipv4Address = "invalid";
+        await fixture.Actions.ApplyStaticCommand.ExecuteAsync(null);
+        Assert.Null(fixture.Actions.LastSwitchOutcome);
+        Assert.Null(fixture.Actions.LastStaticApplyResult);
+        Assert.Null(fixture.Actions.LastDhcpApplyResult);
+    }
+
     private sealed class Fixture : IDisposable
     {
         public Fixture()

@@ -622,8 +622,9 @@ public sealed class MainWindowViewModelTests
                 actions,
                 validator,
                 profilePanel,
-                editorFactory: editorCatalog is null ? null : (profile, gateway) => new(editorCatalog, validator,
-                    new(new SequenceIpv4ConflictProbe()), new ImmediateDelayProvider(), profile, gateway),
+                editorFactory: editorCatalog is null ? null : (profile, adapter) => new(editorCatalog, validator,
+                    new(new SequenceIpv4ConflictProbe()), new ImmediateDelayProvider(), profile, adapter?.Gateway,
+                    adapter?.Ipv4Address, adapter?.SubnetMask),
                 confirmationService: confirmation);
 
             return new MainWindowHarness(
