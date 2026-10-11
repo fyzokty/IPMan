@@ -33,6 +33,7 @@ public sealed class ProfilePanelViewModelTests
         Assert.Equal("Zulu favorite", viewModel.Groups[0].Profiles[1].Name);
         Assert.Equal("Alpha", viewModel.Groups[1].Profiles[0].Name);
         Assert.Equal("Zulu", viewModel.Groups[1].Profiles[1].Name);
+        Assert.Equal(viewModel.Groups.SelectMany(group => group.Profiles), viewModel.Profiles);
     }
 
     [Theory]
@@ -59,6 +60,40 @@ public sealed class ProfilePanelViewModelTests
         Assert.Single(viewModel.Groups);
         Assert.Single(viewModel.Groups[0].Profiles);
         Assert.Equal("PLC", viewModel.Groups[0].Profiles[0].Name);
+        Assert.Same(viewModel.Groups[0].Profiles[0], Assert.Single(viewModel.Profiles));
+    }
+
+    [Fact]
+    public void Profiles_WhenSearchOrCatalogChanges_NotifiesAndPreservesGroupOrder()
+    {
+        FakeProfileCatalog catalog = new()
+        {
+            Profiles =
+            [
+                TestData.Profile(profileId: "other", name: "Alpha"),
+                TestData.Profile(profileId: "favorite", name: "Zulu", isFavorite: true)
+            ]
+        };
+        using ProfilePanelViewModel viewModel = Create(catalog);
+        int notifications = 0;
+        viewModel.PropertyChanged += (_, args) =>
+        {
+            if (args.PropertyName == nameof(ProfilePanelViewModel.Profiles))
+            {
+                notifications++;
+            }
+        };
+
+        viewModel.SearchText = "Zulu";
+        Assert.Equal("favorite", Assert.Single(viewModel.Profiles).Id);
+        viewModel.SearchText = string.Empty;
+        Assert.Collection(viewModel.Profiles,
+            profile => Assert.Equal("favorite", profile.Id),
+            profile => Assert.Equal("other", profile.Id));
+        catalog.Profiles = [TestData.Profile(profileId: "replacement")];
+        catalog.RaiseChanged();
+        Assert.Equal("replacement", Assert.Single(viewModel.Profiles).Id);
+        Assert.Equal(3, notifications);
     }
 
     [Fact]

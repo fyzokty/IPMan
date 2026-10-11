@@ -68,6 +68,7 @@ public sealed partial class WindowXamlSmokeTests
         Assert.True(draft.IsGatewayDifferentFromWindows);
 
         FrameworkElement content = Layout(main);
+        Assert.Empty(fixture.Confirmation.Requests);
         FluentMotion.SetIsEnabled(content, false);
         Assert.Single(Descendants(content).OfType<Expander>()).IsExpanded = true;
         string suffix = theme.ToLowerInvariant();
@@ -122,6 +123,7 @@ public sealed partial class WindowXamlSmokeTests
         fixture.Main.Actions.ClearStatusCommand.Execute(null);
         fixture.Confirmation.Answers.Enqueue(true);
         fixture.Profiles.SelectedProfile = Assert.Single(profiles, profile => profile.Id == "home");
+        Assert.Single(fixture.Confirmation.Requests);
         Assert.Equal(Strings.ProfileDhcpGuidance, draft.ProfileGuidance);
         RenderWindow(main, directory, $"main-dhcp-profile-{suffix}.png");
         TextBlock profileGuidance = Assert.Single(Descendants(content).OfType<TextBlock>(),
@@ -131,13 +133,21 @@ public sealed partial class WindowXamlSmokeTests
         Assert.True(guidanceBand.ActualHeight > 0);
         Assert.Equal(TextWrapping.Wrap, profileGuidance.TextWrapping);
         fixture.Confirmation.Answers.Enqueue(true);
+        int expectedProfileConfirmations = fixture.Confirmation.Requests.Count + (draft.IsDirty ? 1 : 0);
         fixture.Profiles.SelectedProfile = Assert.Single(profiles, profile => profile.Id == "office");
+        Assert.Equal(expectedProfileConfirmations, fixture.Confirmation.Requests.Count);
         RenderWindow(main, directory, $"main-static-profile-{suffix}.png");
         Assert.Empty(profileGuidance.Text);
         Assert.Equal(Visibility.Collapsed, guidanceBand.Visibility);
         Assert.Equal(new Size(), guidanceBand.DesiredSize);
         fixture.Main.SelectAdapter(RenderAdapters()[1].Id.Value);
+        Assert.Equal(expectedProfileConfirmations, fixture.Confirmation.Requests.Count);
         RenderWindow(main, directory, $"main-dhcp-adapter-{suffix}.png");
+        Assert.Equal(expectedProfileConfirmations, fixture.Confirmation.Requests.Count);
+        ListBoxItem selectedProfile = Assert.Single(Descendants(content).OfType<ListBoxItem>(), item => item.IsSelected);
+        Assert.Same(fixture.Profiles.SelectedProfile, selectedProfile.DataContext);
+        Assert.Empty(fixture.Profiles.StatusMessage);
+        Assert.DoesNotContain(Descendants(content).OfType<TextBlock>(), block => block.Text == Strings.ProfileLoadCancelled);
         Button dhcp = Assert.Single(Descendants(content).OfType<Button>(),
             button => ReferenceEquals(button.Command, fixture.Main.Actions.ApplyDhcpCommand));
         Button dhcpRenew = Assert.Single(Descendants(content).OfType<Button>(),
