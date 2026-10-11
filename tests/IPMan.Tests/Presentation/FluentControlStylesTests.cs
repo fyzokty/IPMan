@@ -44,6 +44,60 @@ public sealed class FluentControlStylesTests
         }, "Control style layout timed out.");
     }
 
+    [Fact]
+    public void Controls_ShareOneStandardHeightAndKeepTurkishTextInside()
+    {
+        WpfTestRunner.Run(() =>
+        {
+            ResourceDictionary controls = Load("Controls");
+            double standard = (double)controls["ControlHeight"];
+            Assert.Equal(32, standard);
+            StackPanel row = new() { Orientation = Orientation.Horizontal };
+            row.Resources.MergedDictionaries.Add(Load("Light"));
+            row.Resources.MergedDictionaries.Add(controls);
+            const string text = "Ğüş İçöĞ Ayrıntılar ve elle ayar →";
+            FrameworkElement[] singleLine =
+            [
+                new Button { Content = text },
+                new Button { Content = text, Style = (Style)row.Resources["SecondaryActionButtonStyle"] },
+                new Button { Content = text, Style = (Style)row.Resources["PrimaryActionButtonStyle"] },
+                new Button { Content = text, Style = (Style)row.Resources["SubtleButtonStyle"] },
+                new Button { Content = "★", Style = (Style)row.Resources["SquareButtonStyle"] },
+                new Button { Content = "", Style = (Style)row.Resources["IconButtonStyle"] },
+                new Button { Content = "Kopyala", Style = (Style)row.Resources["CopyButtonStyle"] },
+                new TextBox { Text = "192.168.10.25 Ğİ" },
+                new ComboBox(),
+                new Border
+                {
+                    Style = (Style)row.Resources["SegmentedControlStyle"],
+                    Child = new StackPanel
+                    {
+                        Orientation = Orientation.Horizontal,
+                        Children =
+                        {
+                            new RadioButton { Content = "Kart", Style = (Style)row.Resources["ViewModeSegmentStyle"] },
+                            new RadioButton { Content = "Liste", Style = (Style)row.Resources["ViewModeSegmentStyle"] }
+                        }
+                    }
+                }
+            ];
+            foreach (FrameworkElement element in singleLine)
+            {
+                row.Children.Add(element);
+            }
+
+            row.Measure(new Size(4000, double.PositiveInfinity));
+            row.Arrange(new Rect(row.DesiredSize));
+            row.UpdateLayout();
+            Assert.Equal(standard, row.ActualHeight);
+            Assert.All(singleLine, element => Assert.Equal(standard, element.ActualHeight));
+            Assert.All(singleLine.OfType<Button>().Where(button => button.Content is not string { Length: > 7 }),
+                button => Assert.Equal(standard, button.ActualWidth));
+            Assert.All(singleLine.OfType<Button>().Where(button => button.Content is string { Length: > 7 }),
+                button => Assert.True(button.ActualWidth > standard));
+        }, "Standard control height layout timed out.");
+    }
+
     private static ResourceDictionary Load(string name) =>
         (ResourceDictionary)System.Windows.Application.LoadComponent(
             new Uri($"/IPMan;component/Themes/{name}.xaml", UriKind.Relative));
