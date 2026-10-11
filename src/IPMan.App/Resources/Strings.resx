@@ -79,27 +79,21 @@
   <data name="FieldSubnetMask" xml:space="preserve">
     <value>Alt ağ maskesi</value>
   </data>
-  <data name="FieldGateway" xml:space="preserve">
-    <value>Ağ geçidi (genelde modem adresi)</value>
-  </data>
+  <data name="FieldGateway" xml:space="preserve"><value>Ağ geçidi</value></data>
   <data name="FieldPrimaryDns" xml:space="preserve">
     <value>Birinci DNS</value>
   </data>
   <data name="FieldSecondaryDns" xml:space="preserve">
     <value>İkinci DNS</value>
   </data>
-  <data name="FieldConfigurationMode" xml:space="preserve">
-    <value>Yapılandırma modu</value>
-  </data>
-  <data name="FieldDnsServers" xml:space="preserve"><value>DNS sunucuları</value></data>
+  <data name="FieldConfigurationMode" xml:space="preserve"><value>Adres modu</value></data>
+  <data name="FieldDnsServers" xml:space="preserve"><value>DNS (alan adı sunucuları)</value></data>
   <data name="FieldDnsSuffix" xml:space="preserve"><value>DNS soneki</value></data>
 
   <data name="ConnectionStateConnected" xml:space="preserve">
     <value>Bağlı</value>
   </data>
-  <data name="ConnectionStateDisconnected" xml:space="preserve">
-    <value>Bağlı Değil</value>
-  </data>
+  <data name="ConnectionStateDisconnected" xml:space="preserve"><value>Bağlı değil</value></data>
   <data name="ModeDhcp" xml:space="preserve">
     <value>Otomatik</value>
   </data>
@@ -128,23 +122,22 @@
   </data>
   <data name="CommandClearStatus" xml:space="preserve"><value>Temizle</value></data>
   <data name="QuickActionAdapterInactive" xml:space="preserve"><value>Bağlantı etkin değil</value></data>
-  <data name="QuickActionNoIpv4Gateway" xml:space="preserve"><value>IPv4 ağ geçidi yok</value></data>
+  <data name="QuickActionNoIpv4Gateway" xml:space="preserve"><value>Ağ geçidi (modem adresi) tanımlı değil</value></data>
   <data name="QuickActionDhcpRequired" xml:space="preserve"><value>Adresi yenilemek için Otomatik ayar gerekli</value></data>
-  <data name="QuickActionDhcpAlreadyEnabled" xml:space="preserve"><value>Bağlantı zaten Otomatik ayarı kullanıyor</value></data>
   <data name="QuickActionUnsupportedAdapter" xml:space="preserve"><value>Bu bağlantı türünde hızlı eylem kullanılamaz</value></data>
   <data name="CopyNetworkInfoSuccess" xml:space="preserve"><value>Ağ bilgisi panoya kopyalandı.</value></data>
   <data name="CopyNetworkInfoFailed" xml:space="preserve"><value>Pano erişimi engellendi; ağ bilgisi kopyalanamadı.</value></data>
   <data name="ConfirmFlushDnsTitle" xml:space="preserve"><value>DNS önbelleği temizlensin mi?</value></data>
   <data name="ConfirmFlushDnsMessage" xml:space="preserve"><value>Bu işlem seçili bağlantıyla sınırlı değildir; tüm sistemin DNS önbelleğini temizler. Devam etmek istiyor musunuz?</value></data>
   <data name="ConfirmDhcpTitle" xml:space="preserve"><value>Otomatik ayara geçilsin mi?</value></data>
-  <data name="ConfirmDhcpMessage" xml:space="preserve"><value>Seçili bağlantının statik ayarları otomatik yapılandırmaya geçirilecek. Mevcut değerler: IP {0}, maske {1}, ağ geçidi {2}, DNS {3}. Devam etmek istiyor musunuz?</value></data>
+  <data name="ConfirmDhcpMessage" xml:space="preserve"><value>Seçili bağlantı Otomatik ayara geçirilecek; adresi ağ kendisi verecek. Şu anki değerler: bilgisayarın adresi {0}, alt ağ maskesi {1}, ağ geçidi {2}, DNS {3}. Devam etmek istiyor musunuz?</value></data>
   <data name="ConfirmDoNotShowAgain" xml:space="preserve"><value>Bu pencereyi bir daha gösterme</value></data>
   <data name="DnsFlushSuccess" xml:space="preserve"><value>Tüm sistem için DNS önbelleği temizlendi.</value></data>
   <data name="IpRenewSuccess" xml:space="preserve"><value>Seçili bağlantının adresi yenilendi.</value></data>
-  <data name="IpRenewFailure" xml:space="preserve"><value>IP yenileme tamamlanamadı. Önceki değerler: IP {0}, maske {1}, ağ geçidi {2}. Hata kodu: {3}</value></data>
-  <data name="AdapterActionUnavailable" xml:space="preserve"><value>Bağlantı artık kullanılamıyor, işlem iptal edildi.</value></data>
-  <data name="QuickActionFailure" xml:space="preserve"><value>İşlem tamamlanamadı. Hata kodu: {0}</value></data>
-  <data name="PingResult" xml:space="preserve"><value>{0} ping sonucu: gönderilen {1}, alınan {2}, kayıp %{3}, RTT min/ort/maks {4}/{5}/{6} ms. Hata kodu: {7}</value></data>
+  <data name="IpRenewFailure" xml:space="preserve"><value>Adres yenilenemedi (hata kodu: {3}). Ağın son durumu doğrulanamadı; önceki değerler: bilgisayarın adresi {0}, alt ağ maskesi {1}, ağ geçidi {2}. Ayrıntılar bölümünden güncel durumu kontrol edip yeniden deneyin.</value></data>
+  <data name="AdapterActionUnavailable" xml:space="preserve"><value>Bağlantı artık kullanılamıyor, işlem tamamlanmadı. Bağlantıyı kontrol edip listeyi yenileyin, sonra yeniden deneyin.</value></data>
+  <data name="QuickActionFailure" xml:space="preserve"><value>DNS önbelleği temizlenemedi (hata kodu: {0}). Ağ ayarlarınız değişmedi. Biraz sonra yeniden deneyin.</value></data>
+  <data name="PingResult" xml:space="preserve"><value>Modeme ({0}) ulaşılıyor mu? Gönderilen {1}, alınan {2}, kayıp %{3}; süre (en az/ortalama/en çok) {4}/{5}/{6} ms. Hata kodu: {7}</value></data>
 
   <data name="StateLoading" xml:space="preserve">
     <value>Yükleniyor...</value>
@@ -159,138 +152,60 @@
     <value>Uygulanıyor…</value>
   </data>
 
-  <data name="ApplyValidationFailed" xml:space="preserve">
-    <value>Girilen değerler geçerli değil. İşaretli alanları düzeltin.</value>
-  </data>
+  <data name="ApplyValidationFailed" xml:space="preserve"><value>Girilen bazı değerler uygun değil.</value></data>
   <data name="ApplyStaticSuccess" xml:space="preserve">
     <value>Ayarlar uygulandı ve Windows tarafından doğrulandı.</value>
   </data>
-  <data name="ApplyStaticNoChange" xml:space="preserve">
-    <value>Ayarlar zaten istenen değerlerde; hiçbir değişiklik yapılmadı.</value>
-  </data>
+  <data name="ApplyStaticNoChange" xml:space="preserve"><value>Bağlantı zaten bu ayarı kullanıyor; bir şey değiştirilmedi.</value></data>
   <data name="ApplyDhcpSuccess" xml:space="preserve">
     <value>Bağlantı Otomatik ayara geçirildi.</value>
   </data>
   <data name="ApplyDhcpNoChange" xml:space="preserve">
     <value>Bağlantı zaten Otomatik ayarı kullanıyor.</value>
   </data>
-  <data name="RestoreSuccess" xml:space="preserve">
-    <value>Son yapılandırma geri yüklendi ve Windows tarafından doğrulandı.</value>
-  </data>
-  <data name="RestoreNoChange" xml:space="preserve">
-    <value>Bağlantı zaten kayıtlı yapılandırmada; hiçbir değişiklik yapılmadı.</value>
-  </data>
-  <data name="RestoreNoSnapshotFound" xml:space="preserve">
-    <value>Bu bağlantı için geri yüklenebilecek bir kayıt yok.</value>
-  </data>
-  <data name="RestoreSnapshotUnreadable" xml:space="preserve">
-    <value>Geri yükleme kaydı okunamadı. Dosya diskte korundu.</value>
-  </data>
-  <data name="RestoreUnsupportedSnapshot" xml:space="preserve">
-    <value>Kayıt bu sürüm tarafından desteklenmiyor.</value>
-  </data>
-  <data name="RestoreAdapterIdentityChanged" xml:space="preserve">
-    <value>Bağlantı kimliği değişti. Yanlış bağlantıe yazmamak için işlem durduruldu.</value>
-  </data>
-  <data name="ApplyAdapterUnavailable" xml:space="preserve">
-    <value>Bağlantı bulunamadı. Liste yenilendikten sonra yeniden deneyin.</value>
-  </data>
-  <data name="ApplyAdapterReadFailed" xml:space="preserve">
-    <value>Bağlantı durumu güvenilir şekilde okunamadı. Hiçbir değişiklik yapılmadı.</value>
-  </data>
-  <data name="ApplyCancelled" xml:space="preserve">
-    <value>İşlem, ağ ayarları değiştirilmeden önce iptal edildi.</value>
-  </data>
-  <data name="ApplyRecoveryCaptureFailed" xml:space="preserve">
-    <value>Geri yükleme kaydı diske yazılamadı. Güvenlik gereği hiçbir değişiklik yapılmadı.</value>
-  </data>
-  <data name="ApplyRecoveryStateUnavailable" xml:space="preserve">
-    <value>Bağlantıün mevcut durumu güvenilir bir geri yükleme kaydı için yeterli değil. Hiçbir değişiklik yapılmadı.</value>
-  </data>
-  <data name="ApplyMutationFailed" xml:space="preserve">
-    <value>Windows ayarları kabul etmedi. Yapılandırma değişmedi.</value>
-  </data>
-  <data name="ActionUnexpectedFailure" xml:space="preserve">
-    <value>İşlem beklenmeyen bir hata nedeniyle tamamlanamadı. Ayrıntılar tanılama günlüğüne yazıldı; bağlantının güncel ayarlarını kontrol edin.</value>
-  </data>
-  <data name="ApplyPartialFailure" xml:space="preserve">
-    <value>İşlem yarıda kaldı. Bağlantı karma durumda olabilir; "Son Yapılandırmayı Geri Yükle" ile eski duruma dönebilirsiniz.</value>
-  </data>
-  <data name="ApplyVerificationFailed" xml:space="preserve">
-    <value>Değişiklik gönderildi ancak Windows doğrulaması beklenen sonucu vermedi.</value>
-  </data>
-  <data name="ApplyAdapterUnavailableDuringVerification" xml:space="preserve">
-    <value>Bağlantı işlemden sonra kayboldu; sonuç doğrulanamadı.</value>
-  </data>
-  <data name="ActionDeclined" xml:space="preserve">
-    <value>İşlem iptal edildi. Ağ ayarları değişmedi.</value>
-  </data>
-  <data name="ApplyConflictUnconfirmed" xml:space="preserve">
-    <value>Adres çakışması onayı alınamadığı için ayarlar uygulanmadı.</value>
-  </data>
-  <data name="ApplyProbeIndeterminateUnconfirmed" xml:space="preserve">
-    <value>Çakışma denetimi sonuçsuz kaldığı için ayarlar uygulanmadı.</value>
-  </data>
+  <data name="RestoreSuccess" xml:space="preserve"><value>Son değişiklik geri alındı; eski ayar Windows tarafından doğrulandı.</value></data>
+  <data name="RestoreNoChange" xml:space="preserve"><value>Bağlantı zaten kayıtlı eski ayarda; bir şey değiştirilmedi.</value></data>
+  <data name="RestoreNoSnapshotFound" xml:space="preserve"><value>Bu bağlantı için geri alınabilecek bir değişiklik kaydı yok.</value></data>
+  <data name="RestoreSnapshotUnreadable" xml:space="preserve"><value>Geri alma kaydı okunamadı; dosya silinmedi.</value></data>
+  <data name="RestoreUnsupportedSnapshot" xml:space="preserve"><value>Geri alma kaydı bu IPMan sürümüyle uyumlu değil.</value></data>
+  <data name="RestoreAdapterIdentityChanged" xml:space="preserve"><value>Bağlantı değişmiş görünüyor; yanlış bağlantıyı değiştirmemek için işlem durduruldu.</value></data>
+  <data name="ApplyAdapterUnavailable" xml:space="preserve"><value>Bağlantı bulunamadı.</value></data>
+  <data name="ApplyAdapterReadFailed" xml:space="preserve"><value>Bağlantının şu anki durumu okunamadı.</value></data>
+  <data name="ApplyCancelled" xml:space="preserve"><value>İşlem iptal edildi.</value></data>
+  <data name="ApplyRecoveryCaptureFailed" xml:space="preserve"><value>Eski ayarınızın yedeği kaydedilemedi; güvenliğiniz için geçiş yapılmadı.</value></data>
+  <data name="ApplyRecoveryStateUnavailable" xml:space="preserve"><value>Bağlantının şu anki durumu, eski ayarın güvenle yedeklenmesi için yeterli değil.</value></data>
+  <data name="ApplyMutationFailed" xml:space="preserve"><value>Windows yeni ayarı uygulayamadı.</value></data>
+  <data name="ActionUnexpectedFailure" xml:space="preserve"><value>Beklenmeyen bir sorun oluştu ve işlem tamamlanamadı. Ağın son durumu doğrulanamadı; Ayrıntılar bölümünden bağlantının güncel durumuna bakın. Sorun tanılama günlüğüne kaydedildi.</value></data>
+  <data name="ApplyPartialFailure" xml:space="preserve"><value>Yeni ayarın yalnızca bir kısmı uygulanabildi.</value></data>
+  <data name="ApplyVerificationFailed" xml:space="preserve"><value>Yeni ayar gönderildi ama Windows sonucu doğrulayamadı.</value></data>
+  <data name="ApplyAdapterUnavailableDuringVerification" xml:space="preserve"><value>Bağlantı işlemden sonra kayboldu.</value></data>
+  <data name="ActionDeclined" xml:space="preserve"><value>İşlem iptal edildi. Ağınız değişmedi. İsterseniz yeniden deneyebilirsiniz.</value></data>
+  <data name="ApplyConflictUnconfirmed" xml:space="preserve"><value>Bu adres ağdaki başka bir cihazla çakışıyor olabilir ve geçiş için onay alınamadı.</value></data>
+  <data name="ApplyProbeIndeterminateUnconfirmed" xml:space="preserve"><value>Adresin boş olup olmadığı kontrol edilemedi ve geçiş için onay alınamadı.</value></data>
 
-  <data name="SafetyMultipleIpv4Addresses" xml:space="preserve">
-    <value>Bu bağlantıde birden fazla IPv4 adresi var. IPMan bu durumu değiştirmeyi güvenli bulmuyor.</value>
-  </data>
-  <data name="SafetyMultipleIpv4Gateways" xml:space="preserve">
-    <value>Bu bağlantıde birden fazla ağ geçidi var. IPMan bu durumu değiştirmeyi güvenli bulmuyor.</value>
-  </data>
-  <data name="SafetyTooManyIpv4DnsServers" xml:space="preserve">
-    <value>Bu bağlantıde IPMan'in yönetebileceğinden fazla DNS sunucusu var.</value>
-  </data>
-  <data name="SafetyNotElevated" xml:space="preserve">
-    <value>Ağ ayarlarını değiştirmek için IPMan'in yönetici olarak çalışması gerekiyor.</value>
-  </data>
+  <data name="SafetyMultipleIpv4Addresses" xml:space="preserve"><value>Bu bağlantıda birden fazla adres tanımlı; IPMan bunu güvenle değiştiremez.</value></data>
+  <data name="SafetyMultipleIpv4Gateways" xml:space="preserve"><value>Bu bağlantıda birden fazla ağ geçidi tanımlı; IPMan bunu güvenle değiştiremez.</value></data>
+  <data name="SafetyTooManyIpv4DnsServers" xml:space="preserve"><value>Bu bağlantıda IPMan'in yönetebileceğinden fazla DNS sunucusu tanımlı.</value></data>
+  <data name="SafetyNotElevated" xml:space="preserve"><value>Ağ ayarını değiştirmek için IPMan'in yönetici olarak çalışması gerekiyor.</value></data>
 
   <data name="ConfirmConflictTitle" xml:space="preserve">
     <value>Adres çakışması olabilir</value>
   </data>
-  <data name="ConfirmConflictMessage" xml:space="preserve">
-    <value>{0} adresi ağda başka bir cihaz tarafından kullanılıyor olabilir. Yine de uygulanmasını istiyor musunuz?</value>
-  </data>
-  <data name="ConfirmProbeIndeterminateTitle" xml:space="preserve">
-    <value>Çakışma denetimi sonuçsuz</value>
-  </data>
-  <data name="ConfirmProbeIndeterminateMessage" xml:space="preserve">
-    <value>Adres çakışması denetimi sonuç vermedi. Yine de devam etmek istiyor musunuz?</value>
-  </data>
-  <data name="ConfirmRestoreTitle" xml:space="preserve">
-    <value>Son yapılandırmaya dönülsün mü?</value>
-  </data>
-  <data name="ConfirmRestoreMessage" xml:space="preserve">
-    <value>{0} bağlantıü, IPMan'in kaydettiği son yapılandırmaya döndürülecek. Devam etmek istiyor musunuz?</value>
-  </data>
+  <data name="ConfirmConflictMessage" xml:space="preserve"><value>{0} adresi ağdaki başka bir cihaz tarafından kullanılıyor olabilir. Aynı adres iki cihazda olursa ikisinin de bağlantısı bozulabilir. Yine de geçilsin mi?</value></data>
+  <data name="ConfirmProbeIndeterminateTitle" xml:space="preserve"><value>Adresin boş olduğu doğrulanamadı</value></data>
+  <data name="ConfirmProbeIndeterminateMessage" xml:space="preserve"><value>Bu adresin ağda başka bir cihazda kullanılıp kullanılmadığı anlaşılamadı. Yine de devam etmek istiyor musunuz?</value></data>
+  <data name="ConfirmRestoreTitle" xml:space="preserve"><value>Son değişiklik geri alınsın mı?</value></data>
+  <data name="ConfirmRestoreMessage" xml:space="preserve"><value>{0} bağlantısı, IPMan'in kaydettiği son ayara döndürülecek. Devam etmek istiyor musunuz?</value></data>
 
-  <data name="ValidationRequired" xml:space="preserve">
-    <value>{0} zorunludur.</value>
-  </data>
-  <data name="ValidationInvalidIpv4" xml:space="preserve">
-    <value>{0} geçerli bir IPv4 adresi değil.</value>
-  </data>
-  <data name="ValidationAddressNotAllowed" xml:space="preserve">
-    <value>{0} bu alanda kullanılamaz.</value>
-  </data>
-  <data name="ValidationNonContiguousSubnetMask" xml:space="preserve">
-    <value>Alt ağ maskesi geçerli değil; bitler bitişik olmalı.</value>
-  </data>
-  <data name="ValidationNetworkAddressNotAllowed" xml:space="preserve">
-    <value>Ağ adresi bir cihaz adresi olarak kullanılamaz.</value>
-  </data>
-  <data name="ValidationBroadcastAddressNotAllowed" xml:space="preserve">
-    <value>Yayın (broadcast) adresi bir cihaz adresi olarak kullanılamaz.</value>
-  </data>
-  <data name="ValidationGatewayOutsideSubnet" xml:space="preserve">
-    <value>Ağ geçidi, IPv4 adresiyle aynı alt ağda değil.</value>
-  </data>
-  <data name="ValidationPrimaryDnsRequired" xml:space="preserve">
-    <value>İkincil DNS girildiğinde birincil DNS de zorunludur.</value>
-  </data>
-  <data name="ValidationGatewayMatchesHostAddress" xml:space="preserve">
-    <value>Ağ geçidi, IPv4 adresiyle aynı olamaz.</value>
-  </data>
+  <data name="ValidationRequired" xml:space="preserve"><value>{0} boş bırakılamaz. Örnek: {1}</value></data>
+  <data name="ValidationInvalidIpv4" xml:space="preserve"><value>{0} geçerli değil. Adres dört sayıdan oluşmalı, noktayla ayrılmalı ve her sayı 0 ile 255 arasında olmalıdır. Örnek: {1}</value></data>
+  <data name="ValidationAddressNotAllowed" xml:space="preserve"><value>{0} için bu adres kullanılamaz (özel veya ayrılmış bir adres). Örnek: {1}</value></data>
+  <data name="ValidationNonContiguousSubnetMask" xml:space="preserve"><value>Alt ağ maskesi geçerli değil; 255'lerden sonra yalnızca 0'lar gelmelidir. Örnek: {0}</value></data>
+  <data name="ValidationNetworkAddressNotAllowed" xml:space="preserve"><value>Bu adres ağın kendi adresi olduğu için bilgisayara verilemez. Örnek: {0}</value></data>
+  <data name="ValidationBroadcastAddressNotAllowed" xml:space="preserve"><value>Bu adres ağdaki tüm cihazlara seslenmek için ayrılmıştır; bilgisayara verilemez. Örnek: {0}</value></data>
+  <data name="ValidationGatewayOutsideSubnet" xml:space="preserve"><value>Ağ geçidi, bilgisayarın adresiyle aynı ağda olmalı. Örnek: bilgisayarın adresi {0} ise ağ geçidi {1} olabilir.</value></data>
+  <data name="ValidationPrimaryDnsRequired" xml:space="preserve"><value>İkinci DNS girildiğinde Birinci DNS de girilmelidir. Örnek: {0}</value></data>
+  <data name="ValidationGatewayMatchesHostAddress" xml:space="preserve"><value>Ağ geçidi, bilgisayarın adresinden farklı olmalı. Örnek: bilgisayarın adresi {0} ise ağ geçidi {1} olabilir.</value></data>
   <data name="LoadingAdapters" xml:space="preserve">
     <value>Ağ bağlantıları okunuyor...</value>
   </data>
@@ -300,12 +215,8 @@
   <data name="EmptyStateDescription" xml:space="preserve">
     <value>Windows şu anda görüntülenebilecek bir bağlantı bildirmiyor. Bir bağlantı takıldığında liste kendiliğinden güncellenir.</value>
   </data>
-  <data name="RefreshFailedTitle" xml:space="preserve">
-    <value>Bağlantı bilgileri yenilenemedi. Görüntülenen değerler son başarılı okumaya aittir.</value>
-  </data>
-  <data name="ExistingInstanceNotResponding" xml:space="preserve">
-    <value>Çalışan IPMan örneğine ulaşılamadı. Lütfen mevcut pencereyi denetleyip yeniden deneyin.</value>
-  </data>
+  <data name="RefreshFailedTitle" xml:space="preserve"><value>Bağlantı bilgileri yenilenemedi. Görüntülenen değerler son başarılı okumaya aittir; biraz sonra yeniden deneyin.</value></data>
+  <data name="ExistingInstanceNotResponding" xml:space="preserve"><value>IPMan zaten açık ama yanıt vermiyor. Açık olan IPMan penceresini kapatıp yeniden başlatın.</value></data>
   <data name="ApplicationName" xml:space="preserve">
     <value>IPMan</value>
   </data>
@@ -317,9 +228,6 @@
   </data>
   <data name="TrayPreferenceMessage" xml:space="preserve">
     <value>Pencere kapatıldığında veya küçültüldüğünde sistem tepsisine gönderilsin mi?</value>
-  </data>
-  <data name="TrayBalloonMessage" xml:space="preserve">
-    <value>IPMan sistem tepsisinde çalışmaya devam ediyor.</value>
   </data>
   <data name="ExitConfirmationTitle" xml:space="preserve">
     <value>Uygulamadan çıkılsın mı?</value>
@@ -359,7 +267,6 @@
   <data name="CommandExportProfile" xml:space="preserve"><value>Dışa aktar</value></data>
   <data name="CommandRenameProfile" xml:space="preserve"><value>Yeniden adlandır</value></data>
   <data name="CommandDuplicateProfile" xml:space="preserve"><value>Kopyala</value></data>
-  <data name="CommandToggleFavorite" xml:space="preserve"><value>Favoriyi aç/kapat</value></data>
   <data name="CommandDeleteProfile" xml:space="preserve"><value>Sil</value></data>
   <data name="CommandOk" xml:space="preserve"><value>Tamam</value></data>
   <data name="CommandCancel" xml:space="preserve"><value>İptal</value></data>
@@ -368,7 +275,6 @@
   <data name="ProfileJsonFileFilter" xml:space="preserve"><value>IPMan ayar dosyası (*.json)|*.json</value></data>
   <data name="ProfileRenameTitle" xml:space="preserve"><value>Ayarı yeniden adlandır</value></data>
   <data name="ProfileNameRequired" xml:space="preserve"><value>Ayar adı boş bırakılamaz. Örnek: Saha PLC, Ofis, Ev</value></data>
-  <data name="ProfileLoadCancelled" xml:space="preserve"><value>Ayar yükleme iptal edildi.</value></data>
   <data name="ConfirmProfileDeleteTitle" xml:space="preserve"><value>Ayar silinsin mi?</value></data>
   <data name="ConfirmProfileDeleteMessage" xml:space="preserve"><value>{0} ayarı kalıcı olarak silinecek. Devam etmek istiyor musunuz?</value></data>
   <data name="ProfileSaveSuccess" xml:space="preserve"><value>Ayar kaydedildi.</value></data>
@@ -376,21 +282,19 @@
   <data name="ProfileImportSuccess" xml:space="preserve"><value>Ayar içe aktarıldı.</value></data>
   <data name="ProfileImportSuccessWithName" xml:space="preserve"><value>Ayar içe aktarıldı: {0}</value></data>
   <data name="ProfileExportSuccess" xml:space="preserve"><value>Ayar dışa aktarıldı.</value></data>
-  <data name="ProfileApplied" xml:space="preserve"><value>Ayar uygulandı.</value></data>
-  <data name="ProfileInvalidContent" xml:space="preserve"><value>Ayar içeriği geçerli değil.</value></data>
-  <data name="ProfileAccessDenied" xml:space="preserve"><value>Ayar dosyasına erişim reddedildi.</value></data>
-  <data name="ProfileIoFailure" xml:space="preserve"><value>Ayar dosyası işlemi tamamlanamadı.</value></data>
-  <data name="ProfileNotFound" xml:space="preserve"><value>Ayar bulunamadı.</value></data>
-  <data name="ProfileProblemMalformedJson" xml:space="preserve"><value>Geçersiz JSON</value></data>
-  <data name="ProfileProblemUnsupportedSchema" xml:space="preserve"><value>Desteklenmeyen şema sürümü</value></data>
-  <data name="ProfileProblemInvalidContent" xml:space="preserve"><value>Geçersiz ayar içeriği</value></data>
+  <data name="ProfileInvalidContent" xml:space="preserve"><value>Ayarın bilgileri geçerli değil, kaydedilmedi. Ağınız değişmedi. Bilgileri kontrol edip yeniden deneyin.</value></data>
+  <data name="ProfileAccessDenied" xml:space="preserve"><value>Ayar dosyasına erişim izni verilmedi. Ağınız değişmedi. Dosyanın bulunduğu klasörün izinlerini kontrol edin.</value></data>
+  <data name="ProfileIoFailure" xml:space="preserve"><value>Ayar dosyası okunamadı veya yazılamadı. Ağınız değişmedi. Disk alanını kontrol edip yeniden deneyin.</value></data>
+  <data name="ProfileNotFound" xml:space="preserve"><value>Ayar bulunamadı; silinmiş veya taşınmış olabilir. Ağınız değişmedi. Listeyi yenileyip yeniden deneyin.</value></data>
+  <data name="ProfileProblemMalformedJson" xml:space="preserve"><value>Dosya biçimi bozuk</value></data>
+  <data name="ProfileProblemUnsupportedSchema" xml:space="preserve"><value>Bu IPMan sürümüyle uyumsuz dosya</value></data>
+  <data name="ProfileProblemInvalidContent" xml:space="preserve"><value>Ayar bilgileri geçersiz</value></data>
   <data name="ProfileProblemReadFailure" xml:space="preserve"><value>Dosya okunamadı</value></data>
   <data name="SettingsTitle" xml:space="preserve"><value>Ayarlar</value></data>
   <data name="SettingsTheme" xml:space="preserve"><value>Tema</value></data>
   <data name="SettingsThemeLight" xml:space="preserve"><value>Açık</value></data>
   <data name="SettingsThemeDark" xml:space="preserve"><value>Koyu</value></data>
   <data name="SettingsThemeSystem" xml:space="preserve"><value>Sistem</value></data>
-  <data name="SettingsThemeSoon" xml:space="preserve"><value>Tema desteği yakında.</value></data>
   <data name="SettingsCloseBehavior" xml:space="preserve"><value>Kapatma davranışı</value></data>
   <data name="SettingsCloseAsk" xml:space="preserve"><value>İlk kapatmada sor</value></data>
   <data name="SettingsCloseTray" xml:space="preserve"><value>Tepsiye küçült</value></data>
@@ -402,29 +306,29 @@
   <data name="SettingsShowVirtual" xml:space="preserve"><value>Sanal bağlantıları göster</value></data>
   <data name="SettingsRememberWindow" xml:space="preserve"><value>Son pencere durumunu hatırla</value></data>
   <data name="SettingsReset" xml:space="preserve"><value>Varsayılanlara dön</value></data>
-  <data name="SettingsResetTitle" xml:space="preserve"><value>Ayarlar sıfırlansın mı?</value></data>
-  <data name="SettingsResetMessage" xml:space="preserve"><value>Tüm ayarlar varsayılan değerlerine döndürülecek.</value></data>
-  <data name="SettingsPersistenceWarning" xml:space="preserve"><value>settings.json yazılamıyor, ayarlarınız şu an kaydedilemiyor</value></data>
-  <data name="SettingsHelpTheme" xml:space="preserve"><value>Şimdilik yalnızca açık tema kullanılabilir.&#x0A;Varsayılan: Açık</value></data>
+  <data name="SettingsResetTitle" xml:space="preserve"><value>Uygulama tercihleri sıfırlansın mı?</value></data>
+  <data name="SettingsResetMessage" xml:space="preserve"><value>Tema, bildirim ve pencere tercihleri varsayılan değerlerine dönecek. Kayıtlı ağ ayarlarınız silinmez.</value></data>
+  <data name="SettingsPersistenceWarning" xml:space="preserve"><value>Uygulama tercihleriniz bu bilgisayara kaydedilemiyor; yaptığınız değişiklikler bir sonraki açılışta kaybolabilir.</value></data>
+  <data name="SettingsHelpTheme" xml:space="preserve"><value>Uygulamanın açık, koyu veya Windows'un temasını kullanmasını seçer.&#x0A;Varsayılan: Sistem</value></data>
   <data name="SettingsHelpClose" xml:space="preserve"><value>Kapatma düğmesi ve Alt+F4 için davranışı belirler.&#x0A;Varsayılan: İlk kapatmada sor</value></data>
-  <data name="SettingsHelpNotifications" xml:space="preserve"><value>Bağlantı ayarları değiştiğinde Windows bildiriminin ne zaman gösterileceğini belirler.&#x0A;Varsayılan: Kapalı</value></data>
-  <data name="SettingsHelpShowVirtual" xml:space="preserve"><value>Sanal bağlantı sekmelerini gösterir.&#x0A;Varsayılan: Açık</value></data>
+  <data name="SettingsHelpNotifications" xml:space="preserve"><value>Bir ağ ayarı uygulandığında veya geri alındığında Windows bildiriminin ne zaman gösterileceğini belirler.&#x0A;Varsayılan: Kapalı</value></data>
+  <data name="SettingsHelpShowVirtual" xml:space="preserve"><value>Sanal bağlantıları (örneğin Hyper-V veya WSL) bağlantı listesinde gösterir.&#x0A;Varsayılan: Kapalı</value></data>
   <data name="SettingsHelpRememberWindow" xml:space="preserve"><value>Pencere konumu ve boyutunu sonraki açılış için saklar.&#x0A;Varsayılan: Açık</value></data>
   <data name="NotificationSucceeded" xml:space="preserve"><value>Başarılı</value></data>
   <data name="NotificationFailed" xml:space="preserve"><value>Başarısız</value></data>
-  <data name="NotificationOperationApply" xml:space="preserve"><value>Yapılandırma uygula</value></data>
+  <data name="NotificationOperationApply" xml:space="preserve"><value>Ayarı uygula</value></data>
   <data name="NotificationOperationDhcp" xml:space="preserve"><value>Otomatik ayara geç</value></data>
-  <data name="NotificationOperationRestore" xml:space="preserve"><value>Son yapılandırmayı geri yükle</value></data>
-  <data name="NotificationOperationRenewIp" xml:space="preserve"><value>IP yenile</value></data>
+  <data name="NotificationOperationRestore" xml:space="preserve"><value>Son değişikliği geri al</value></data>
+  <data name="NotificationOperationRenewIp" xml:space="preserve"><value>Adresi yenile</value></data>
   <data name="OperationNotification" xml:space="preserve"><value>{0}: {1} — {2}</value></data>
   <data name="NotificationHistory" xml:space="preserve"><value>Bildirim geçmişi</value></data>
   <data name="NotificationHistoryEmpty" xml:space="preserve"><value>Henüz bağlantı işlemi sonucu yok.</value></data>
   <data name="NotificationHistoryClear" xml:space="preserve"><value>Temizle</value></data>
   <data name="NotificationPromptTitle" xml:space="preserve"><value>Windows bildirimleri</value></data>
   <data name="NotificationPromptMessage" xml:space="preserve"><value>İşlem sonuçları için Windows bildirimleri gösterilsin mi?</value></data>
-  <data name="UnexpectedShutdownNotification" xml:space="preserve"><value>Uygulama önceki oturumda beklenmedik şekilde kapandı.</value></data>
-  <data name="CriticalLogWriteFailedNotification" xml:space="preserve"><value>Tanılama günlüğü yazılamadı.</value></data>
-  <data name="UnhandledExceptionMessage" xml:space="preserve"><value>Beklenmeyen bir hata nedeniyle uygulama kapatılacak.</value></data>
+  <data name="UnexpectedShutdownNotification" xml:space="preserve"><value>IPMan en son beklenmedik şekilde kapanmış. Ağınızın durumunu Ayrıntılar bölümünden kontrol edebilirsiniz.</value></data>
+  <data name="CriticalLogWriteFailedNotification" xml:space="preserve"><value>Tanılama günlüğü kaydedilemedi. IPMan çalışmaya devam ediyor.</value></data>
+  <data name="UnhandledExceptionMessage" xml:space="preserve"><value>Beklenmeyen bir sorun oluştu ve IPMan kapatılacak. Ağınızın durumunu kontrol etmek için IPMan'i yeniden açabilirsiniz.</value></data>
   <data name="SettingsDiagnostics" xml:space="preserve"><value>Tanılama…</value></data>
   <data name="DiagnosticsTitle" xml:space="preserve"><value>Tanılama</value></data>
   <data name="DiagnosticsRefresh" xml:space="preserve"><value>Yenile</value></data>
@@ -493,7 +397,6 @@
   <data name="NewSetting" xml:space="preserve"><value>+ Yeni ayar ekle</value></data>
   <data name="EditSetting" xml:space="preserve"><value>Düzenle</value></data>
   <data name="DetailsAndManualSettings" xml:space="preserve"><value>Ayrıntılar ve elle ayar →</value></data>
-  <data name="GoBack" xml:space="preserve"><value>← Geri</value></data>
   <data name="SwitchToWireless" xml:space="preserve"><value>Kablosuz bağlantıya geç</value></data>
   <data name="CableDisconnectedGuidance" xml:space="preserve"><value>Kabloyu takın. Seçtiğiniz ayar kablo takılınca da geçerli olur.</value></data>
   <data name="CurrentNetwork" xml:space="preserve"><value>Şu an: {0} ağındasınız</value></data>
@@ -506,14 +409,11 @@
   <data name="ConnectionKindCellular" xml:space="preserve"><value>Mobil bağlantı</value></data>
   <data name="SettingMenu" xml:space="preserve"><value>Ayar işlemleri</value></data>
   <data name="FavoriteSetting" xml:space="preserve"><value>Favori ayar</value></data>
-  <data name="UpdateSetting" xml:space="preserve"><value>Ayarı güncelle</value></data>
   <data name="ConnectionStatusUnknown" xml:space="preserve"><value>İnternet durumu bilinmiyor</value></data>
   <data name="SafeSwitchConfirmationTitle" xml:space="preserve">
     <value>{0} ayarına geçilsin mi?</value>
   </data>
-  <data name="SafeSwitchComputerAddress" xml:space="preserve">
-    <value>Bilgisayarınızın adresi</value>
-  </data>
+  <data name="SafeSwitchComputerAddress" xml:space="preserve"><value>Bilgisayarın adresi</value></data>
   <data name="SafeSwitchAddressArrow" xml:space="preserve">
     <value>→</value>
   </data>
@@ -586,16 +486,10 @@
   <data name="SafeSwitchExitRevert" xml:space="preserve">
     <value>Geri al ve çık</value>
   </data>
-  <data name="SafeSwitchBusy" xml:space="preserve">
-    <value>Önce devam eden geçişi tamamlayın.</value>
-  </data>
-  <data name="SafeSwitchApplyFailed" xml:space="preserve">
-    <value>Yeni ayar doğrulanamadı. Bağlantının mevcut durumunu Ayrıntılar bölümünden kontrol edin. Ayarı gözden geçirip yeniden deneyin.</value>
-  </data>
-  <data name="SafeSwitchRevertFailed" xml:space="preserve">
-    <value>Eski ayara dönüş tamamlanamadı. Ağınız şu an yeni ayarda olabilir. Otomatik'e geçerek ya da Ayrıntılar'dan elle düzelterek devam edebilirsiniz.</value>
-  </data>
-  <data name="SafeSwitchManualSetting" xml:space="preserve"><value>Elle ayar</value></data>
+  <data name="SafeSwitchBusy" xml:space="preserve"><value>Başka bir geçiş sürüyor. Bitmesini bekleyip yeniden deneyin.</value></data>
+  <data name="SafeSwitchApplyFailed" xml:space="preserve"><value>Yeni ayar uygulanamadı veya doğrulanamadı. Ağın son durumu doğrulanamadı; Ayrıntılar bölümünden bağlantının güncel durumuna bakıp yeniden deneyin.</value></data>
+  <data name="SafeSwitchRevertFailed" xml:space="preserve"><value>Eski ayara dönülemedi. Ağınız şu an yeni ayarda kalmış olabilir. Otomatik ayara geçin ya da Ayrıntılar bölümünden elle düzeltin.</value></data>
+  <data name="SafeSwitchManualSetting" xml:space="preserve"><value>Elle girilen adres</value></data>
   <data name="SafeSwitchKept" xml:space="preserve"><value>{0} ayarına geçildi.</value></data>
   <data name="SafeSwitchReverted" xml:space="preserve"><value>Eski ayara ({0}) dönüldü. Ağınız eskisi gibi.</value></data>
 
@@ -607,7 +501,7 @@
   <data name="ProfileEditorNameHint" xml:space="preserve"><value>Örnek: Saha PLC, Ofis, Ev</value></data>
   <data name="ProfileEditorModeLabel" xml:space="preserve"><value>Adres nasıl belirlensin?</value></data>
   <data name="ProfileEditorAutomatic" xml:space="preserve"><value>Otomatik</value></data>
-  <data name="ProfileEditorAutomaticHint" xml:space="preserve"><value>Ağ adresi kendisi verir (önerilir)</value></data>
+  <data name="ProfileEditorAutomaticHint" xml:space="preserve"><value>Adresi ağ kendisi verir (önerilir)</value></data>
   <data name="ProfileEditorStatic" xml:space="preserve"><value>Sabit adres</value></data>
   <data name="ProfileEditorStaticHint" xml:space="preserve"><value>Bir cihaza doğrudan bağlanmak için</value></data>
   <data name="ProfileEditorDeviceLabel" xml:space="preserve"><value>Bağlanacağınız cihazın adresi (biliyorsanız)</value></data>
@@ -628,10 +522,8 @@
   <data name="ProfileEditorSaveAndSwitch" xml:space="preserve"><value>Kaydet ve geç</value></data>
   <data name="ProfileEditorNameRequired" xml:space="preserve"><value>Ayar adı boş bırakılamaz. Örnek: Saha PLC, Ofis, Ev</value></data>
   <data name="ProfileEditorDuplicateName" xml:space="preserve"><value>Bu adda başka bir ayar var. Farklı bir ad seçin. Örnek: Saha PLC 2</value></data>
-  <data name="ProfileEditorOctetError" xml:space="preserve"><value>Her sayı 0 ile 255 arasında olmalı. Örnek: 192.168.1.50</value></data>
-  <data name="ProfileEditorAddressFormatError" xml:space="preserve"><value>Adres dört sayıdan oluşmalı ve noktayla ayrılmalıdır. Örnek: 192.168.1.50</value></data>
-  <data name="ProfileEditorAddressExample" xml:space="preserve"><value>Örnek: 192.168.1.50</value></data>
-  <data name="ProfileEditorMaskExample" xml:space="preserve"><value>Örnek: 255.255.255.0</value></data>
+  <data name="ProfileEditorOctetError" xml:space="preserve"><value>Her sayı 0 ile 255 arasında olmalı. Örnek: {0}</value></data>
+  <data name="ProfileEditorAddressFormatError" xml:space="preserve"><value>Adres dört sayıdan oluşmalı ve noktayla ayrılmalıdır. Örnek: {0}</value></data>
   <data name="ProfileEditorGatewayWarning" xml:space="preserve"><value>Ağ geçidi bilgisayarın adresiyle aynı ağda görünmüyor. İnternet çalışmayabilir.</value></data>
   <data name="ProfileEditorSaveFailed" xml:space="preserve"><value>Ayar kaydedilemedi. Ağınız değişmedi. Tekrar kaydetmeyi deneyin.</value></data>
   <data name="ProfileEditorSaveCancelled" xml:space="preserve"><value>Kayıt iptal edildi. Ağınız değişmedi. Yeniden kaydedebilirsiniz.</value></data>
@@ -643,7 +535,7 @@
   <data name="DetailsDiscardMessage" xml:space="preserve"><value>Değişiklikler uygulanmadı. Çıkılsın mı?</value></data>
   <data name="DetailsCurrentSettings" xml:space="preserve"><value>Şu anki ayarlar</value></data>
   <data name="DetailsAutomatic" xml:space="preserve"><value>Otomatik</value></data>
-  <data name="DetailsStatic" xml:space="preserve"><value>Sabit</value></data>
+  <data name="DetailsStatic" xml:space="preserve"><value>Sabit adres</value></data>
   <data name="DetailsAddressMode" xml:space="preserve"><value>Adres modu</value></data>
   <data name="DetailsChanged" xml:space="preserve"><value>değişecek</value></data>
   <data name="DetailsEmpty" xml:space="preserve"><value>boş</value></data>
@@ -652,10 +544,10 @@
   <data name="DetailsNoChanges" xml:space="preserve"><value>Değişiklik yok</value></data>
   <data name="DetailsAddress" xml:space="preserve"><value>Bilgisayarın adresi</value></data>
   <data name="DetailsMask" xml:space="preserve"><value>Alt ağ maskesi</value></data>
-  <data name="DetailsGateway" xml:space="preserve"><value>Ağ geçidi (modem adresi)</value></data>
+  <data name="DetailsGateway" xml:space="preserve"><value>Ağ geçidi (genelde modem adresi)</value></data>
   <data name="DetailsPrimaryDns" xml:space="preserve"><value>Birinci DNS</value></data>
   <data name="DetailsSecondaryDns" xml:space="preserve"><value>İkinci DNS</value></data>
-  <data name="DetailsAdvanced" xml:space="preserve"><value>Gelişmiş ayarlar ve bağdaştırıcı bilgisi</value></data>
+  <data name="DetailsAdvanced" xml:space="preserve"><value>Gelişmiş ayarlar ve bağlantı bilgileri</value></data>
   <data name="DetailsDns" xml:space="preserve"><value>DNS (alan adı sunucuları)</value></data>
   <data name="DetailsConnectionInfo" xml:space="preserve"><value>Bağlantı bilgileri</value></data>
   <data name="DetailsHardware" xml:space="preserve"><value>Donanım adı</value></data>
@@ -674,18 +566,41 @@
   <data name="DetailsDismiss" xml:space="preserve"><value>Kapat</value></data>
   <data name="DetailsInternet" xml:space="preserve"><value>Bağlı · İnternet çalışıyor</value></data>
   <data name="DetailsFailureTitleFormat" xml:space="preserve"><value>{0} ayarına geçilemedi.</value></data>
-  <data name="DetailsUnchangedFormat" xml:space="preserve"><value>Ağınız değişmedi, {0} ile devam ediyorsunuz.</value></data>
-  <data name="DetailsUncertain" xml:space="preserve"><value>Ağın son durumu doğrulanamadı. Bağlantı bilgilerini kontrol edin; gerekirse son değişikliği geri alın.</value></data>
-  <data name="DetailsPartial" xml:space="preserve"><value>Ayarların bir kısmı değişmiş olabilir. Bağlantı bilgilerini kontrol edin; gerekirse son değişikliği geri alın.</value></data>
+  <data name="DetailsUnchangedFormat" xml:space="preserve"><value>Ağınız değişmedi. Önceki ayarınızla ({0}) devam ediyorsunuz.</value></data>
+  <data name="DetailsUncertain" xml:space="preserve"><value>Ağın son durumu doğrulanamadı. Bağlantı bilgilerini kontrol edin; gerekirse "Son değişikliği geri al" düğmesini kullanın.</value></data>
+  <data name="DetailsPartial" xml:space="preserve"><value>Ayarların bir kısmı değişmiş olabilir. Bağlantı bilgilerini kontrol edin; gerekirse "Son değişikliği geri al" düğmesini kullanın.</value></data>
   <data name="DetailsModeCurrentFormat" xml:space="preserve"><value>şu an: {0}</value></data>
-  <data name="DetailsValidationExample" xml:space="preserve"><value>Örnek: 192.168.1.50</value></data>
-  <data name="DetailsMaskExample" xml:space="preserve"><value>Örnek: 255.255.255.0</value></data>
-  <data name="DetailsMutationRejected" xml:space="preserve"><value>Windows yeni ayarları kabul etmedi.</value></data>
-  <data name="DetailsPartialExplanation" xml:space="preserve"><value>Ayarların tümü uygulanamadı.</value></data>
   <data name="TraySwitch" xml:space="preserve"><value>Ayara geç</value></data>
   <data name="TrayMoreSettings" xml:space="preserve"><value>Diğer ayarlar…</value></data>
   <data name="TrayUndo" xml:space="preserve"><value>Son değişikliği geri al</value></data>
   <data name="TrayOpen" xml:space="preserve"><value>IPMan'i aç</value></data>
   <data name="TrayExit" xml:space="preserve"><value>Çıkış</value></data>
   <data name="TrayCurrentStatus" xml:space="preserve"><value>Şu an: {0} · {1}</value></data>
+  <data name="ApplyValidationAction" xml:space="preserve"><value>İşaretli alanları düzeltin. Örnek: 192.168.1.50</value></data>
+  <data name="ApplyMutationFailedAction" xml:space="preserve"><value>Değerleri kontrol edip yeniden deneyin.</value></data>
+  <data name="ApplyPartialFailureAction" xml:space="preserve"><value>Son değişikliği geri alarak eski ayara dönebilirsiniz.</value></data>
+  <data name="ApplyAdapterUnavailableDuringVerificationAction" xml:space="preserve"><value>Bağlantı geri geldiğinde Ayrıntılar bölümünden durumuna bakın.</value></data>
+  <data name="ApplyConflictUnconfirmedAction" xml:space="preserve"><value>Farklı bir adres seçin ya da yeniden deneyip onay verin.</value></data>
+  <data name="ApplyProbeIndeterminateUnconfirmedAction" xml:space="preserve"><value>Yeniden deneyip onay verin ya da farklı bir adres seçin.</value></data>
+  <data name="SafetyMultipleIpv4AddressesAction" xml:space="preserve"><value>Fazla adresleri Windows ağ ayarlarından kaldırıp yeniden deneyin.</value></data>
+  <data name="SafetyMultipleIpv4GatewaysAction" xml:space="preserve"><value>Fazla ağ geçitlerini Windows ağ ayarlarından kaldırıp yeniden deneyin.</value></data>
+  <data name="SafetyTooManyIpv4DnsServersAction" xml:space="preserve"><value>Fazla DNS sunucularını Windows ağ ayarlarından kaldırıp yeniden deneyin.</value></data>
+  <data name="SafetyNotElevatedAction" xml:space="preserve"><value>IPMan'i kapatıp sağ tıklayarak Yönetici olarak çalıştırın.</value></data>
+  <data name="NextRetry" xml:space="preserve"><value>Biraz sonra yeniden deneyin.</value></data>
+  <data name="NextRefreshAndRetry" xml:space="preserve"><value>Listeyi yenileyip yeniden deneyin.</value></data>
+  <data name="NextCheckDetails" xml:space="preserve"><value>Ayrıntılar bölümünden bağlantının güncel durumuna bakın; gerekirse "Son değişikliği geri al" düğmesini kullanın.</value></data>
+  <data name="NextManualEntry" xml:space="preserve"><value>Eski değerleri Ayrıntılar bölümünden elle girebilirsiniz.</value></data>
+  <data name="NextSelectConnection" xml:space="preserve"><value>Doğru bağlantıyı seçip yeniden deneyin.</value></data>
+  <data name="NextRetryIfWanted" xml:space="preserve"><value>İsterseniz yeniden deneyebilirsiniz.</value></data>
+  <data name="NextFixDisk" xml:space="preserve"><value>Disk alanını ve klasör erişimini kontrol edip yeniden deneyin.</value></data>
+  <data name="NextWaitReady" xml:space="preserve"><value>Bağlantının tam hazır olmasını bekleyip yeniden deneyin.</value></data>
+  <data name="NetworkUnchanged" xml:space="preserve"><value>Ağınız değişmedi.</value></data>
+  <data name="NetworkPartial" xml:space="preserve"><value>Ağ ayarlarınız kısmen değişmiş olabilir.</value></data>
+  <data name="NetworkUnverified" xml:space="preserve"><value>Ağın son durumu doğrulanamadı.</value></data>
+  <data name="ExampleAddress" xml:space="preserve"><value>192.168.1.50</value></data>
+  <data name="ExampleMask" xml:space="preserve"><value>255.255.255.0</value></data>
+  <data name="ExampleGateway" xml:space="preserve"><value>192.168.1.1</value></data>
+  <data name="ExamplePrimaryDns" xml:space="preserve"><value>8.8.8.8</value></data>
+  <data name="ExampleSecondaryDns" xml:space="preserve"><value>1.1.1.1</value></data>
+  <data name="ProfileEditorDeviceShortLabel" xml:space="preserve"><value>Cihazın adresi</value></data>
 </root>

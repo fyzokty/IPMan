@@ -212,9 +212,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
                     .Select(error => error.Field)
                     .Distinct()
                     .Select(ValidationMessageFormatter.DescribeField));
-            SetStatus(
-                string.Concat(Strings.ApplyValidationFailed, Environment.NewLine, fields),
-                ApplyStatusSeverity.Error);
+            SetStatus(ApplyResultMessageFormatter.DescribeInvalidInput(fields));
             ApplyCompleted?.Invoke(this, false);
             return;
         }

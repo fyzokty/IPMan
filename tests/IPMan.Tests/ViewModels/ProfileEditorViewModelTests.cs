@@ -42,7 +42,7 @@ public sealed class ProfileEditorViewModelTests
         Assert.Empty(editor.SubnetMask);
         Assert.Empty(editor.NameError);
         Assert.Empty(editor.SubnetMaskError);
-        Assert.Equal(Strings.ProfileEditorOctetError, editor.Ipv4AddressError);
+        Assert.Equal(Strings.FormatProfileEditorOctetError(Strings.ExampleAddress), editor.Ipv4AddressError);
         Assert.False(editor.CanSave);
     }
 
@@ -57,7 +57,7 @@ public sealed class ProfileEditorViewModelTests
         editor.Name = "Saha PLC";
         editor.Ipv4Address = address;
         await editor.SaveAsync(false);
-        Assert.Equal(key == "ProfileEditorOctetError" ? Strings.ProfileEditorOctetError : Strings.ProfileEditorAddressFormatError,
+        Assert.Equal(key == "ProfileEditorOctetError" ? Strings.FormatProfileEditorOctetError(Strings.ExampleAddress) : Strings.FormatProfileEditorAddressFormatError(Strings.ExampleAddress),
             editor.Ipv4AddressError);
         Assert.NotEmpty(editor.SubnetMaskError);
         Assert.True(editor.IsAdvancedExpanded);
@@ -256,7 +256,7 @@ public sealed class ProfileEditorViewModelTests
             "PrimaryDns" => editor.PrimaryDnsError,
             _ => editor.SecondaryDnsError
         };
-        Assert.Contains(field == "SubnetMask" ? Strings.ProfileEditorMaskExample : Strings.ProfileEditorAddressExample,
+        Assert.Contains(field == "SubnetMask" ? Strings.ExampleMask : Strings.ExamplePrimaryDns,
             error, StringComparison.Ordinal);
     }
 

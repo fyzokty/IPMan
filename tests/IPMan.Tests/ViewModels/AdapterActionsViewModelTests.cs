@@ -221,7 +221,8 @@ public sealed class AdapterActionsViewModelTests
         await context.Actions.RestoreLastCommand.ExecuteAsync(null);
 
         Assert.Single(context.RecoveryRestore.Requests);
-        Assert.Equal(Strings.RestoreNoSnapshotFound, context.Actions.StatusMessage);
+        Assert.StartsWith(Strings.RestoreNoSnapshotFound, context.Actions.StatusMessage, StringComparison.Ordinal);
+        Assert.Contains(Strings.NetworkUnchanged, context.Actions.StatusMessage, StringComparison.Ordinal);
         Assert.NotEqual(Strings.ActionDeclined, context.Actions.StatusMessage);
         AssertConfigurationRefreshRequested(context);
     }

@@ -25,9 +25,9 @@ public sealed class DetailsFailureMessageFormatterTests
             or StaticIpv4ApplyStatus.ConflictConfirmationRequired or StaticIpv4ApplyStatus.ProbeIndeterminateConfirmationRequired
             or StaticIpv4ApplyStatus.RecoveryCaptureFailed or StaticIpv4ApplyStatus.RecoveryStateUnavailable or StaticIpv4ApplyStatus.Cancelled;
         Assert.Equal(safe, message.NetworkState == Strings.FormatDetailsUnchanged("Ofis"));
-        if (status == StaticIpv4ApplyStatus.MutationFailed) Assert.Equal(Strings.DetailsMutationRejected, message.Explanation);
-        else if (status == StaticIpv4ApplyStatus.PartialFailure) Assert.Equal(Strings.DetailsPartialExplanation, message.Explanation);
-        else Assert.Equal(ApplyResultMessageFormatter.Describe(result).Text, message.Explanation);
+        // The explanation is only the "what happened" sentence; the network state is a separate line.
+        Assert.Equal(ApplyResultMessageFormatter.Describe(result).Reason, message.Explanation);
+        Assert.DoesNotContain(Strings.NetworkUnchanged, message.Explanation, StringComparison.Ordinal);
         Assert.NotEmpty(message.TechnicalDetails);
     }
 

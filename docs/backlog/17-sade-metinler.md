@@ -1,6 +1,6 @@
 # 17 — Sade metinler ve terim sözlüğü uyumu
 
-- **Durum:** yapılacak
+- **Durum:** bitti
 - **Bağımlılık:** 13, 14, 15, 16
 - **Gereksinimler:** ADR-018 · UX-ilkeleri.md
 
@@ -25,7 +25,7 @@ Uygulama genelindeki tüm kullanıcı arayüzü metinlerini, hata mesajlarını 
 - Uygulama içinde hiçbir İngilizce metin kırıntısının kalmaması; tek dilin Türkçe olması
 
 ## Bitti sayılır
-- [ ] `Strings.resx` dosyasındaki tüm terimler `UX-ilkeleri.md` sözlüğüne eksiksiz uyarlandı
-- [ ] Taslak ve eski teknik ifadelere ait kullanılmayan kaynak dizgileri temizlendi
-- [ ] Tüm giriş doğrulama mesajları somut örnekler içeriyor
-- [ ] Arayüzde hiçbir İngilizce veya jargona dayalı metin kalmadı
+- [x] `Strings.resx` dosyasındaki tüm terimler `UX-ilkeleri.md` sözlüğüne eksiksiz uyarlandı
+- [x] Taslak ve eski teknik ifadelere ait kullanılmayan kaynak dizgileri temizlendi
+- [x] Tüm giriş doğrulama mesajları somut örnekler içeriyor
+- [x] Arayüzde hiçbir İngilizce veya jargona dayalı metin kalmadı

@@ -238,7 +238,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         {
             IReadOnlyList<StaticIpv4ValidationError> deviceErrors = _validator.Validate(new(DeviceAddress, "255.255.255.255", null, null, null)).Errors;
             StaticIpv4ValidationError? error = deviceErrors.Count == 0 ? null : deviceErrors[0];
-            if (error is not null) deviceError = Describe(error, DeviceAddress);
+            if (error is not null) deviceError = Describe(error, DeviceAddress, Strings.ProfileEditorDeviceShortLabel);
         }
         DeviceAddressError = Visible(nameof(DeviceAddress)) ? deviceError : string.Empty;
         Ipv4AddressError = FieldError(blocking, StaticIpv4ConfigurationField.Ipv4Address, nameof(Ipv4Address), Ipv4Address);
@@ -267,16 +267,16 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         return Visible(property) && error is not null ? Describe(error, value) : string.Empty;
     }
 
-    private static string Describe(StaticIpv4ValidationError error, string value)
+    private static string Describe(StaticIpv4ValidationError error, string value, string? fieldLabel = null)
     {
         if (error.Code == StaticIpv4ValidationErrorCode.InvalidIpv4)
         {
+            string example = ValidationMessageFormatter.DescribeExample(error.Field);
             string[] parts = value.Trim().Split('.');
             return parts.Length == 4 && parts.Any(part => int.TryParse(part, out int number) && (number < 0 || number > 255))
-                ? Strings.ProfileEditorOctetError : Strings.ProfileEditorAddressFormatError;
+                ? Strings.FormatProfileEditorOctetError(example) : Strings.FormatProfileEditorAddressFormatError(example);
         }
-        return ValidationMessageFormatter.Describe(error) + " " +
-            (error.Field == StaticIpv4ConfigurationField.SubnetMask ? Strings.ProfileEditorMaskExample : Strings.ProfileEditorAddressExample);
+        return ValidationMessageFormatter.Describe(error, fieldLabel);
     }
 
     private void NotifySaveCommands()

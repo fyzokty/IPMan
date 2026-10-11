@@ -54,16 +54,16 @@ public sealed class ManualSettingsFieldViewModel : ObservableObject
         DraftField.SecondaryDns => _page.Adapter.Draft.SecondaryDnsError,
         _ => string.Empty
     };
-    public string Error => VisibleError.Length == 0 ? string.Empty : string.Concat(
-        VisibleError.Replace(Field switch
-        {
-            DraftField.Ipv4Address => Strings.FieldIpv4Address,
-            DraftField.SubnetMask => Strings.FieldSubnetMask,
-            DraftField.Gateway => Strings.FieldGateway,
-            DraftField.PrimaryDns => Strings.FieldPrimaryDns,
-            DraftField.SecondaryDns => Strings.FieldSecondaryDns,
-            _ => Label
-        }, Label, StringComparison.Ordinal), " ", Field == DraftField.SubnetMask ? Strings.DetailsMaskExample : Strings.DetailsValidationExample);
+    // The validation messages already end with a concrete example for the field.
+    public string Error => VisibleError.Length == 0 ? string.Empty : VisibleError.Replace(Field switch
+    {
+        DraftField.Ipv4Address => Strings.FieldIpv4Address,
+        DraftField.SubnetMask => Strings.FieldSubnetMask,
+        DraftField.Gateway => Strings.FieldGateway,
+        DraftField.PrimaryDns => Strings.FieldPrimaryDns,
+        DraftField.SecondaryDns => Strings.FieldSecondaryDns,
+        _ => Label
+    }, Label, StringComparison.Ordinal);
     public bool HasError => Error.Length > 0;
     internal void Refresh()
     {

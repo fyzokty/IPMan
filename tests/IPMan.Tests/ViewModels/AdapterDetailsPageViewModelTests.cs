@@ -74,7 +74,7 @@ public sealed class AdapterDetailsPageViewModelTests
         using DetailsPageFixture fixture = new();
         fixture.Adapter.Draft.Ipv4Address = "invalid";
         Assert.False(fixture.Page.ApplyCommand.CanExecute(null));
-        Assert.Contains(Strings.DetailsValidationExample, fixture.Page.Fields[0].Error, StringComparison.Ordinal);
+        Assert.Contains(Strings.ExampleAddress, fixture.Page.Fields[0].Error, StringComparison.Ordinal);
         fixture.Page.IsAutomatic = true;
         Assert.Equal(1, fixture.Page.ChangeCount);
         Assert.Equal(fixture.Adapter.Snapshot.Ipv4Address, fixture.Page.Fields[0].Value);

@@ -10,26 +10,22 @@ public static class DetailsFailureMessageFormatter
 {
     public static DetailsFailureMessage? Describe(StaticIpv4ApplyResult result, string settingName, string previousName) =>
         result.Status is StaticIpv4ApplyStatus.VerifiedSuccess or StaticIpv4ApplyStatus.NoChange ? null :
-        Create(ApplyResultMessageFormatter.Describe(result), settingName, previousName,
-            (result.Status == StaticIpv4ApplyStatus.MutationFailed && result.Mutation?.WasMutationAttempted == false) ||
-            result.Status is StaticIpv4ApplyStatus.ValidationFailed or StaticIpv4ApplyStatus.AdapterUnavailable
-                or StaticIpv4ApplyStatus.AdapterReadFailed or StaticIpv4ApplyStatus.SafetyBlocked
-                or StaticIpv4ApplyStatus.ConflictConfirmationRequired or StaticIpv4ApplyStatus.ProbeIndeterminateConfirmationRequired
-                or StaticIpv4ApplyStatus.RecoveryCaptureFailed or StaticIpv4ApplyStatus.RecoveryStateUnavailable or StaticIpv4ApplyStatus.Cancelled,
-            result.Status == StaticIpv4ApplyStatus.MutationFailed, result.Status == StaticIpv4ApplyStatus.PartialFailure, result.ToString());
+        Create(ApplyResultMessageFormatter.Describe(result), settingName, previousName, result.ToString());
 
     public static DetailsFailureMessage? Describe(DhcpApplyResult result, string settingName, string previousName) =>
         result.Status is DhcpApplyStatus.VerifiedSuccess or DhcpApplyStatus.NoChange ? null :
-        Create(ApplyResultMessageFormatter.Describe(result), settingName, previousName,
-            (result.Status == DhcpApplyStatus.MutationFailed && result.Mutation?.WasMutationAttempted == false) ||
-            result.Status is DhcpApplyStatus.AdapterUnavailable or DhcpApplyStatus.AdapterReadFailed
-                or DhcpApplyStatus.SafetyBlocked or DhcpApplyStatus.RecoveryCaptureFailed or DhcpApplyStatus.RecoveryStateUnavailable or DhcpApplyStatus.Cancelled,
-            result.Status == DhcpApplyStatus.MutationFailed, result.Status == DhcpApplyStatus.PartialFailure, result.ToString());
+        Create(ApplyResultMessageFormatter.Describe(result), settingName, previousName, result.ToString());
 
-    private static DetailsFailureMessage Create(ApplyStatusMessage message, string setting, string previous,
-        bool unchanged, bool mutationFailed, bool partial, string technical) => new(
-            Strings.FormatDetailsFailureTitle(setting),
-            mutationFailed ? Strings.DetailsMutationRejected : partial ? Strings.DetailsPartialExplanation : message.Text,
-            unchanged ? Strings.FormatDetailsUnchanged(previous)
-                : partial ? Strings.DetailsPartial : Strings.DetailsUncertain, technical);
+    // The explanation is the "what happened" sentence alone; the network state is shown on its own line,
+    // so the assurance comes from the same classification the inline status message uses.
+    private static DetailsFailureMessage Create(ApplyStatusMessage message, string setting, string previous, string technical) => new(
+        Strings.FormatDetailsFailureTitle(setting),
+        message.Reason ?? message.Text,
+        message.Network switch
+        {
+            ApplyNetworkEffect.Unchanged => Strings.FormatDetailsUnchanged(previous),
+            ApplyNetworkEffect.Partial => Strings.DetailsPartial,
+            _ => Strings.DetailsUncertain
+        },
+        technical);
 }
