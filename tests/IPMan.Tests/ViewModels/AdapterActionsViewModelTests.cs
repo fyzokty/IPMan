@@ -46,8 +46,8 @@ public sealed class AdapterActionsViewModelTests
         Assert.Equal("192.168.20.1", request.DesiredConfiguration.Gateway);
         Assert.Equal("1.1.1.1", request.DesiredConfiguration.PrimaryDns);
         Assert.Null(request.DesiredConfiguration.SecondaryDns);
-        Assert.Equal(Strings.ApplyStaticSuccess, context.Actions.StatusMessage);
-        Assert.Equal(ApplyStatusSeverity.Success, context.Actions.StatusSeverity);
+        Assert.Equal(Strings.FormatSafeSwitchKept(Strings.SafeSwitchManualSetting), context.Actions.StatusMessage);
+        Assert.Equal(ApplyStatusSeverity.Information, context.Actions.StatusSeverity);
         Assert.False(context.Adapter.Draft.IsDirty);
         AssertConfigurationRefreshRequested(context);
     }
@@ -154,7 +154,7 @@ public sealed class AdapterActionsViewModelTests
         DhcpApplyRequest request = Assert.Single(context.DhcpApply.Requests);
         Assert.Equal(context.Adapter.Id, request.AdapterId);
         Assert.Single(context.Confirmation.Requests);
-        Assert.Equal(Strings.ApplyDhcpSuccess, context.Actions.StatusMessage);
+        Assert.Equal(Strings.FormatSafeSwitchKept(Strings.SafeSwitchAutomatic), context.Actions.StatusMessage);
         AssertConfigurationRefreshRequested(context);
     }
 
@@ -489,6 +489,7 @@ public sealed class AdapterActionsViewModelTests
             recoveryRestore,
             confirmation,
             refreshCoordinator,
+            new FakeSafetyCountdownCoordinator(),
             quickActionService: null,
             clipboardService: null,
             criticalLogger: criticalLogger);

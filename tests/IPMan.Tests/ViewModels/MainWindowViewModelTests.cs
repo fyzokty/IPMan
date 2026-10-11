@@ -683,7 +683,8 @@ public sealed class MainWindowViewModelTests
                 dhcpApply,
                 recoveryRestore,
                 confirmation,
-                coordinator);
+                coordinator,
+                new FakeSafetyCountdownCoordinator());
             StaticIpv4ConfigurationValidator validator = new();
 
             MainWindowViewModel viewModel = new(

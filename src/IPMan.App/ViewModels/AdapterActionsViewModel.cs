@@ -8,6 +8,7 @@ using IPMan.App.Services;
 using IPMan.Application.Logging;
 using IPMan.Application.Networking;
 using IPMan.Application.Settings;
+using IPMan.Application.Profiles;
 using IPMan.Domain.Networking;
 using IPMan.Domain.Settings;
 using IPMan.Domain.Profiles;
@@ -30,6 +31,8 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
     private readonly IAppSettingsRepository? _settingsRepository;
     private readonly OperationNotificationService? _operationNotificationService;
     private readonly ICriticalLogger _criticalLogger;
+    private readonly ISafetyCountdownCoordinator _safetyCoordinator;
+    private IReadOnlyList<NetworkProfile> _availableSettings = [];
     private bool _actionCancelledBecauseAdapterUnavailable;
     private bool _isDisposed;
 
@@ -83,13 +86,15 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         IDhcpApplyService dhcpApplyService,
         IRecoveryRestoreService recoveryRestoreService,
         IUserConfirmationService confirmationService,
-        IAdapterRefreshCoordinator refreshCoordinator)
+        IAdapterRefreshCoordinator refreshCoordinator,
+        ISafetyCountdownCoordinator safetyCoordinator)
         : this(
             staticApplyService,
             dhcpApplyService,
             recoveryRestoreService,
             confirmationService,
             refreshCoordinator,
+            safetyCoordinator,
             quickActionService: null,
             clipboardService: null,
             settingsRepository: null,
@@ -104,6 +109,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         IRecoveryRestoreService recoveryRestoreService,
         IUserConfirmationService confirmationService,
         IAdapterRefreshCoordinator refreshCoordinator,
+        ISafetyCountdownCoordinator safetyCoordinator,
         IQuickNetworkActionService? quickActionService,
         IClipboardService? clipboardService,
         IAppSettingsRepository? settingsRepository = null,
@@ -115,18 +121,23 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         ArgumentNullException.ThrowIfNull(recoveryRestoreService);
         ArgumentNullException.ThrowIfNull(confirmationService);
         ArgumentNullException.ThrowIfNull(refreshCoordinator);
+        ArgumentNullException.ThrowIfNull(safetyCoordinator);
 
         _staticApplyService = staticApplyService;
         _dhcpApplyService = dhcpApplyService;
         _recoveryRestoreService = recoveryRestoreService;
         _confirmationService = confirmationService;
         _refreshCoordinator = refreshCoordinator;
+        _safetyCoordinator = safetyCoordinator;
         _quickActionService = quickActionService;
         _clipboardService = clipboardService;
         _settingsRepository = settingsRepository;
         _operationNotificationService = operationNotificationService;
         _criticalLogger = criticalLogger ?? new NullCriticalLogger();
     }
+
+    /// <summary>Updates saved settings used to name the pre-switch configuration.</summary>
+    public void SetAvailableSettings(IReadOnlyList<NetworkProfile> settings) => _availableSettings = settings;
 
     /// <summary>Attaches the actions to the selected adapter, or detaches them when null.</summary>
     public void Attach(AdapterViewModel? adapter)
@@ -172,7 +183,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             return;
         }
 
-        await ApplyStaticConfigurationAsync(CurrentAdapter!, profile.ToStaticConfiguration(), false, cancellationToken);
+        await ApplyStaticConfigurationAsync(CurrentAdapter!, profile.ToStaticConfiguration(), profile.Name, false, cancellationToken);
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteAction))]
@@ -180,7 +191,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
     {
         AdapterViewModel? adapter = CurrentAdapter;
 
-        if (adapter is null)
+        if (adapter is null || !CanExecuteAction())
         {
             ApplyCompleted?.Invoke(this, false);
             return;
@@ -204,106 +215,148 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             return;
         }
 
-        await ApplyStaticConfigurationAsync(adapter, draft.ValidatedConfiguration!, true, cancellationToken);
+        await ApplyStaticConfigurationAsync(adapter, draft.ValidatedConfiguration!, Strings.SafeSwitchManualSetting, true, cancellationToken);
     }
 
     private async Task ApplyStaticConfigurationAsync(
         AdapterViewModel adapter,
         StaticIpv4Configuration configuration,
+        string settingName,
         bool markDraftApplied,
         CancellationToken cancellationToken)
     {
-        StaticIpv4ApplyResult? result = null;
-        bool succeeded = false;
-        bool failedUnexpectedly = false;
-        IsBusy = true;
-
-        try
-        {
-            result = await ApplyStaticWithConfirmationsAsync(
-                adapter,
-                configuration,
-                cancellationToken);
-
-            if (result is null)
+        bool succeeded = await RunSwitchAsync(adapter, settingName, configuration,
+            Strings.NotificationOperationApply, async token =>
             {
-                return;
-            }
-
-            ApplyStatusMessage message = ApplyResultMessageFormatter.Describe(result);
-            SetStatus(message);
-            ReportOperation(
-                Strings.NotificationOperationApply,
-                adapter,
-                result.Status is StaticIpv4ApplyStatus.VerifiedSuccess or StaticIpv4ApplyStatus.NoChange);
-
-            if (result.Status is StaticIpv4ApplyStatus.VerifiedSuccess or StaticIpv4ApplyStatus.NoChange)
-            {
-                if (markDraftApplied)
+                StaticIpv4ApplyResult? result = await ApplyStaticWithConfirmationsAsync(adapter, configuration, token);
+                if (result is null)
                 {
-                    adapter.Draft.MarkApplied();
+                    return null;
                 }
-                succeeded = true;
-            }
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
+                SetStatus(ApplyResultMessageFormatter.Describe(result));
+                return result.Status switch
+                {
+                    StaticIpv4ApplyStatus.VerifiedSuccess => SafeSwitchApplyResult.Applied,
+                    StaticIpv4ApplyStatus.NoChange => SafeSwitchApplyResult.NoChange,
+                    _ => SafeSwitchApplyResult.Failed
+                };
+            }, cancellationToken);
+        if (succeeded && markDraftApplied)
         {
-            failedUnexpectedly = true;
-            ReportUnexpectedActionFailure(nameof(ApplyStaticCommand), exception);
-            ReportOperation(Strings.NotificationOperationApply, adapter, succeeded: false);
+            adapter.Draft.MarkApplied();
         }
-        finally
-        {
-            if (result is not null || failedUnexpectedly)
-            {
-                _refreshCoordinator.RequestRefresh(NetworkChangeReason.ConfigurationApplied);
-            }
-
-            IsBusy = false;
-            ApplyCompleted?.Invoke(this, succeeded);
-        }
+        ApplyCompleted?.Invoke(this, succeeded);
     }
 
     [RelayCommand(CanExecute = nameof(CanExecuteDhcp))]
     private async Task ApplyDhcpAsync(CancellationToken cancellationToken)
     {
         AdapterViewModel? adapter = CurrentAdapter;
-
-        if (adapter is null)
+        if (adapter is null || !CanExecuteAction())
         {
             ApplyCompleted?.Invoke(this, false);
             return;
         }
-
         if (!ShouldApplyDhcp(adapter))
         {
             ApplyCompleted?.Invoke(this, false);
             return;
         }
+        bool succeeded = await RunSwitchAsync(adapter, Strings.SafeSwitchAutomatic, null,
+            Strings.NotificationOperationDhcp, async token =>
+            {
+                DhcpApplyResult result = await _dhcpApplyService.ApplyAsync(new DhcpApplyRequest(adapter.Id), token);
+                SetStatus(ApplyResultMessageFormatter.Describe(result));
+                return result.Status switch
+                {
+                    DhcpApplyStatus.VerifiedSuccess => SafeSwitchApplyResult.Applied,
+                    DhcpApplyStatus.NoChange => SafeSwitchApplyResult.NoChange,
+                    _ => SafeSwitchApplyResult.Failed
+                };
+            }, cancellationToken);
+        ApplyCompleted?.Invoke(this, succeeded);
+    }
 
-        bool succeeded = false;
+    private async Task<bool> RunSwitchAsync(AdapterViewModel adapter, string settingName,
+        StaticIpv4Configuration? target, string operation,
+        Func<CancellationToken, Task<SafeSwitchApplyResult?>> applyAsync, CancellationToken cancellationToken)
+    {
+        NetworkAdapterSnapshot snapshot = adapter.Snapshot;
+        string previousName = snapshot.Mode == NetworkConfigurationMode.Dhcp ? Strings.SafeSwitchAutomatic :
+            new ActiveSettingMatcher().Find(snapshot, _availableSettings)?.Name ?? Strings.SafeSwitchPreviousSetting;
+        SafeSwitchRequest request = new(snapshot, settingName, previousName, target);
+        bool applyCompleted = false;
         IsBusy = true;
-
+        ClearStatusCore();
         try
         {
-            DhcpApplyResult result = await _dhcpApplyService.ApplyAsync(
-                new DhcpApplyRequest(adapter.Id),
-                cancellationToken);
-            SetStatus(ApplyResultMessageFormatter.Describe(result));
-            succeeded = result.Status is DhcpApplyStatus.VerifiedSuccess or DhcpApplyStatus.NoChange;
-            ReportOperation(Strings.NotificationOperationDhcp, adapter, succeeded);
-        }
-        catch (Exception exception) when (exception is not OperationCanceledException)
-        {
-            succeeded = false;
-            ReportUnexpectedActionFailure(nameof(ApplyDhcpCommand), exception);
-            ReportOperation(Strings.NotificationOperationDhcp, adapter, succeeded: false);
+            SafeSwitchOutcome outcome = await _safetyCoordinator.RunAsync(request, async token =>
+            {
+                try
+                {
+                    SafeSwitchApplyResult? result = await applyAsync(token);
+                    applyCompleted = result is not null;
+                    return result ?? SafeSwitchApplyResult.Failed;
+                }
+                catch (Exception exception) when (exception is not OperationCanceledException)
+                {
+                    applyCompleted = true;
+                    ReportUnexpectedActionFailure(operation, exception);
+                    return SafeSwitchApplyResult.Failed;
+                }
+            }, cancellationToken);
+            switch (outcome.Status)
+            {
+                case SafeSwitchStatus.Kept:
+                    _actionCancelledBecauseAdapterUnavailable = false;
+                    SetStatus(Strings.FormatSafeSwitchKept(settingName), ApplyStatusSeverity.Information);
+                    ReportOperation(operation, adapter, succeeded: true);
+                    break;
+                case SafeSwitchStatus.Reverted:
+                    _actionCancelledBecauseAdapterUnavailable = false;
+                    SetStatus(Strings.FormatSafeSwitchReverted(previousName), ApplyStatusSeverity.Information);
+                    ReportOperation(Strings.NotificationOperationRestore, adapter, succeeded: true);
+                    break;
+                case SafeSwitchStatus.RevertFailed:
+                    _actionCancelledBecauseAdapterUnavailable = false;
+                    SetStatus(Strings.SafeSwitchRevertFailed, ApplyStatusSeverity.Error);
+                    ReportOperation(Strings.NotificationOperationRestore, adapter, succeeded: false);
+                    break;
+                case SafeSwitchStatus.Cancelled:
+                    ClearStatusCore();
+                    break;
+                case SafeSwitchStatus.Busy:
+                    SetStatus(Strings.SafeSwitchBusy, ApplyStatusSeverity.Information);
+                    break;
+                case SafeSwitchStatus.ApplyFailed:
+                    if (!HasStatusMessage)
+                    {
+                        SetStatus(outcome.Message ?? Strings.SafeSwitchApplyFailed, ApplyStatusSeverity.Error);
+                    }
+                    if (applyCompleted)
+                    {
+                        ReportOperation(operation, adapter, succeeded: false);
+                    }
+                    break;
+                case SafeSwitchStatus.NoChange:
+                    ReportOperation(operation, adapter, succeeded: true);
+                    break;
+            }
+            if (outcome.PreferenceSaveFailed)
+            {
+                SetStatus(string.Join(Environment.NewLine, new[] { StatusMessage, Strings.SettingsPersistenceWarning }
+                    .Where(text => text.Length > 0)),
+                    StatusSeverity == ApplyStatusSeverity.Error ? ApplyStatusSeverity.Error : ApplyStatusSeverity.Warning);
+            }
+            return outcome.Status is SafeSwitchStatus.Kept or SafeSwitchStatus.NoChange;
         }
         finally
         {
-            _refreshCoordinator.RequestRefresh(NetworkChangeReason.ConfigurationApplied);
+            if (applyCompleted)
+            {
+                _refreshCoordinator.RequestRefresh(NetworkChangeReason.ConfigurationApplied);
+            }
             IsBusy = false;
-            ApplyCompleted?.Invoke(this, succeeded);
         }
     }
 

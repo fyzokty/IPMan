@@ -544,6 +544,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private void UpdateHome()
     {
+        Actions.SetAvailableSettings(ProfilePanel?.AllProfiles ?? []);
         NetworkAdapterSnapshot? snapshot = SelectedAdapter?.Snapshot;
         string? activeId = snapshot is null ? null : new ActiveSettingMatcher()
             .Find(snapshot, ProfilePanel?.AllProfiles ?? [])?.ProfileId;

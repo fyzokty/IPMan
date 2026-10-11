@@ -1,6 +1,6 @@
 # 14 — Güvenli geçiş: koşullu onay ve geri alma sayacı
 
-- **Durum:** yapılacak
+- **Durum:** bitti
 - **Bağımlılık:** 13
 - **Gereksinimler:** ADR-018 · Ekran 03, 04
 
@@ -19,8 +19,8 @@ Kullanıcının internet erişimini kesebilecek geçişlerde önceden uyarılmas
 - Zamanlayıcı mimarisi: App katmanında zamanlayıcı soyutlaması (`ISystemClock` / `ITimerService`) kullanılarak birim testlerde sahte nesnelerle (`FakeClock`, `FakeTimer`) deterministik test edilebilmesi; 1.0 sürümünde sayacın zorunlu olması
 
 ## Bitti sayılır
-- [ ] İnternet kesilme kuralı sağlandığında onay diyaloğu açılıyor; "Bir daha sorma" seçildiğinde ayar saklanıyor ve tekrar sormuyor
-- [ ] Her başarılı geçişten sonra 15 saniyelik geri sayım diyaloğu en üstte açılıyor
-- [ ] "Hayır, geri al" tıklandığında veya 15 saniye dolduğunda `RecoveryRestoreService` ile eski ayara başarıyla dönülüyor
-- [ ] "Evet, böyle kalsın" tıklandığında sayaç iptal edilip diyalog kapanıyor
-- [ ] Sayacın çalışması ve geri alma mantığı `tests/IPMan.Tests/Fakes/` içindeki sahte zamanlayıcılarla test edildi
+- [x] İnternet kesilme kuralı sağlandığında onay diyaloğu açılıyor; "Bir daha sorma" seçildiğinde ayar saklanıyor ve tekrar sormuyor
+- [x] Her başarılı geçişten sonra 15 saniyelik geri sayım diyaloğu en üstte açılıyor
+- [x] "Hayır, geri al" tıklandığında veya 15 saniye dolduğunda `RecoveryRestoreService` ile eski ayara başarıyla dönülüyor
+- [x] "Evet, böyle kalsın" tıklandığında sayaç iptal edilip diyalog kapanıyor
+- [x] Sayacın çalışması ve geri alma mantığı `tests/IPMan.Tests/Fakes/` içindeki sahte zamanlayıcılarla test edildi

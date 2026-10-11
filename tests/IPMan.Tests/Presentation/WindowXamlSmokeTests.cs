@@ -35,7 +35,7 @@ public sealed partial class WindowXamlSmokeTests
         MainWindow main = FakeWindowServices.CreateWindow<MainWindow>(InitializeResources,
             fixture.Main, fixture.SettingsRepository, fixture.Confirmation, fixture.Tray,
             fixture.Settings, fixture.Theme, fixture.Notifications, fixture.Dispatcher,
-            new FakeWindowSessionMarker(), (Func<DiagnosticsViewModel>)(() => fixture.Diagnostics));
+            new FakeWindowSessionMarker(), (Func<DiagnosticsViewModel>)(() => fixture.Diagnostics), fixture.Safety);
         FrameworkElement mainContent = Layout(main);
         Assert.Equal(900, main.MinWidth);
         Assert.Equal(600, main.MinHeight);
@@ -248,7 +248,7 @@ public sealed partial class WindowXamlSmokeTests
             Notifications = new OperationNotificationService(SettingsRepository, sources);
             Notifications.Report(Strings.CommandApply, TestData.Snapshot().Id.Value, "Ethernet", true);
             AdapterActionsViewModel actions = new(new FakeStaticIpv4ApplyService(), new FakeDhcpApplyService(),
-                new FakeRecoveryRestoreService(), Confirmation, Coordinator);
+                new FakeRecoveryRestoreService(), Confirmation, Coordinator, Safety);
             FakeWindowProfileDialogs dialogs = new();
             Profiles = new ProfilePanelViewModel(_catalog, dialogs, dialogs, Confirmation, Dispatcher);
             Main = new MainWindowViewModel(Coordinator, Dispatcher, new FakeClipboardService(), sources,
@@ -262,6 +262,7 @@ public sealed partial class WindowXamlSmokeTests
             Diagnostics.RefreshCommand.Execute(null);
         }
 
+        internal FakeSafetyCountdownCoordinator Safety { get; } = new();
         internal FakeUiDispatcher Dispatcher { get; } = new();
         internal FakeAdapterRefreshCoordinator Coordinator { get; } = new();
         internal FakeUserConfirmationService Confirmation { get; } = new();

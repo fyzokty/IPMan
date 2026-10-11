@@ -65,7 +65,7 @@ public sealed partial class WindowXamlSmokeTests
         FakeWindowServices.CreateWindow<MainWindow>(window => AttachResources(window, theme),
             fixture.Main, fixture.SettingsRepository, fixture.Confirmation, fixture.Tray,
             fixture.Settings, fixture.Theme, fixture.Notifications, fixture.Dispatcher,
-            new FakeWindowSessionMarker(), (Func<DiagnosticsViewModel>)(() => fixture.Diagnostics));
+            new FakeWindowSessionMarker(), (Func<DiagnosticsViewModel>)(() => fixture.Diagnostics), fixture.Safety);
 
     [Fact]
     public void MainWindow_WhenDirtyEditIsDeclined_PreservesDraftAndHomePage() =>

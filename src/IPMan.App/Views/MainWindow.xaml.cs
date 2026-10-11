@@ -33,6 +33,8 @@ public partial class MainWindow : Window
     private bool _isHidingToTray;
     private bool _isExiting;
     private bool _isSessionEnding;
+    private bool _exitCheckPending;
+    private readonly ISafetyCountdownCoordinator _safetyCoordinator;
     private SettingsWindow? _settingsWindow;
 
     /// <summary>Creates the main window and restores the user-scoped preferences.</summary>
@@ -46,7 +48,8 @@ public partial class MainWindow : Window
         OperationNotificationService operationNotificationService,
         IUiDispatcher uiDispatcher,
         ISessionMarker sessionMarker,
-        Func<DiagnosticsViewModel> diagnosticsFactory)
+        Func<DiagnosticsViewModel> diagnosticsFactory,
+        ISafetyCountdownCoordinator safetyCoordinator)
     {
         ArgumentNullException.ThrowIfNull(viewModel);
         ArgumentNullException.ThrowIfNull(settingsRepository);
@@ -58,8 +61,10 @@ public partial class MainWindow : Window
         ArgumentNullException.ThrowIfNull(uiDispatcher);
         ArgumentNullException.ThrowIfNull(sessionMarker);
         ArgumentNullException.ThrowIfNull(diagnosticsFactory);
+        ArgumentNullException.ThrowIfNull(safetyCoordinator);
 
         _viewModel = viewModel;
+        _safetyCoordinator = safetyCoordinator;
         _settingsRepository = settingsRepository;
         _confirmationService = confirmationService;
         _trayIconManager = trayIconManager;
@@ -177,8 +182,13 @@ public partial class MainWindow : Window
         _settings = updated;
     }
 
-    private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+    private async void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
+        if (_exitCheckPending)
+        {
+            e.Cancel = true;
+            return;
+        }
         if (!_isExiting && _settings.CloseToTray == true)
         {
             e.Cancel = true;
@@ -201,6 +211,26 @@ public partial class MainWindow : Window
             }
         }
 
+        if (!_isExiting && _safetyCoordinator.IsCountdownActive)
+        {
+            e.Cancel = true;
+            _exitCheckPending = true;
+            bool exitApproved;
+            try
+            {
+                exitApproved = await _safetyCoordinator.RequestExitAsync(CancellationToken.None);
+            }
+            finally
+            {
+                _exitCheckPending = false;
+            }
+            if (exitApproved)
+            {
+                _isExiting = true;
+                _ = Dispatcher.BeginInvoke(new Action(Close));
+            }
+            return;
+        }
         if (!_isExiting && RequiresExitConfirmation() &&
             !_confirmationService.Confirm(new UserConfirmationRequest(
                 Strings.ExitConfirmationTitle,
@@ -215,6 +245,7 @@ public partial class MainWindow : Window
         {
             _sessionMarker.Delete();
         }
+        _settingsViewModel.SettingsChanged -= OnSettingsChanged;
         _viewModel.Actions.PropertyChanged -= OnActionsPropertyChanged;
         _viewModel.ViewModeChanged -= OnViewModeChanged;
         PersistSettings();

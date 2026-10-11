@@ -103,6 +103,10 @@ public partial class App : System.Windows.Application
         _serviceProvider.GetRequiredService<WindowsThemeService>().Apply(startupSettings.Theme);
         MainWindow window = _serviceProvider.GetRequiredService<MainWindow>();
         MainWindow = window;
+        _serviceProvider.GetRequiredService<ISafetyCountdownCoordinator>().SettingsChanged += (_, settings) =>
+            _serviceProvider.GetRequiredService<SettingsViewModel>().AcceptPersistedInternetLossConfirmationPreference(settings);
+        _serviceProvider.GetRequiredService<TrayIconManager>().ExitGuard = () =>
+            _serviceProvider.GetRequiredService<ISafetyCountdownCoordinator>().RequestExitAsync(CancellationToken.None);
         SessionEnding += OnSessionEnding;
         window.Show();
 
@@ -220,6 +224,22 @@ public partial class App : System.Windows.Application
         services.AddSingleton<WindowsThemeService>();
 
         services.AddSingleton<IUserConfirmationService, WpfUserConfirmationService>();
+        services.AddSingleton<ITimerService>(new DispatcherTimerService(uiDispatcher));
+        services.AddSingleton<Func<InternetLossConfirmationViewModel, InternetLossConfirmationWindow>>(_ =>
+            viewModel => new InternetLossConfirmationWindow(viewModel));
+        services.AddSingleton<Func<SafetyCountdownViewModel, SafetyCountdownWindow>>(_ =>
+            viewModel => new SafetyCountdownWindow(viewModel));
+        services.AddTransient<SafeSwitchExitWindow>();
+        services.AddSingleton<Func<SafeSwitchExitWindow>>(provider =>
+            () => provider.GetRequiredService<SafeSwitchExitWindow>());
+        services.AddSingleton<WpfSafeSwitchDialogService>(provider => new WpfSafeSwitchDialogService(
+            uiDispatcher, provider.GetRequiredService<WindowsThemeService>(),
+            provider.GetRequiredService<Func<InternetLossConfirmationViewModel, InternetLossConfirmationWindow>>(),
+            provider.GetRequiredService<Func<SafetyCountdownViewModel, SafetyCountdownWindow>>(),
+            provider.GetRequiredService<Func<SafeSwitchExitWindow>>()));
+        services.AddSingleton<IInternetLossConfirmationService>(provider => provider.GetRequiredService<WpfSafeSwitchDialogService>());
+        services.AddSingleton<ISafetyCountdownDialogService>(provider => provider.GetRequiredService<WpfSafeSwitchDialogService>());
+        services.AddSingleton<ISafetyCountdownCoordinator, SafeSwitchCoordinator>();
         services.AddSingleton<IUserTextInputService, WpfUserTextInputService>();
         services.AddSingleton<IProfileFileDialogService, WpfProfileFileDialogService>();
         services.AddSingleton<OperationNotificationService>();

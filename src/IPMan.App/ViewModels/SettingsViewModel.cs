@@ -17,6 +17,11 @@ public sealed partial class SettingsViewModel : ObservableObject
     private readonly string _persistenceWarningText = Strings.SettingsPersistenceWarning;
     private AppSettings _settings = AppSettings.Default;
     private bool _isLoading;
+    private bool _resettingInternetLossConfirmation;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ResetInternetLossConfirmationCommand))]
+    private bool _skipInternetLossConfirmation;
 
     [ObservableProperty]
     private AppTheme _theme;
@@ -63,6 +68,7 @@ public sealed partial class SettingsViewModel : ObservableObject
         NotificationMode = settings.NotificationMode;
         ShowVirtualAdapters = settings.ShowVirtualAdapters;
         RememberWindowState = settings.RememberWindowState;
+        SkipInternetLossConfirmation = settings.SkipInternetLossConfirmation;
         PersistenceWarning = _settingsRepository.LastLoadFailed;
         _isLoading = false;
     }
@@ -177,6 +183,37 @@ public sealed partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private void OpenDiagnostics() => DiagnosticsRequested?.Invoke(this, EventArgs.Empty);
 
+    /// <summary>Refreshes the preference that may have changed in a transition dialog.</summary>
+    public void RefreshInternetLossConfirmationPreference() =>
+        SkipInternetLossConfirmation = _settingsRepository.LoadAsync(CancellationToken.None)
+            .GetAwaiter().GetResult().SkipInternetLossConfirmation;
+
+    /// <summary>Synchronizes the shell's settings cache after the transition dialog saved a preference.</summary>
+    public void AcceptPersistedInternetLossConfirmationPreference(AppSettings settings)
+    {
+        ArgumentNullException.ThrowIfNull(settings);
+        _settings = settings;
+        SkipInternetLossConfirmation = settings.SkipInternetLossConfirmation;
+        SettingsChanged?.Invoke(this, settings);
+    }
+
+    private bool CanResetInternetLossConfirmation() => SkipInternetLossConfirmation;
+
+    [RelayCommand(CanExecute = nameof(CanResetInternetLossConfirmation))]
+    private void ResetInternetLossConfirmation()
+    {
+        _resettingInternetLossConfirmation = true;
+        try
+        {
+            SkipInternetLossConfirmation = false;
+            Save();
+        }
+        finally
+        {
+            _resettingInternetLossConfirmation = false;
+        }
+    }
+
     [RelayCommand]
     private void ResetToDefaults()
     {
@@ -195,8 +232,11 @@ public sealed partial class SettingsViewModel : ObservableObject
         NotificationMode = defaults.NotificationMode;
         ShowVirtualAdapters = defaults.ShowVirtualAdapters;
         RememberWindowState = defaults.RememberWindowState;
+        SkipInternetLossConfirmation = defaults.SkipInternetLossConfirmation;
         _isLoading = false;
-        Save(resetToDefaults: true);
+        _resettingInternetLossConfirmation = true;
+        try { Save(resetToDefaults: true); }
+        finally { _resettingInternetLossConfirmation = false; }
     }
 
     private void SaveIfReady()
@@ -210,6 +250,10 @@ public sealed partial class SettingsViewModel : ObservableObject
     private void Save(bool resetToDefaults = false)
     {
         AppSettings current = resetToDefaults ? _settings : _settingsRepository.LoadAsync(CancellationToken.None).GetAwaiter().GetResult();
+        if (!_resettingInternetLossConfirmation)
+        {
+            SkipInternetLossConfirmation = current.SkipInternetLossConfirmation;
+        }
         AppSettings settings = current with
         {
             SchemaVersion = AppSettings.CurrentSchemaVersion,
@@ -220,6 +264,7 @@ public sealed partial class SettingsViewModel : ObservableObject
             CloseToTray = CloseToTray,
             ShowVirtualAdapters = ShowVirtualAdapters,
             RememberWindowState = RememberWindowState,
+            SkipInternetLossConfirmation = SkipInternetLossConfirmation,
             WindowPlacement = RememberWindowState ? current.WindowPlacement : null
         };
         _themeService.Apply(Theme);
