@@ -33,13 +33,13 @@ Distribution: win-x64 self-contained portable zip and Inno Setup installer tooli
 Single instance: `Local\` mutex + admin-only pipe activation; mutation serialized
 machine-wide by a `Global\` mutex (ADR-011, ADR-014).
 i18n: `Strings.resx`, single language (Turkish).
-Design: Windows 11 Fluent tokens in `docs/03_UI_UX/DESIGN.md`, screen references from the Stitch
-project "IPMan" in `docs/03_UI_UX/stitch/`; shared styles live in `Themes/Controls.xaml`.
+Design: Windows 11 Fluent tokens and simplified component specifications in `docs/03_UI_UX/DESIGN.md`, UX principles in `docs/03_UI_UX/UX-ilkeleri.md`, and 10 canonical reference screens in `docs/03_UI_UX/stitch-karma/` (ADR-018). The legacy technician layout in `docs/03_UI_UX/stitch/` is superseded. UI code has not yet been migrated to the new design. Shared styles live in `Themes/Controls.xaml`.
 
 # Next
 Order and details live in `docs/backlog/`:
 1. 10 — portable package and installer
 2. 11 — real-adapter verification on an isolated VM (can run in parallel)
+3. 12–18 — simple-first UX overhaul (ADR-018: connectivity indication, main screen, safe switching with countdown, setting form, manual details, plain terminology, tray menu)
 
 # Constraints
 - Destructive network tests are opt-in and must run only on an isolated VM adapter

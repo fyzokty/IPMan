@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+
+<html class="light" lang="tr"><head>
+<meta charset="utf-8"/>
+<title>IPMan - Network Profile Manager</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "surface-dim": "#dbdad9",
+            "outline": "#717783",
+            "on-error": "#ffffff",
+            "secondary-container": "#91f77e",
+            "on-secondary-fixed": "#002200",
+            "surface-bright": "#fbf9f8",
+            "surface-container-high": "#e9e8e7",
+            "primary": "#005396",
+            "on-surface": "#1b1c1c",
+            "background": "#fbf9f8",
+            "on-primary-fixed": "#001c39",
+            "secondary-fixed": "#94fa81",
+            "on-primary-container": "#e3ecff",
+            "error-container": "#ffdad6",
+            "on-error-container": "#93000a",
+            "error": "#ba1a1a",
+            "inverse-surface": "#303030",
+            "tertiary-container": "#c63500",
+            "secondary-fixed-dim": "#79dd68",
+            "primary-fixed-dim": "#a3c9ff",
+            "secondary": "#006e06",
+            "on-tertiary-fixed": "#3b0900",
+            "on-secondary": "#ffffff",
+            "outline-variant": "#c1c7d3",
+            "surface": "#fbf9f8",
+            "primary-container": "#0f6cbd",
+            "on-tertiary-fixed-variant": "#872100",
+            "on-primary-fixed-variant": "#004883",
+            "inverse-on-surface": "#f2f0f0",
+            "surface-tint": "#0060ab",
+            "on-tertiary-container": "#ffe7e1",
+            "primary-fixed": "#d3e3ff",
+            "surface-container": "#efeded",
+            "surface-container-lowest": "#ffffff",
+            "inverse-primary": "#a3c9ff",
+            "surface-variant": "#e4e2e2",
+            "surface-container-highest": "#e4e2e2",
+            "on-secondary-container": "#007306",
+            "on-secondary-fixed-variant": "#005303",
+            "on-surface-variant": "#414751",
+            "tertiary-fixed-dim": "#ffb5a0",
+            "tertiary-fixed": "#ffdbd1",
+            "on-background": "#1b1c1c",
+            "tertiary": "#9b2800",
+            "surface-container-low": "#f5f3f3",
+            "on-primary": "#ffffff",
+            "on-tertiary": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter-sm": "0.75rem",
+            "margin-window": "0px",
+            "gutter-lg": "1.5rem",
+            "space-xl": "1.5rem",
+            "space-md": "0.75rem",
+            "space-sm": "0.5rem",
+            "space-lg": "1rem",
+            "space-xs": "0.25rem",
+            "margin": "1rem",
+            "gutter": "1rem"
+          },
+          "fontFamily": {
+            "display": ["Plus Jakarta Sans"],
+            "caption": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "data-mono": ["JetBrains Mono"],
+            "title-app": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "body-default": ["Plus Jakarta Sans"],
+            "caption-strong": ["Plus Jakarta Sans"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "data-mono-sm": ["JetBrains Mono"],
+            "body-strong": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "display": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "caption": ["12px", { "lineHeight": "16px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "headline-lg": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "data-mono": ["12px", { "lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "500" }],
+            "title-app": ["12px", { "lineHeight": "32px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "headline-sm": ["14px", { "lineHeight": "20px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "body-default": ["14px", { "lineHeight": "20px", "letterSpacing": "0px", "fontWeight": "400" }],
+            "caption-strong": ["12px", { "lineHeight": "16px", "letterSpacing": "0px", "fontWeight": "600" }],
+            "headline-md": ["16px", { "lineHeight": "22px", "letterSpacing": "-0.005em", "fontWeight": "600" }],
+            "data-mono-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "400" }],
+            "body-strong": ["14px", { "lineHeight": "20px", "letterSpacing": "0px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .custom-app-shadow {
+      box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.18), 0 0 0 1px rgba(0, 0, 0, 0.08);
+    }
+    .card-elevation {
+      box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.04), 0px 0px 2px rgba(0, 0, 0, 0.02);
+    }
+  </style>
+</head>
+<body class="bg-surface-dim min-h-screen flex items-center justify-center p-4 antialiased select-none font-body-default text-on-surface">
+<!-- Desktop App Window Frame (1000px x 680px) -->
+<div class="w-[1000px] h-[680px] bg-[#f8f9fa] rounded-lg overflow-hidden flex flex-col custom-app-shadow border border-outline-variant relative">
+<!-- TitleBar (Windows 11 Fluent) -->
+<header class="h-[36px] bg-[#f3f3f3] flex items-center justify-between border-b border-[#e5e5e5] px-0 select-none">
+<!-- Drag Region / App Identity -->
+<div class="flex items-center gap-2 pl-3 flex-1 h-full cursor-default">
+<span class="material-symbols-outlined text-[16px] text-primary" data-icon="lan">lan</span>
+<span class="font-title-app text-[12px] text-on-surface font-medium tracking-tight">IPMan</span>
+</div>
+<!-- Caption Controls -->
+<div class="flex items-center h-full">
+<!-- Minimize -->
+<button class="w-[46px] h-[36px] flex items-center justify-center text-on-surface-variant hover:bg-black/5 transition-colors duration-150">
+<span class="w-[10px] h-[1px] bg-on-surface inline-block"></span>
+</button>
+<!-- Maximize -->
+<button class="w-[46px] h-[36px] flex items-center justify-center text-on-surface-variant hover:bg-black/5 transition-colors duration-150">
+<span class="w-[9px] h-[9px] border border-on-surface inline-block"></span>
+</button>
+<!-- Close -->
+<button class="w-[46px] h-[36px] flex items-center justify-center text-on-surface-variant hover:bg-[#c42b1c] hover:text-white transition-colors duration-150">
+<span class="material-symbols-outlined text-[13px]" data-icon="close">close</span>
+</button>
+</div>
+</header>
+<!-- Main Viewport Area (No browser footer or website chrome) -->
+<main class="flex-1 overflow-y-auto px-8 py-6 flex flex-col justify-between">
+<div>
+<!-- 1. Header Row -->
+<section class="flex items-center justify-between mb-5">
+<h1 class="text-[22px] font-semibold text-on-surface tracking-tight font-display">Ağ ayarları</h1>
+<!-- Compact Adapter Selector Dropdown -->
+<div class="flex items-center gap-1.5 px-3 py-1.5 bg-surface-container-lowest border border-outline-variant hover:border-[#8A8A8A] rounded-[6px] shadow-sm cursor-pointer transition-colors text-on-surface">
+<span class="font-body-default text-[13px] text-on-surface font-normal">Bağlantı: <span class="font-medium text-on-surface">Kablolu (Ethernet)</span></span>
+<span class="material-symbols-outlined text-[18px] text-on-surface-variant ml-1" data-icon="expand_more">expand_more</span>
+</div>
+</section>
+<!-- 2. Full-Width Status Card -->
+<section class="bg-surface-container-lowest border border-[#e5e7eb] rounded-lg p-4 mb-6 flex items-center justify-between card-elevation"><div class="flex items-center gap-3.5">
+<div class="w-10 h-10 rounded-full bg-[#f3f4f6] border border-[#e5e7eb] flex items-center justify-center text-on-surface-variant flex-shrink-0">
+<span class="material-symbols-outlined text-[24px]" data-icon="link_off">link_off</span>
+</div>
+<div>
+<h2 class="font-headline-md text-base text-on-surface font-semibold tracking-tight">Kablo takılı değil</h2>
+<p class="font-body-default text-xs text-on-surface-variant mt-0.5">Kabloyu takın. Seçtiğiniz ayar kablo takılınca da geçerli olur.</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex items-center gap-1.5 text-xs text-[#0F6CBD] hover:bg-[#e7f1fb] font-medium px-3 py-1.5 rounded-[6px] border border-[#0F6CBD]/20 transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="wifi">wifi</span>
+<span>Kablosuz bağlantıya geç</span>
+</button>
+</div></section>
+<!-- 3. Selection & Filter Row -->
+<section class="flex items-center justify-between mb-3.5">
+<h2 class="font-headline-md text-[17px] text-on-surface font-semibold tracking-tight">Hangi ağa geçmek istiyorsunuz?</h2>
+<div class="flex items-center gap-3">
+<!-- Small Search Input -->
+<div class="relative w-44">
+<span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[16px] text-on-surface-variant pointer-events-none" data-icon="search">search</span>
+<input class="w-full bg-surface-container-lowest border border-outline-variant rounded-md pl-8 pr-2.5 py-1 text-xs text-on-surface focus:outline-none focus:border-primary focus:ring-0 placeholder:text-outline transition-colors" placeholder="Ara…" type="text"/>
+</div>
+<!-- Segmented Toggle (Kart | Liste) -->
+<div class="flex items-center p-0.5 bg-[#ebebeb] rounded-md border border-[#e0e0e0]">
+<button class="flex items-center gap-1 px-2.5 py-1 bg-surface-container-lowest text-on-surface rounded shadow-xs text-xs font-medium cursor-default">
+<span class="material-symbols-outlined text-[16px] text-on-surface" data-icon="grid_view">grid_view</span>
+<span>Kart</span>
+</button>
+<button class="flex items-center gap-1 px-2.5 py-1 text-on-surface-variant hover:text-on-surface text-xs font-medium transition-colors">
+<span class="material-symbols-outlined text-[16px]" data-icon="view_list">view_list</span>
+<span>Liste</span>
+</button>
+</div>
+</div>
+</section>
+<!-- 4. Grid of Profile Cards (3 Columns) -->
+<section class="grid grid-cols-3 gap-4">
+<!-- Card 1: Otomatik -->
+<article class="bg-surface-container-lowest border border-[#e5e7eb] rounded-lg p-[14px] h-[138px] flex flex-col justify-between card-elevation hover:border-[#d1d1d1] transition-all">
+<!-- Top -->
+<div class="flex items-start justify-between">
+<div>
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-base text-on-surface font-semibold leading-tight">Otomatik</h3>
+<span class="bg-[#e7f1fb] text-[#0f6cbd] text-[11px] font-medium px-2 py-0.5 rounded-full border border-[#0f6cbd]/15">Çoğu ağ için önerilir</span>
+</div>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<button class="p-0.5 hover:text-on-surface rounded transition-colors" title="Favorilere Ekle">
+<span class="material-symbols-outlined text-[17px]" data-icon="star">star</span>
+</button>
+<button class="p-0.5 hover:text-on-surface rounded transition-colors" title="Daha Fazla">
+<span class="material-symbols-outlined text-[17px]" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+</div>
+<!-- Middle -->
+<div>
+<p class="font-body-default text-xs text-on-surface-variant">Adresi ağ kendisi verir</p>
+</div>
+<!-- Bottom -->
+<div>
+<button class="w-full py-1 bg-surface-container-lowest border border-outline-variant hover:bg-[#f9f9f9] text-on-surface font-medium text-xs rounded transition-colors shadow-xs active:bg-[#f5f5f5]">
+                Bu ağa geç
+              </button>
+</div>
+</article>
+<!-- Card 2: Ofis (ACTIVE CARD) -->
+<article class="bg-surface-container-lowest border border-[#e5e7eb] rounded-lg p-[14px] h-[138px] flex flex-col justify-between card-elevation hover:border-[#d1d1d1] transition-all">
+<!-- Top -->
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-2">
+<h3 class="font-headline-sm text-base text-on-surface font-semibold leading-tight">Ofis</h3>
+<span class="bg-[#f3f4f6] text-on-surface-variant text-[11px] font-medium px-2 py-0.5 rounded-full border border-[#e5e7eb]">Son kullanılan</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<button class="p-0.5 hover:text-on-surface rounded transition-colors" title="Favori">
+<span class="material-symbols-outlined text-[17px] text-[#0F6CBD]" data-icon="star" data-weight="fill" style="font-variation-settings: 'FILL' 1;">star</span>
+</button>
+<button class="p-0.5 hover:text-on-surface rounded transition-colors" title="Daha Fazla">
+<span class="material-symbols-outlined text-[17px]" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+</div>
+<!-- Middle -->
+<div>
+<p class="font-body-default text-xs text-on-surface">Sabit adres · <span class="font-data-mono font-medium text-on-surface tracking-tight">192.168.10.25</span></p>
+</div>
+<!-- Bottom -->
+<div>
+<button class="w-full py-1 bg-surface-container-lowest border border-outline-variant hover:bg-[#f9f9f9] text-on-surface font-medium text-xs rounded transition-colors shadow-xs active:bg-[#f5f5f5]">
+Bu ağa geç
+</button>
+</div>
+</article>
+<!-- Card 3: Saha PLC -->
+<article class="bg-surface-container-lowest border border-[#e5e7eb] rounded-lg p-[14px] h-[138px] flex flex-col justify-between card-elevation hover:border-[#d1d1d1] transition-all">
+<!-- Top -->
+<div class="flex items-start justify-between">
+<div>
+<h3 class="font-headline-sm text-base text-on-surface font-semibold leading-tight">Saha PLC</h3>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<button class="p-0.5 hover:text-on-surface rounded transition-colors" title="Favorilere Ekle">
+<span class="material-symbols-outlined text-[17px]" data-icon="star">star</span>
+</button>
+<button class="p-0.5 hover:text-on-surface rounded transition-colors" title="Daha Fazla">
+<span class="material-symbols-outlined text-[17px]" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+</div>
+<!-- Middle -->
+<div>
+<p class="font-body-default text-xs text-on-surface">Sabit adres · <span class="font-data-mono font-medium text-on-surface-variant tracking-tight">192.168.0.50</span></p>
+</div>
+<!-- Bottom -->
+<div>
+<button class="w-full py-1 bg-surface-container-lowest border border-outline-variant hover:bg-[#f9f9f9] text-on-surface font-medium text-xs rounded transition-colors shadow-xs active:bg-[#f5f5f5]">
+                Bu ağa geç
+              </button>
+</div>
+</article>
+<!-- Card 4: Kamera kurulumu -->
+<article class="bg-surface-container-lowest border border-[#e5e7eb] rounded-lg p-[14px] h-[138px] flex flex-col justify-between card-elevation hover:border-[#d1d1d1] transition-all">
+<!-- Top -->
+<div class="flex items-start justify-between">
+<div>
+<h3 class="font-headline-sm text-base text-on-surface font-semibold leading-tight">Kamera kurulumu</h3>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant">
+<button class="p-0.5 hover:text-on-surface rounded transition-colors" title="Favorilere Ekle">
+<span class="material-symbols-outlined text-[17px]" data-icon="star">star</span>
+</button>
+<button class="p-0.5 hover:text-on-surface rounded transition-colors" title="Daha Fazla">
+<span class="material-symbols-outlined text-[17px]" data-icon="more_horiz">more_horiz</span>
+</button>
+</div>
+</div>
+<!-- Middle -->
+<div>
+<p class="font-body-default text-xs text-on-surface">Sabit adres · <span class="font-data-mono font-medium text-on-surface-variant tracking-tight">192.168.1.200</span></p>
+</div>
+<!-- Bottom -->
+<div>
+<button class="w-full py-1 bg-surface-container-lowest border border-outline-variant hover:bg-[#f9f9f9] text-on-surface font-medium text-xs rounded transition-colors shadow-xs active:bg-[#f5f5f5]">
+                Bu ağa geç
+              </button>
+</div>
+</article>
+<!-- Card 5: + Yeni ayar ekle (Dashed Border Card) -->
+<div class="border-[1.5px] border-dashed border-[#cbd5e1] hover:border-[#0F6CBD] rounded-lg bg-surface-container-lowest/60 hover:bg-surface-container-lowest flex flex-col items-center justify-center cursor-pointer text-on-surface-variant hover:text-[#0F6CBD] gap-1.5 h-[138px] transition-all group">
+<div class="w-8 h-8 rounded-full bg-[#f3f4f6] group-hover:bg-[#e7f1fb] flex items-center justify-center transition-colors">
+<span class="material-symbols-outlined text-[20px] text-on-surface group-hover:text-[#0F6CBD]" data-icon="add">add</span>
+</div>
+<span class="font-body-strong text-xs font-semibold">+ Yeni ayar ekle</span>
+</div>
+</section>
+</div>
+</main>
+</div>
+</body></html>

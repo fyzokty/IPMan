@@ -19,6 +19,18 @@ Sıra, uygulama sırasıdır. Tüm maddeler 1.0 kapsamındadır.
 | 10 | [Dağıtım: taşınabilir paket ve kurulum](10-dagitim.md) | devam ediyor |
 | 11 | [Gerçek bağdaştırıcıda doğrulama](11-gercek-dogrulama.md) | yapılacak |
 
+## Kolay kullanım yenilemesi (ADR-018)
+
+| #  | İş | Durum |
+|----|----|-------|
+| 12 | [İnternet durumu ve bağlantı yok durumu](12-internet-durumu.md) | yapılacak |
+| 13 | [Profil merkezli ana ekran](13-ana-ekran.md) | yapılacak |
+| 14 | [Güvenli geçiş: koşullu onay ve geri alma sayacı](14-guvenli-gecis.md) | yapılacak |
+| 15 | [Yeni ve düzenle ayar sayfası](15-yeni-ayar-sayfasi.md) | yapılacak |
+| 16 | [Ayrıntılar ve elle ayar sayfası](16-ayrintilar-sayfasi.md) | yapılacak |
+| 17 | [Sade metinler ve terim sözlüğü uyumu](17-sade-metinler.md) | yapılacak |
+| 18 | [Tepsi menüsünden ayar değiştirme](18-tepsiden-ayar-degistirme.md) | yapılacak |
+
 ## Kaynaklar
 - Gereksinimler: `docs/01_Requirements/01_Product_Requirements_Baseline.md` (PR-xxx)
 - Kabul kriterleri: `docs/09_Acceptance_Criteria.md` (AC-xxx)
