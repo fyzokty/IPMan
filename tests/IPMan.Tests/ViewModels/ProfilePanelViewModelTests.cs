@@ -137,30 +137,6 @@ public sealed class ProfilePanelViewModelTests
     }
 
     [Fact]
-    public async Task SaveCommand_WhenDraftAndNameAreAvailable_SavesDraftProfileAndSelectsResult()
-    {
-        FakeProfileCatalog catalog = new();
-        using ProfilePanelViewModel viewModel = Create(catalog);
-        AdapterDraftViewModel draft = new(new FakeClipboardService(), new StaticIpv4ConfigurationValidator());
-        draft.UpdateCurrentValues(TestData.Snapshot(
-            ipv4Address: "10.0.0.5",
-            subnetMask: "255.255.255.0",
-            gateway: "10.0.0.1"));
-        viewModel.SetDraft(draft);
-        viewModel.NewProfileName = "PLC";
-        viewModel.NewProfileDescription = "Hat 1";
-
-        await viewModel.SaveCommand.ExecuteAsync(null);
-
-        NetworkProfile saved = Assert.Single(catalog.SavedProfiles);
-        Assert.Equal("PLC", saved.Name);
-        Assert.Equal("Hat 1", saved.Description);
-        Assert.Equal("10.0.0.5", saved.Ipv4Address);
-        Assert.Equal(Strings.ProfileSaveSuccess, viewModel.StatusMessage);
-        Assert.Equal(saved.ProfileId, viewModel.SelectedProfile!.Id);
-    }
-
-    [Fact]
     public async Task Editor_WhenSaved_UpdatesExistingIdentityAndNewSettingCreatesSeparateIdentity()
     {
         NetworkProfile original = TestData.Profile(isFavorite: true);

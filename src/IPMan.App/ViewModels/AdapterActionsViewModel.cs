@@ -71,6 +71,10 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
     /// <summary>Raised when a static or DHCP apply action finishes.</summary>
     public event EventHandler<bool>? ApplyCompleted;
 
+    public StaticIpv4ApplyResult? LastStaticApplyResult { get; private set; }
+    public DhcpApplyResult? LastDhcpApplyResult { get; private set; }
+    public SafeSwitchOutcome? LastSwitchOutcome { get; private set; }
+
     /// <summary>True when an inline action result should be displayed.</summary>
     public bool HasStatusMessage => StatusSeverity != ApplyStatusSeverity.None;
 
@@ -229,6 +233,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             Strings.NotificationOperationApply, async token =>
             {
                 StaticIpv4ApplyResult? result = await ApplyStaticWithConfirmationsAsync(adapter, configuration, token);
+                LastStaticApplyResult = result;
                 if (result is null)
                 {
                     return null;
@@ -251,6 +256,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
     [RelayCommand(CanExecute = nameof(CanExecuteDhcp))]
     private async Task ApplyDhcpAsync(CancellationToken cancellationToken)
     {
+        ClearSwitchResult();
         AdapterViewModel? adapter = CurrentAdapter;
         if (adapter is null || !CanExecuteAction())
         {
@@ -266,6 +272,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             Strings.NotificationOperationDhcp, async token =>
             {
                 DhcpApplyResult result = await _dhcpApplyService.ApplyAsync(new DhcpApplyRequest(adapter.Id), token);
+                LastDhcpApplyResult = result;
                 SetStatus(ApplyResultMessageFormatter.Describe(result));
                 return result.Status switch
                 {
@@ -281,9 +288,10 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
         StaticIpv4Configuration? target, string operation,
         Func<CancellationToken, Task<SafeSwitchApplyResult?>> applyAsync, CancellationToken cancellationToken)
     {
+        ClearSwitchResult();
         NetworkAdapterSnapshot snapshot = adapter.Snapshot;
         string previousName = snapshot.Mode == NetworkConfigurationMode.Dhcp ? Strings.SafeSwitchAutomatic :
-            new ActiveSettingMatcher().Find(snapshot, _availableSettings)?.Name ?? Strings.SafeSwitchPreviousSetting;
+            new ActiveSettingMatcher().Find(snapshot, _availableSettings)?.Name ?? Strings.SafeSwitchManualSetting;
         SafeSwitchRequest request = new(snapshot, settingName, previousName, target);
         bool applyCompleted = false;
         IsBusy = true;
@@ -305,6 +313,7 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
                     return SafeSwitchApplyResult.Failed;
                 }
             }, cancellationToken);
+            LastSwitchOutcome = outcome;
             switch (outcome.Status)
             {
                 case SafeSwitchStatus.Kept:
@@ -358,6 +367,13 @@ public sealed partial class AdapterActionsViewModel : ObservableObject, IDisposa
             }
             IsBusy = false;
         }
+    }
+
+    private void ClearSwitchResult()
+    {
+        LastStaticApplyResult = null;
+        LastDhcpApplyResult = null;
+        LastSwitchOutcome = null;
     }
 
     [RelayCommand(CanExecute = nameof(CanCopyNetworkInfo))]

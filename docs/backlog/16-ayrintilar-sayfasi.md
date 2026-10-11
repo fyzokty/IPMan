@@ -1,7 +1,7 @@
 # 16 — Ayrıntılar ve elle ayar sayfası
 
-- **Durum:** yapılacak
-- **Bağımlılık:** 13, 14
+- **Durum:** bitti
+- **Bağımlılık:** 13, 14, 15
 - **Gereksinimler:** ADR-018 · Ekran 06, 08
 
 ## Amaç
@@ -23,8 +23,8 @@ Eski "Mevcut yapılandırma / Yapılandırma taslağı" ikili kart düzenini kal
 - Başarısızlık durumunda (Ekran 08): Sayfa üstünde kırmızı inline hata bandı gösterilmesi ("Saha PLC ayarına geçilemedi. Windows yeni adresi kabul etmedi. Ağınız değişmedi, Ofis ayarı ile devam ediyorsunuz.") ile "Tekrar dene" ve "Ayrıntılar" seçenekleri
 
 ## Bitti sayılır
-- [ ] Ayrıntılar sayfası açılıyor ve mevcut yapılandırmayı doğru yüklüyor
-- [ ] Değiştirilen alanlar amber renkle "değişecek" ve eski değer bilgisiyle vurgulanıyor
-- [ ] Gelişmiş araçlar (kopyala, modem pingi, DNS temizleme, IP yenileme) sorunsuz çalışıyor
-- [ ] Yapışkan alt çubuk değişiklik sayısını dinamik gösteriyor; "Ayar olarak kaydet" yeni profil açıyor; "Uygula" onay ve 15 sn sayacını tetikliyor
-- [ ] Başarısız uygulama durumunda kullanıcıyı rahatlatan kırmızı hata bandı doğru metinle beliriyor
+- [x] Ayrıntılar sayfası açılıyor ve mevcut yapılandırmayı doğru yüklüyor
+- [x] Değiştirilen alanlar amber renkle "değişecek" ve eski değer bilgisiyle vurgulanıyor
+- [x] Gelişmiş araçlar (kopyala, modem pingi, DNS temizleme, IP yenileme) sorunsuz çalışıyor
+- [x] Yapışkan alt çubuk değişiklik sayısını dinamik gösteriyor; "Ayar olarak kaydet" yeni profil açıyor; "Uygula" onay ve 15 sn sayacını tetikliyor
+- [x] Başarısız uygulama durumunda kullanıcıyı rahatlatan kırmızı hata bandı doğru metinle beliriyor

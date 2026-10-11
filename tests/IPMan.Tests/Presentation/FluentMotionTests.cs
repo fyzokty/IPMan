@@ -93,41 +93,6 @@ public sealed class FluentMotionTests
         }, "Motion accessibility switch timed out.");
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void CopyClick_ObservesCommandResultAndOnlyAnimatesClickedButton(bool succeeds)
-    {
-        WpfTestRunner.RunWithSystemAnimations(() =>
-        {
-            FakeClipboardService clipboard = new() { Succeeds = succeeds };
-            AdapterViewModel adapter = new(TestData.Snapshot(), clipboard, new StaticIpv4ConfigurationValidator());
-            StackPanel host = Host();
-            FluentMotion.SetIsEnabled(host, false);
-            TestButton clicked = CopyButton(host, adapter);
-            TestButton other = CopyButton(host, adapter);
-            Layout(host);
-            object command = clicked.Command;
-            clicked.Press();
-            DrainDispatcher();
-            Assert.Equal(succeeds ? "Success" : "Error", CopyFeedback.GetState(clicked));
-            Assert.Equal("Idle", CopyFeedback.GetState(other));
-            Assert.Same(command, clicked.Command);
-            Assert.Single(clipboard.CopiedTexts);
-            TextBlock check = (TextBlock)clicked.Template.FindName("SuccessGlyph", clicked);
-            Assert.Equal(succeeds ? 1 : 0, check.Opacity);
-
-            clipboard.Succeeds = !succeeds;
-            clicked.Press();
-            DrainDispatcher();
-            Assert.Equal(succeeds ? "Error" : "Success", CopyFeedback.GetState(clicked));
-            Assert.Equal(2, clipboard.CopiedTexts.Count);
-            clicked.RaiseEvent(new RoutedEventArgs(FrameworkElement.UnloadedEvent, clicked));
-            Assert.Equal("Idle", CopyFeedback.GetState(clicked));
-            Assert.Equal(0, check.Opacity);
-        }, "Copy result feedback timed out.");
-    }
-
     [Fact]
     public void Motion_WhenSystemAnimationsDisabled_UsesZeroDurationsAndNoAnimations()
     {
@@ -185,22 +150,6 @@ public sealed class FluentMotionTests
             DrainDispatcher();
             Assert.Equal("Idle", CopyFeedback.GetState(button));
         }, "Copy feedback reset timed out.");
-    }
-
-    [Fact]
-    public void CopyClick_WhenUnloadedBeforeCommandFeedbackDispatch_DiscardsPendingFeedback()
-    {
-        WpfTestRunner.RunWithSystemAnimations(() =>
-        {
-            StackPanel host = Host();
-            AdapterViewModel adapter = new(TestData.Snapshot(), new FakeClipboardService(), new StaticIpv4ConfigurationValidator());
-            TestButton button = CopyButton(host, adapter);
-            Layout(host);
-            button.Press();
-            button.RaiseEvent(new RoutedEventArgs(FrameworkElement.UnloadedEvent, button));
-            DrainDispatcher();
-            Assert.Equal("Idle", CopyFeedback.GetState(button));
-        }, "Unloaded copy feedback cancellation timed out.");
     }
 
     [Fact]
@@ -329,19 +278,6 @@ public sealed class FluentMotionTests
             DisabledAppearanceTests.Pump(DisabledAppearanceTests.Settle);
             Assert.Equal(0, success.Opacity);
         }, "Copy/reveal latest state timed out.");
-    }
-
-    private static TestButton CopyButton(StackPanel host, AdapterViewModel adapter)
-    {
-        TestButton button = new()
-        {
-            Style = (Style)host.Resources["CopyButtonStyle"],
-            Command = adapter.CopyCurrentFieldCommand,
-            CommandParameter = DraftField.Ipv4Address
-        };
-        button.SetBinding(CopyFeedback.ResultProperty, new Binding(nameof(adapter.CopySucceeded)) { Source = adapter });
-        host.Children.Add(button);
-        return button;
     }
 
     private static StackPanel Host()

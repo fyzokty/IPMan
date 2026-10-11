@@ -75,7 +75,7 @@ public sealed partial class ProfileHomeViewModelTests
         fixture.Profiles.SearchText = "unmatched";
         Assert.Contains("Ofis yeni", fixture.Main.StatusHeadline, StringComparison.Ordinal);
         fixture.Coordinator.PublishRefresh(TestData.Snapshot(mode: NetworkConfigurationMode.Static, primaryDns: "9.9.9.9"));
-        Assert.Contains("Elle ayarlanmış adres · 192.168.1.50", fixture.Main.StatusHeadline, StringComparison.Ordinal);
+        Assert.Equal(Strings.FormatCurrentNetwork(Strings.SafeSwitchManualSetting), fixture.Main.StatusHeadline);
     }
 
     [Theory]
@@ -128,7 +128,7 @@ public sealed partial class ProfileHomeViewModelTests
         Assert.True(fixture.Static.Requests[1].ConfirmPotentialConflict);
         Assert.Empty(fixture.Dhcp.Requests);
         Assert.Equal("invalid", fixture.Main.SelectedAdapter.Draft.Ipv4Address);
-        Assert.True(fixture.Main.HasDirtyDrafts);
+        Assert.True(fixture.Main.SelectedAdapter.Draft.IsDirty);
         Assert.Equal(ApplyStatusSeverity.Information, fixture.Main.Actions.StatusSeverity);
         Assert.Single(fixture.Coordinator.RefreshRequests);
     }
@@ -188,31 +188,4 @@ public sealed partial class ProfileHomeViewModelTests
         Assert.False(fixture.Main.ProfileEditor.IsDirty);
     }
 
-    private sealed class HomeFixture : IDisposable
-    {
-        public HomeFixture(IReadOnlyList<NetworkProfile> profiles)
-        {
-            Catalog.Profiles = profiles;
-            FakeWindowProfileDialogs dialogs = new();
-            Profiles = new(Catalog, dialogs, dialogs, Confirmation, new FakeUiDispatcher());
-            AdapterActionsViewModel actions = new(Static, Dhcp, new FakeRecoveryRestoreService(), Confirmation, Coordinator, Safety);
-            Main = new(Coordinator, new FakeUiDispatcher(), new FakeClipboardService(),
-                new FakeClock(DateTimeOffset.UtcNow), new FakeElevationStateProvider(true), new FakeApplicationVersionProvider("1.0"),
-                actions, new StaticIpv4ConfigurationValidator(), Profiles,
-                editorFactory: (profile, gateway) => new(Catalog, new StaticIpv4ConfigurationValidator(),
-                    new(new SequenceIpv4ConflictProbe()), new ImmediateDelayProvider(), profile, gateway),
-                confirmationService: Confirmation);
-            Main.Initialize();
-            Coordinator.PublishRefresh(TestData.Snapshot());
-        }
-        public FakeProfileEditorCatalog Catalog { get; } = new();
-        public FakeAdapterRefreshCoordinator Coordinator { get; } = new();
-        public FakeStaticIpv4ApplyService Static { get; } = new();
-        public FakeDhcpApplyService Dhcp { get; } = new();
-        public FakeSafetyCountdownCoordinator Safety { get; } = new();
-        public FakeUserConfirmationService Confirmation { get; } = new();
-        public ProfilePanelViewModel Profiles { get; }
-        public MainWindowViewModel Main { get; }
-        public void Dispose() => Main.Dispose();
-    }
 }

@@ -118,6 +118,20 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     public event EventHandler<ProfileEditorSavedEventArgs>? SaveRequested;
     public event EventHandler<ProfileEditorSavedEventArgs>? SaveAndSwitchRequested;
 
+    public void Prefill(NetworkConfigurationMode mode, DraftValues values)
+    {
+        _loading = true;
+        IsStatic = mode == NetworkConfigurationMode.Static;
+        Ipv4Address = values.Ipv4Address;
+        SubnetMask = values.SubnetMask;
+        Gateway = values.Gateway;
+        PrimaryDns = values.PrimaryDns;
+        SecondaryDns = values.SecondaryDns;
+        _loading = false;
+        Validate();
+        OnPropertyChanged(nameof(IsDirty));
+    }
+
     [RelayCommand]
     private void Back()
     {

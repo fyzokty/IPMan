@@ -31,8 +31,8 @@ public sealed class AdapterViewModelTests
             Assert.False(adapter.IsConnected);
             Assert.Equal("Kablo takılı değil", adapter.ConnectionState);
             Assert.Equal(
-                AdapterDisplayFormatter.FormatConfigurationMode(NetworkConfigurationMode.Dhcp),
-                adapter.Details.ConfigurationMode);
+                NetworkConfigurationMode.Dhcp,
+                adapter.Snapshot.Mode);
             Assert.Equal("10.0.0.7", adapter.Draft.Ipv4Address);
         };
 
@@ -63,7 +63,7 @@ public sealed class AdapterViewModelTests
         new(snapshot, new FakeClipboardService(), new StaticIpv4ConfigurationValidator());
 
     [Fact]
-    public void Update_WithConnectivityOnlyChange_UpdatesTabDetailsAndAccessibility()
+    public void Update_WithConnectivityOnlyChange_UpdatesConnectionAndAccessibility()
     {
         NetworkAdapterSnapshot initial = TestData.Snapshot();
         AdapterViewModel adapter = Create(initial);
@@ -72,9 +72,8 @@ public sealed class AdapterViewModelTests
 
         Assert.Equal("Kablolu bağlantı (Ethernet)", adapter.DisplayName);
         Assert.Equal("İnternet çalışıyor", adapter.ConnectionState);
-        Assert.Equal("İnternet çalışıyor", adapter.Details.ConnectionState);
         Assert.Contains(adapter.DisplayName, adapter.AccessibleDescription, StringComparison.Ordinal);
         Assert.Contains(adapter.ConnectionState, adapter.AccessibleDescription, StringComparison.Ordinal);
-        Assert.Equal("Ethernet", adapter.Details.Name);
+        Assert.Equal("Ethernet", adapter.Snapshot.Name);
     }
 }

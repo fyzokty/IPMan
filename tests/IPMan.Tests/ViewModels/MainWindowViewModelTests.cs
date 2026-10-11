@@ -306,49 +306,7 @@ public sealed class MainWindowViewModelTests
         harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}", ipv4Address: "10.0.0.6"));
 
         Assert.Equal("10.0.0.99", adapter.Draft.Ipv4Address);
-        Assert.Equal("10.0.0.6", adapter.Details.Ipv4Address);
-    }
-
-    [Fact]
-    public void CurrentPanel_ShowsTheLatestSnapshotAndMarksMissingValues()
-    {
-        using MainWindowHarness harness = MainWindowHarness.Create();
-        harness.ViewModel.Initialize();
-
-        harness.Coordinator.PublishRefresh(TestData.Snapshot(
-            id: "{A}",
-            name: "Ethernet",
-            gateway: null,
-            secondaryDns: null,
-            linkSpeedBitsPerSecond: null));
-
-        AdapterDetailsViewModel details = harness.ViewModel.Adapters[0].Details;
-
-        Assert.Equal("Ethernet", details.Name);
-        Assert.Equal(Strings.ValueUnavailable, details.Gateway);
-        Assert.Equal(Strings.ValueUnavailable, details.SecondaryDns);
-        Assert.Equal(Strings.ValueUnavailable, details.LinkSpeed);
-    }
-
-    [Fact]
-    public void CurrentPanel_KeepsAdditionalIpv4AddressesVisible()
-    {
-        using MainWindowHarness harness = MainWindowHarness.Create();
-        harness.ViewModel.Initialize();
-
-        harness.Coordinator.PublishRefresh(TestData.Snapshot(
-            id: "{A}",
-            ipv4Address: "192.168.1.50",
-            ipv4Addresses: new IPMan.Domain.Networking.Ipv4AddressCollection(new[]
-            {
-                new IPMan.Domain.Networking.Ipv4AddressAssignment("192.168.1.50", "255.255.255.0"),
-                new IPMan.Domain.Networking.Ipv4AddressAssignment("192.168.1.60", "255.255.255.0")
-            })));
-
-        AdapterDetailsViewModel details = harness.ViewModel.Adapters[0].Details;
-
-        Assert.True(details.HasAdditionalIpv4Addresses);
-        Assert.Equal("192.168.1.60", Assert.Single(details.AdditionalIpv4AddressList).Split('/')[0]);
+        Assert.Equal("10.0.0.6", adapter.Snapshot.Ipv4Address);
     }
 
     [Fact]
@@ -522,27 +480,6 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
-    public void ProfilePanel_WhenNoAdapterIsSelected_DisablesSaveUntilAnAdapterIsAvailable()
-    {
-        TestProfileCatalog catalog = new();
-        using ProfilePanelViewModel panel = CreateProfilePanel(catalog);
-        using MainWindowHarness harness = MainWindowHarness.Create(panel);
-
-        panel.NewProfileName = "PLC";
-
-        Assert.False(panel.SaveCommand.CanExecute(null));
-
-        harness.ViewModel.Initialize();
-        harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}"));
-
-        Assert.True(panel.SaveCommand.CanExecute(null));
-
-        harness.Coordinator.PublishRefresh();
-
-        Assert.False(panel.SaveCommand.CanExecute(null));
-    }
-
-    [Fact]
     public async Task DhcpApply_FollowedByRefresh_UpdatesActionsDetailsAndDraftForTheSelectedAdapter()
     {
         using MainWindowHarness harness = MainWindowHarness.Create();
@@ -564,8 +501,8 @@ public sealed class MainWindowViewModelTests
         Assert.False(harness.Actions.ApplyDhcpCommand.CanExecute(null));
         Assert.True(harness.Actions.RenewIpCommand.CanExecute(null));
         Assert.Equal(string.Empty, harness.Actions.RenewIpDisabledReason);
-        Assert.Equal(Strings.ModeDhcp, selected.Details.ConfigurationMode);
-        Assert.Equal("192.168.1.77", selected.Details.Ipv4Address);
+        Assert.Equal(NetworkConfigurationMode.Dhcp, selected.Snapshot.Mode);
+        Assert.Equal("192.168.1.77", selected.Snapshot.Ipv4Address);
         Assert.Equal("192.168.1.77", selected.Draft.Ipv4Address);
     }
 
@@ -581,7 +518,7 @@ public sealed class MainWindowViewModelTests
         Assert.True(harness.Actions.ApplyDhcpCommand.CanExecute(null));
         Assert.False(harness.Actions.RenewIpCommand.CanExecute(null));
         Assert.Equal(Strings.QuickActionDhcpRequired, harness.Actions.RenewIpDisabledReason);
-        Assert.Equal(Strings.ModeStatic, harness.ViewModel.SelectedAdapter!.Details.ConfigurationMode);
+        Assert.Equal(NetworkConfigurationMode.Static, harness.ViewModel.SelectedAdapter!.Snapshot.Mode);
     }
 
     [Fact]

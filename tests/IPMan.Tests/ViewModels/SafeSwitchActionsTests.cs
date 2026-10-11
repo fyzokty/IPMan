@@ -142,7 +142,7 @@ public sealed class SafeSwitchActionsTests
         restored.SetResult(new(RecoveryRestoreStatus.VerifiedSuccess));
         await apply;
         Assert.False(fixture.Actions.IsBusy);
-        Assert.Equal("Eski ayara (önceki ayar) dönüldü. Ağınız eskisi gibi.", fixture.Actions.StatusMessage);
+        Assert.Equal(Strings.FormatSafeSwitchReverted(Strings.SafeSwitchManualSetting), fixture.Actions.StatusMessage);
     }
 
     [Fact]

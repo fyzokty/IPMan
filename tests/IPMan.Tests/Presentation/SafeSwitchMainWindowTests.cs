@@ -35,14 +35,16 @@ public sealed partial class WindowXamlSmokeTests
         }, "Main window countdown exit timed out.");
 
     [Fact]
-    public void MainWindow_ClosingWithoutCountdown_UsesExistingDirtyDraftConfirmation() =>
+    public void MainWindow_ClosingWithoutCountdown_UsesDetailsExitConfirmation() =>
         WpfTestRunner.Run(() =>
         {
             using WindowFixture fixture = new("Light");
             fixture.SettingsRepository.SaveAsync(fixture.SettingsRepository.Settings with { CloseToTray = false }, CancellationToken.None)
                 .GetAwaiter().GetResult();
             MainWindow main = CreateProfileSelectionWindow(fixture, "Light");
-            fixture.Main.SelectedAdapter!.Draft.Ipv4Address = "10.0.0.50";
+            fixture.Main.OpenDetailsCommand.Execute(null);
+            fixture.Main.DetailsPage!.IsStatic = true;
+            fixture.Main.DetailsPage.Fields[0].Value = "10.0.0.50";
             fixture.Confirmation.Answer = false;
             Assert.True(CloseEvent(main).Cancel);
             Assert.Equal(0, fixture.Safety.ExitRequests);

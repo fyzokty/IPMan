@@ -1,0 +1,138 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:res="clr-namespace:IPMan.App.Resources"
+                    xmlns:vm="clr-namespace:IPMan.App.ViewModels">
+    <ResourceDictionary.MergedDictionaries><ResourceDictionary Source="Controls.xaml" /></ResourceDictionary.MergedDictionaries>
+    <BooleanToVisibilityConverter x:Key="DetailsVisibility" />
+    <Style x:Key="DetailsChangedLabel" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource DetailsChangedBrush}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="Margin" Value="12,0,0,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="DetailsChangedBadge" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{DynamicResource DetailsChangedBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Background" Value="{DynamicResource DetailsChangedBackgroundBrush}" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="6,3" />
+        <Setter Property="Margin" Value="12,0,0,0" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <Style x:Key="DetailsFieldBorder" TargetType="Border">
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="12" />
+        <Setter Property="Margin" Value="0,0,0,12" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsChanged}" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource DetailsChangedBrush}" />
+                <Setter Property="BorderThickness" Value="4,1,1,1" />
+                <Setter Property="Background" Value="{DynamicResource DetailsChangedBackgroundBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="DetailsInput" TargetType="TextBox" BasedOn="{StaticResource {x:Type TextBox}}">
+        <Setter Property="FontFamily" Value="{StaticResource MonoFont}" />
+        <Setter Property="Height" Value="32" />
+        <Setter Property="Padding" Value="10,4" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding HasError}" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}" />
+                <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="DetailsError" TargetType="TextBlock">
+        <Setter Property="Foreground" Value="{DynamicResource ErrorTextBrush}" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="Margin" Value="0,6,0,0" />
+        <Style.Triggers><DataTrigger Binding="{Binding HasError}" Value="False"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger></Style.Triggers>
+    </Style>
+    <Style x:Key="DetailsFooter" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource InfoBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="0,1,0,0" />
+        <Setter Property="Padding" Value="24,12" />
+    </Style>
+    <Style x:Key="DetailsFailure" TargetType="Border" BasedOn="{StaticResource CardStyle}">
+        <Setter Property="Background" Value="{DynamicResource ErrorBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource ErrorBorderBrush}" />
+        <Setter Property="TextElement.Foreground" Value="{DynamicResource ErrorTextBrush}" />
+        <Setter Property="Margin" Value="0,0,0,16" />
+    </Style>
+    <Style x:Key="DetailsModeSelector" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="CornerRadius" Value="4" />
+        <Setter Property="Padding" Value="3" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsModeChanged}" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource DetailsChangedBrush}" />
+                <Setter Property="BorderThickness" Value="4,1,1,1" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+    <Style x:Key="DetailsAdvancedHeader" TargetType="ToggleButton">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
+        <Setter Property="Padding" Value="0,8" />
+        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+        <Setter Property="Template"><Setter.Value>
+            <ControlTemplate TargetType="ToggleButton">
+                <Border x:Name="Header" Padding="{TemplateBinding Padding}" Background="{TemplateBinding Background}" BorderThickness="1" CornerRadius="4">
+                    <ContentPresenter HorizontalAlignment="Stretch" />
+                </Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Header" Property="Background" Value="{DynamicResource ControlHoverBrush}" /></Trigger>
+                    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Header" Property="BorderBrush" Value="{DynamicResource FocusBrush}" /></Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate>
+        </Setter.Value></Setter>
+    </Style>
+    <Style x:Key="DetailsAdvancedExpander" TargetType="Expander">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Expander">
+                    <StackPanel>
+                        <ToggleButton Style="{StaticResource DetailsAdvancedHeader}" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}">
+                            <DockPanel>
+                                <TextBlock Text="&#xE70D;" FontFamily="{StaticResource IconFont}" Margin="0,0,12,0" Foreground="{DynamicResource AccentBrush}" />
+                                <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" />
+                            </DockPanel>
+                        </ToggleButton>
+                        <ContentPresenter x:Name="Body" ContentSource="Content" Visibility="Collapsed" />
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsExpanded" Value="True"><Setter TargetName="Body" Property="Visibility" Value="Visible" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    <DataTemplate DataType="{x:Type vm:ManualSettingsFieldViewModel}">
+        <Border Style="{StaticResource DetailsFieldBorder}">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="240" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Label}" Foreground="{DynamicResource PrimaryTextBrush}" VerticalAlignment="Top" Margin="0,6,12,0" TextWrapping="Wrap" />
+                <StackPanel Grid.Column="1">
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                        <TextBox Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}" IsReadOnly="{Binding IsReadOnly}"
+                                 AutomationProperties.Name="{Binding Label}" Style="{StaticResource DetailsInput}" />
+                        <Border Grid.Column="1" Style="{StaticResource DetailsChangedBadge}" Visibility="{Binding IsChanged, Converter={StaticResource DetailsVisibility}}">
+                            <TextBlock Text="{x:Static res:Strings.DetailsChanged}" Style="{StaticResource DetailsChangedLabel}" Margin="0" />
+                        </Border>
+                    </Grid>
+                    <TextBlock Text="{Binding CurrentText}" FontFamily="{StaticResource MonoFont}" FontSize="12" Margin="0,6,0,0"
+                               Foreground="{DynamicResource SecondaryTextBrush}" Visibility="{Binding IsChanged, Converter={StaticResource DetailsVisibility}}" />
+                    <TextBlock Text="{Binding Error}" Style="{StaticResource DetailsError}" />
+                </StackPanel>
+            </Grid>
+        </Border>
+    </DataTemplate>
+</ResourceDictionary>

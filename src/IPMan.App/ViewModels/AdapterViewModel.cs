@@ -1,5 +1,4 @@
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using IPMan.App.Presentation;
 using IPMan.App.Resources;
 using IPMan.Application.Networking;
@@ -14,11 +13,6 @@ namespace IPMan.App.ViewModels;
 /// </summary>
 public sealed partial class AdapterViewModel : ObservableObject
 {
-    private readonly IClipboardService _clipboardService;
-
-    [ObservableProperty]
-    private bool _copySucceeded;
-
     [ObservableProperty]
     private string _displayName = string.Empty;
 
@@ -42,9 +36,8 @@ public sealed partial class AdapterViewModel : ObservableObject
         ArgumentNullException.ThrowIfNull(validator);
 
         Id = snapshot.Id;
-        _clipboardService = clipboardService;
         Details = new AdapterDetailsViewModel();
-        Draft = new AdapterDraftViewModel(clipboardService, validator);
+        Draft = new AdapterDraftViewModel(validator);
 
         Update(snapshot);
     }
@@ -62,29 +55,6 @@ public sealed partial class AdapterViewModel : ObservableObject
     public AdapterDetailsViewModel Details { get; }
 
     public AdapterDraftViewModel Draft { get; }
-
-    /// <summary>Copies the latest Windows value without changing the editable draft.</summary>
-    [RelayCommand]
-    private void CopyCurrentField(DraftField field)
-    {
-        string text = field switch
-        {
-            DraftField.Ipv4Address => Snapshot.Ipv4Address ?? string.Empty,
-            DraftField.SubnetMask => Snapshot.SubnetMask ?? string.Empty,
-            DraftField.Gateway => Snapshot.Gateway ?? string.Empty,
-            DraftField.PrimaryDns => Snapshot.PrimaryDns ?? string.Empty,
-            DraftField.SecondaryDns => Snapshot.SecondaryDns ?? string.Empty,
-            _ => throw new ArgumentOutOfRangeException(nameof(field))
-        };
-        try
-        {
-            CopySucceeded = _clipboardService.SetText(text);
-        }
-        catch (Exception)
-        {
-            CopySucceeded = false;
-        }
-    }
 
     /// <summary>
     /// Applies a newly discovered snapshot. The read-only details always follow

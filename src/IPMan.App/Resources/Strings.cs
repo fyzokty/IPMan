@@ -67,16 +67,9 @@ public static class Strings
 
     public static string FormatCurrentNetwork(string value) => Format(Get("CurrentNetwork"), CultureInfo.CurrentCulture, value);
 
-    public static string FormatManualSettingName(string value) => Format(Get("ManualSettingName"), CultureInfo.CurrentCulture, value);
-
     public static string FormatStaticSettingSummary(string value) => Format(Get("StaticSettingSummary"), CultureInfo.CurrentCulture, value);
 
     public static string FormatConnectionSummary(string kind, string status) => Format(Get("ConnectionSummary"), CultureInfo.CurrentCulture, kind, status);
-
-    public static string CurrentConfigurationHeader => Get(nameof(CurrentConfigurationHeader));
-
-    public static string DraftConfigurationHeader => Get(nameof(DraftConfigurationHeader));
-
 
     public static string FieldConnectionState => Get(nameof(FieldConnectionState));
 
@@ -97,10 +90,6 @@ public static class Strings
     public static string FieldSecondaryDns => Get(nameof(FieldSecondaryDns));
 
     public static string FieldConfigurationMode => Get(nameof(FieldConfigurationMode));
-
-    public static string FieldLinkSpeed => Get(nameof(FieldLinkSpeed));
-
-    public static string FieldAdditionalIpv4Addresses => Get(nameof(FieldAdditionalIpv4Addresses));
 
     public static string FieldDnsServers => Get(nameof(FieldDnsServers));
 
@@ -144,28 +133,8 @@ public static class Strings
 
     public static string ValueUnavailable => Get(nameof(ValueUnavailable));
 
-    public static string CommandGetCurrentValues => Get(nameof(CommandGetCurrentValues));
 
     public static string CommandCopy => Get(nameof(CommandCopy));
-
-    /// <summary>Gets the static apply command label.</summary>
-    public static string CommandApply => Get(nameof(CommandApply));
-
-    /// <summary>Gets the DHCP command label.</summary>
-    public static string CommandUseDhcp => Get(nameof(CommandUseDhcp));
-
-    /// <summary>Gets the recovery restore command label.</summary>
-    public static string CommandRestoreLast => Get(nameof(CommandRestoreLast));
-    public static string CommandRestoreLastCompact => Get(nameof(CommandRestoreLastCompact));
-
-    public static string CommandCopyNetworkInfo => Get(nameof(CommandCopyNetworkInfo));
-
-    public static string CommandPingGateway => Get(nameof(CommandPingGateway));
-
-    public static string CommandFlushDns => Get(nameof(CommandFlushDns));
-    public static string CommandFlushDnsCompact => Get(nameof(CommandFlushDnsCompact));
-
-    public static string CommandRenewIp => Get(nameof(CommandRenewIp));
 
     public static string CommandClearStatus => Get(nameof(CommandClearStatus));
 
@@ -389,10 +358,7 @@ public static class Strings
     public static string ProfileGroupFavorites => Get(nameof(ProfileGroupFavorites));
     public static string ProfileGroupOthers => Get(nameof(ProfileGroupOthers));
     public static string ProfileNameLabel => Get(nameof(ProfileNameLabel));
-    public static string ProfileDescriptionLabel => Get(nameof(ProfileDescriptionLabel));
-    public static string ProfileUseDhcpLabel => Get(nameof(ProfileUseDhcpLabel));
     public static string ProfileProblemSeparator => Get(nameof(ProfileProblemSeparator));
-    public static string CommandSaveProfile => Get(nameof(CommandSaveProfile));
     public static string CommandImportProfile => Get(nameof(CommandImportProfile));
     public static string CommandExportProfile => Get(nameof(CommandExportProfile));
     public static string CommandRenameProfile => Get(nameof(CommandRenameProfile));
@@ -406,9 +372,6 @@ public static class Strings
     public static string ProfileJsonFileFilter => Get(nameof(ProfileJsonFileFilter));
     public static string ProfileRenameTitle => Get(nameof(ProfileRenameTitle));
     public static string ProfileNameRequired => Get(nameof(ProfileNameRequired));
-    public static string ProfileDhcpGuidance => Get(nameof(ProfileDhcpGuidance));
-    public static string ConfirmProfileLoadTitle => Get(nameof(ConfirmProfileLoadTitle));
-    public static string ConfirmProfileLoadMessage => Get(nameof(ConfirmProfileLoadMessage));
     public static string ProfileLoadCancelled => Get(nameof(ProfileLoadCancelled));
     public static string ConfirmProfileDeleteTitle => Get(nameof(ConfirmProfileDeleteTitle));
     public static string ProfileSaveSuccess => Get(nameof(ProfileSaveSuccess));
@@ -533,8 +496,6 @@ public static class Strings
     public static string FormatLinkSpeedKilobits(string value, IFormatProvider formatProvider) =>
         Format(Get("LinkSpeedKilobitsPerSecond"), formatProvider, value);
 
-    public static string FormatCopyFieldTooltip(string fieldLabel) =>
-        Format(Get("CommandCopyFieldTooltip"), CultureInfo.CurrentCulture, fieldLabel);
 
     public static string FormatSelectedAdapter(string adapterName, string connectionState) =>
         Format(Get("StatusSelectedAdapter"), CultureInfo.CurrentCulture, adapterName, connectionState);
@@ -574,9 +535,57 @@ public static class Strings
     public static string FormatValidationAddressNotAllowed(string fieldLabel) =>
         Format(Get("ValidationAddressNotAllowed"), CultureInfo.CurrentCulture, fieldLabel);
 
-    public static string QuickActionsHeader => Get(nameof(QuickActionsHeader));
 
-    public static string DraftDifferentHint => Get(nameof(DraftDifferentHint));
+    // Details page
+    public static string DetailsBack => Get(nameof(DetailsBack));
+    public static string DetailsDiscardMessage => Get(nameof(DetailsDiscardMessage));
+    public static string DetailsCurrentSettings => Get(nameof(DetailsCurrentSettings));
+    public static string DetailsAutomatic => Get(nameof(DetailsAutomatic));
+    public static string DetailsStatic => Get(nameof(DetailsStatic));
+    public static string DetailsAddressMode => Get(nameof(DetailsAddressMode));
+    public static string DetailsChanged => Get(nameof(DetailsChanged));
+    public static string DetailsEmpty => Get(nameof(DetailsEmpty));
+    public static string DetailsCurrentFormat => Get(nameof(DetailsCurrentFormat));
+    public static string DetailsChangeCountFormat => Get(nameof(DetailsChangeCountFormat));
+    public static string DetailsNoChanges => Get(nameof(DetailsNoChanges));
+    public static string DetailsAddress => Get(nameof(DetailsAddress));
+    public static string DetailsMask => Get(nameof(DetailsMask));
+    public static string DetailsGateway => Get(nameof(DetailsGateway));
+    public static string DetailsPrimaryDns => Get(nameof(DetailsPrimaryDns));
+    public static string DetailsSecondaryDns => Get(nameof(DetailsSecondaryDns));
+    public static string DetailsAdvanced => Get(nameof(DetailsAdvanced));
+    public static string DetailsDns => Get(nameof(DetailsDns));
+    public static string DetailsConnectionInfo => Get(nameof(DetailsConnectionInfo));
+    public static string DetailsHardware => Get(nameof(DetailsHardware));
+    public static string DetailsMac => Get(nameof(DetailsMac));
+    public static string DetailsSpeed => Get(nameof(DetailsSpeed));
+    public static string DetailsCopy => Get(nameof(DetailsCopy));
+    public static string DetailsPing => Get(nameof(DetailsPing));
+    public static string DetailsFlush => Get(nameof(DetailsFlush));
+    public static string DetailsRenew => Get(nameof(DetailsRenew));
+    public static string DetailsRestore => Get(nameof(DetailsRestore));
+    public static string DetailsSave => Get(nameof(DetailsSave));
+    public static string DetailsCancel => Get(nameof(DetailsCancel));
+    public static string DetailsApply => Get(nameof(DetailsApply));
+    public static string DetailsRetry => Get(nameof(DetailsRetry));
+    public static string DetailsTechnical => Get(nameof(DetailsTechnical));
+    public static string DetailsDismiss => Get(nameof(DetailsDismiss));
+    public static string DetailsInternet => Get(nameof(DetailsInternet));
+    public static string DetailsFailureTitleFormat => Get(nameof(DetailsFailureTitleFormat));
+    public static string DetailsUnchangedFormat => Get(nameof(DetailsUnchangedFormat));
+    public static string DetailsUncertain => Get(nameof(DetailsUncertain));
+    public static string DetailsPartial => Get(nameof(DetailsPartial));
+    public static string DetailsModeCurrentFormat => Get(nameof(DetailsModeCurrentFormat));
+
+    public static string DetailsValidationExample => Get(nameof(DetailsValidationExample));
+    public static string DetailsMaskExample => Get(nameof(DetailsMaskExample));
+    public static string DetailsMutationRejected => Get(nameof(DetailsMutationRejected));
+    public static string DetailsPartialExplanation => Get(nameof(DetailsPartialExplanation));
+    public static string FormatDetailsCurrent(string value) => Format(DetailsCurrentFormat, CultureInfo.CurrentCulture, value);
+    public static string FormatDetailsChangeCount(int value) => Format(DetailsChangeCountFormat, CultureInfo.CurrentCulture, value);
+    public static string FormatDetailsModeCurrent(string value) => Format(DetailsModeCurrentFormat, CultureInfo.CurrentCulture, value);
+    public static string FormatDetailsFailureTitle(string value) => Format(DetailsFailureTitleFormat, CultureInfo.CurrentCulture, value);
+    public static string FormatDetailsUnchanged(string value) => Format(DetailsUnchangedFormat, CultureInfo.CurrentCulture, value);
 
     private static string Get(string name) =>
         Manager.GetString(name, CultureInfo.CurrentUICulture) ?? name;
@@ -614,7 +623,6 @@ public static class Strings
     public static string SafeSwitchExitKeep => Get(nameof(SafeSwitchExitKeep));
     public static string SafeSwitchExitRevert => Get(nameof(SafeSwitchExitRevert));
     public static string SafeSwitchManualSetting => Get(nameof(SafeSwitchManualSetting));
-    public static string SafeSwitchPreviousSetting => Get(nameof(SafeSwitchPreviousSetting));
     public static string FormatSafeSwitchKept(string name) =>
         Format(Get("SafeSwitchKept"), CultureInfo.CurrentCulture, name);
     public static string FormatSafeSwitchReverted(string name) =>

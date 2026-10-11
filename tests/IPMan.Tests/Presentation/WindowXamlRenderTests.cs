@@ -90,23 +90,16 @@ public sealed partial class WindowXamlSmokeTests
         main.Width = 1000;
         main.Height = 680;
         AdapterDraftViewModel draft = fixture.Main.SelectedAdapter!.Draft;
+        fixture.Main.DetailsPage!.IsStatic = true;
         draft.Ipv4Address = "192.168.10.40";
         draft.Gateway = "192.168.10.254";
         Assert.True(draft.IsValid);
         Assert.True(draft.IsDirty);
         RenderWindow(main, directory, $"main-details-{suffix}.png");
-        TextBox[] draftFields = Descendants(content).OfType<TextBox>()
-            .Where(box => ReferenceEquals(box.DataContext, draft)).ToArray();
-        Assert.Equal(5, draftFields.Length);
-        Assert.All(draftFields, box => Assert.Equal(32, box.ActualHeight));
-        ScrollViewer detailsScroll = Assert.Single(Descendants(content).OfType<ScrollViewer>(),
-            scroll => scroll.Content is Grid grid && grid.ColumnDefinitions.Count == 3);
-        Assert.True(detailsScroll.ScrollableHeight > 0);
-        Button apply = Assert.Single(Descendants(content).OfType<Button>(),
-            button => ReferenceEquals(button.Command, fixture.Main.Actions.ApplyStaticCommand));
-        Button restore = Assert.Single(Descendants(content).OfType<Button>(),
-            button => ReferenceEquals(button.Command, fixture.Main.Actions.RestoreLastCommand));
-        Assert.Equal(Position(apply, content).Y, Position(restore, content).Y);
+        AdapterDetailsPage details = Assert.Single(Descendants(content).OfType<AdapterDetailsPage>());
+        Assert.Same(fixture.Main.DetailsPage, details.DataContext);
+        Assert.All(Descendants(details).OfType<TextBox>().Where(box => box.DataContext is ManualSettingsFieldViewModel),
+            box => Assert.Equal(32, box.ActualHeight));
         draft.Ipv4Address = "192.168.10.999";
         draft.MarkAllFieldsTouched();
         Assert.NotEmpty(draft.Ipv4AddressError);
@@ -115,8 +108,9 @@ public sealed partial class WindowXamlSmokeTests
         fixture.Main.Actions.StatusMessage = Strings.ApplyStaticSuccess;
         fixture.Main.Actions.StatusSeverity = ApplyStatusSeverity.Success;
         RenderWindow(main, directory, $"main-details-banner-{suffix}.png");
+        fixture.Confirmation.Answer = true;
         fixture.Main.GoBackCommand.Execute(null);
-        Assert.True(draft.IsDirty);
+        Assert.False(draft.IsDirty);
         RenderWindow(main, directory, $"main-banner-{suffix}.png");
         fixture.Main.Actions.ClearStatusCommand.Execute(null);
         fixture.Confirmation.Answers.Enqueue(true);
