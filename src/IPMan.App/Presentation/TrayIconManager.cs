@@ -161,10 +161,22 @@ public sealed class TrayIconManager : IDisposable
     public event EventHandler<string>? NotificationClicked;
 
     /// <summary>Makes the icon visible.</summary>
-    public void Show() => _notifyIcon.Visible = true;
+    public void Show()
+    {
+        if (_notifyIcon is not null)
+        {
+            _notifyIcon.Visible = true;
+        }
+    }
 
     /// <summary>Hides the icon.</summary>
-    public void Hide() => _notifyIcon.Visible = AlwaysVisible;
+    public void Hide()
+    {
+        if (_notifyIcon is not null)
+        {
+            _notifyIcon.Visible = AlwaysVisible;
+        }
+    }
 
     /// <summary>Attempts to show a non-critical balloon notification.</summary>
     public void ShowBalloon(string text)
@@ -236,15 +248,21 @@ public sealed class TrayIconManager : IDisposable
         }
 
         _isDisposed = true;
-        _notifyIcon.MouseClick -= OnMouseClick;
-        _notifyIcon.DoubleClick -= OnDoubleClick;
-        _notifyIcon.BalloonTipClicked -= OnBalloonTipClicked;
-        _notifyIcon.BalloonTipClosed -= OnBalloonTipClosed;
-        _notifyIcon.Visible = false;
-        _notifyIcon.Dispose();
-        _menu.Opening -= OnMenuOpening;
-        ClearMenu();
-        _menu.Dispose();
+        if (_notifyIcon is not null)
+        {
+            _notifyIcon.MouseClick -= OnMouseClick;
+            _notifyIcon.DoubleClick -= OnDoubleClick;
+            _notifyIcon.BalloonTipClicked -= OnBalloonTipClicked;
+            _notifyIcon.BalloonTipClosed -= OnBalloonTipClosed;
+            _notifyIcon.Visible = false;
+            _notifyIcon.Dispose();
+        }
+        if (_menu is not null)
+        {
+            _menu.Opening -= OnMenuOpening;
+            ClearMenu();
+            _menu.Dispose();
+        }
     }
 
     private static Icon GetApplicationIcon() =>
@@ -301,6 +319,9 @@ public sealed class TrayIconManager : IDisposable
         }
 
         _restoreVisibilityAfterNotification = false;
-        _notifyIcon.Visible = AlwaysVisible;
+        if (_notifyIcon is not null)
+        {
+            _notifyIcon.Visible = AlwaysVisible;
+        }
     }
 }

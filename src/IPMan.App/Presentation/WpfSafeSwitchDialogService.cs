@@ -45,7 +45,7 @@ public sealed class WpfSafeSwitchDialogService(Dispatcher dispatcher, WindowsThe
                 theme.AttachWindow(window);
                 // An independent topmost window stays visible when the shell hides to the tray.
                 // AdapterActionsViewModel keeps mutations disabled until this task completes.
-                window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+                DialogWindowPlacement.Prepare(window, null);
                 _countdownWindow = window;
                 window.Show();
             });
@@ -84,13 +84,6 @@ public sealed class WpfSafeSwitchDialogService(Dispatcher dispatcher, WindowsThe
     private void Prepare(Window window)
     {
         theme.AttachWindow(window);
-        if (System.Windows.Application.Current?.MainWindow is { IsVisible: true } owner)
-        {
-            window.Owner = owner;
-        }
-        else
-        {
-            window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
-        }
+        DialogWindowPlacement.Prepare(window, System.Windows.Application.Current?.MainWindow);
     }
 }

@@ -1,6 +1,6 @@
 # 18 — Tepsi menüsünden ayar değiştirme
 
-- **Durum:** yapılacak
+- **Durum:** bitti
 - **Bağımlılık:** 14
 - **Gereksinimler:** ADR-018 · Ekran 10
 
@@ -18,8 +18,8 @@ Uygulama penceresini açmaya gerek kalmadan, Windows sistem tepsisi (tray) menü
 - Tepsi üzerinden tetiklenen ağ geçişlerinin de koşullu onay ve 15 saniyelik güvenlik geri alma sayacı diyaloğunu en üstte (topmost) çalıştırması
 
 ## Bitti sayılır
-- [ ] Tepsi menüsü açıldığında güncel ağ ve internet durumu doğru simge ve metinle görünüyor
-- [ ] Favori ve diğer ayarlar doğru sırada listeleniyor, etkin ayar işaretleniyor
-- [ ] Menüden bir ayara tıklandığında koşullu onay ve 15 saniyelik güvenlik geri alma sayacı çalışıyor
-- [ ] "Son değişikliği geri al" tıklandığında önceki yapılandırmaya dönülüyor
-- [ ] "IPMan'i aç" pencereyi öne getiriyor; "Çıkış" uygulamayı kapatıyor
+- [x] Tepsi menüsü açıldığında güncel ağ ve internet durumu doğru simge ve metinle görünüyor
+- [x] Favori ve diğer ayarlar doğru sırada listeleniyor, etkin ayar işaretleniyor
+- [x] Menüden bir ayara tıklandığında koşullu onay ve 15 saniyelik güvenlik geri alma sayacı çalışıyor
+- [x] "Son değişikliği geri al" tıklandığında önceki yapılandırmaya dönülüyor
+- [x] "IPMan'i aç" pencereyi öne getiriyor; "Çıkış" uygulamayı kapatıyor

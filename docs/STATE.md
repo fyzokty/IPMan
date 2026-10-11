@@ -34,6 +34,7 @@ active countdown while hiding to the tray leaves it running. Restore itself star
 Setting editor (15): new/edit open a full-page form in the main window's Home/Details/ProfileEditor navigation.
 Save-only returns to the refreshed catalog; save-and-switch uses the shared safe-switch command for static and DHCP targets.
 Suggestions exclude the gateway captured on opening; unsaved back/close prompts and adapter-busy switch gating are covered by fakes and light/dark host renders.
+Tray menu (18): persistent tray icon stays visible (`AlwaysVisible = true`) and builds a bounded menu on opening. Shows current connection status with color dot, up to 10 settings (favorites first, active item checked, DHCP automatic option, and overflow opening Home), and quick snapshot undo. Menu actions reuse the shared safe-switch and restore commands with topmost dialogs centered on screen when the main window is hidden or minimized, preserving the countdown exit guard.
 Profiles / settings: one JSON file per profile under `Documents\IPMan\Profiles\`,
 settings in `Documents\IPMan\settings.json`; recovery snapshots stay in
 `%LocalAppData%\IPMan\Backup\` (ADR-015 supersedes ADR-012).
@@ -46,13 +47,13 @@ Distribution: win-x64 self-contained portable zip and Inno Setup installer tooli
 Single instance: `Local\` mutex + admin-only pipe activation; mutation serialized
 machine-wide by a `Global\` mutex (ADR-011, ADR-014).
 i18n: `Strings.resx`, single language (Turkish).
-Design: Windows 11 Fluent tokens and simplified component specifications in `docs/03_UI_UX/DESIGN.md`, UX principles in `docs/03_UI_UX/UX-ilkeleri.md`, and 10 canonical reference screens in `docs/03_UI_UX/stitch-karma/` (ADR-018). The legacy technician layout in `docs/03_UI_UX/stitch/` is superseded. The main window follows the new design (13); 17–18 remain. Shared styles live in `Themes/Controls.xaml`.
+Design: Windows 11 Fluent tokens and simplified component specifications in `docs/03_UI_UX/DESIGN.md`, UX principles in `docs/03_UI_UX/UX-ilkeleri.md`, and 10 canonical reference screens in `docs/03_UI_UX/stitch-karma/` (ADR-018). The legacy technician layout in `docs/03_UI_UX/stitch/` is superseded. The main window follows the new design (13); 17 remains. Shared styles live in `Themes/Controls.xaml`.
 
 # Next
 Order and details live in `docs/backlog/`:
 1. 10 — portable package and installer
 2. 11 — real-adapter verification on an isolated VM (can run in parallel)
-3. 17–18 — remaining simple-first UX overhaul (ADR-018: plain terminology, tray menu)
+3. 17 — remaining simple-first UX overhaul (ADR-018: plain terminology)
 
 # Constraints
 - Destructive network tests are opt-in and must run only on an isolated VM adapter

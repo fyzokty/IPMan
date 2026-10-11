@@ -33,6 +33,7 @@ public sealed class WpfUserConfirmationService : IUserConfirmationService
     {
         bool trayPreference = request.Title == Strings.TrayPreferenceTitle;
         PromptWindow window = new(request.Title, trayPreference ? "\uE946" : "\uE7BA", trayPreference);
+        DialogWindowPlacement.Prepare(window, System.Windows.Application.Current?.MainWindow);
         TextBlock title = new() { Text = request.Title, FontSize = 20, FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 16) };
         window.Body.Children.Add(title);
         TextBlock message = new() { Text = request.Message, TextWrapping = TextWrapping.Wrap };
