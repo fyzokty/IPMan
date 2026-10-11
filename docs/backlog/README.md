@@ -21,6 +21,8 @@ Sıra, uygulama sırasıdır. Tüm maddeler 1.0 kapsamındadır.
 
 ## Kolay kullanım yenilemesi (ADR-018)
 
+1.0 kapsamındadır; yukarıdaki tablodan sonra, bu sırayla uygulanır.
+
 | #  | İş | Durum |
 |----|----|-------|
 | 12 | [İnternet durumu ve bağlantı yok durumu](12-internet-durumu.md) | yapılacak |
