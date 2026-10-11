@@ -15,8 +15,9 @@ internal sealed class HomeFixture : IDisposable
         Main = new(Coordinator, new FakeUiDispatcher(), new FakeClipboardService(),
             new FakeClock(DateTimeOffset.UtcNow), new FakeElevationStateProvider(true), new FakeApplicationVersionProvider("1.0"),
             actions, new StaticIpv4ConfigurationValidator(), Profiles,
-            editorFactory: (profile, gateway) => new(Catalog, new StaticIpv4ConfigurationValidator(),
-                new(new SequenceIpv4ConflictProbe()), new ImmediateDelayProvider(), profile, gateway),
+            editorFactory: (profile, adapter) => new(Catalog, new StaticIpv4ConfigurationValidator(),
+                new(new SequenceIpv4ConflictProbe()), new ImmediateDelayProvider(), profile, adapter?.Gateway,
+                adapter?.Ipv4Address, adapter?.SubnetMask),
             confirmationService: Confirmation);
         Main.Initialize();
         Coordinator.PublishRefresh(TestData.Snapshot());

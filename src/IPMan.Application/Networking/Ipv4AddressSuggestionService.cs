@@ -2,13 +2,22 @@ using System.Globalization;
 
 namespace IPMan.Application.Networking;
 
-/// <summary>Best-effort /24 suggestions; verification is probe evidence, not a reservation.</summary>
+/// <summary>
+/// Best-effort /24 suggestions; verification is probe evidence, not a reservation. A probe can
+/// only answer for addresses on the adapter's current on-link subnet, so candidates outside it
+/// are never probed and are at most <see cref="Ipv4AddressSuggestionStatus.Unverified"/>.
+/// </summary>
 public sealed class Ipv4AddressSuggestionService(IIpv4ConflictProbe probe)
 {
     private readonly IIpv4ConflictProbe _probe = probe ?? throw new ArgumentNullException(nameof(probe));
 
-    public static IReadOnlyList<string> GenerateCandidates(string deviceAddress, string? currentGateway)
+    public static IReadOnlyList<string> GenerateCandidates(string deviceAddress, string? currentGateway) =>
+        GenerateCandidates(deviceAddress, [currentGateway]);
+
+    /// <summary>Skips the network and broadcast hosts, the device and every excluded address.</summary>
+    public static IReadOnlyList<string> GenerateCandidates(string deviceAddress, IEnumerable<string?> excludedAddresses)
     {
+        ArgumentNullException.ThrowIfNull(excludedAddresses);
         if (!Ipv4Value.TryParse(deviceAddress, out Ipv4Value device) ||
             device.IsUnspecified || device.IsLoopback || device.IsMulticast || device.IsLimitedBroadcast)
         {
@@ -16,13 +25,20 @@ public sealed class Ipv4AddressSuggestionService(IIpv4ConflictProbe probe)
         }
 
         uint network = device.Bits & 0xffffff00;
-        uint? gateway = Ipv4Value.TryParse(currentGateway, out Ipv4Value parsed) ? parsed.Bits : null;
+        HashSet<uint> excluded = [device.Bits];
+        foreach (string? address in excludedAddresses)
+        {
+            if (Ipv4Value.TryParse(address, out Ipv4Value parsed))
+            {
+                excluded.Add(parsed.Bits);
+            }
+        }
         List<string> candidates = new(254);
         for (int offset = 0; offset < 254; offset++)
         {
             uint host = (uint)((49 + offset) % 254 + 1);
             uint bits = network | host;
-            if (bits == device.Bits || bits == gateway)
+            if (excluded.Contains(bits))
             {
                 continue;
             }
@@ -34,11 +50,35 @@ public sealed class Ipv4AddressSuggestionService(IIpv4ConflictProbe probe)
         return candidates;
     }
 
-    public async Task<Ipv4AddressSuggestion?> SuggestAsync(
-        string deviceAddress, string? currentGateway, CancellationToken cancellationToken)
+    /// <summary>
+    /// True only when the adapter's current address and contiguous, non-zero mask place the
+    /// candidate on the same link, i.e. where a probe could actually reach it.
+    /// </summary>
+    public static bool IsOnAdapterSubnet(string candidate, string? adapterAddress, string? adapterSubnetMask)
     {
+        if (!Ipv4Value.TryParse(candidate, out Ipv4Value target) ||
+            !Ipv4Value.TryParse(adapterAddress, out Ipv4Value address) ||
+            !Ipv4Value.TryParse(adapterSubnetMask, out Ipv4Value mask) ||
+            address.IsUnspecified || mask.Bits == 0)
+        {
+            return false;
+        }
+
+        uint hostBits = ~mask.Bits;
+        if ((hostBits & (hostBits + 1)) != 0)
+        {
+            return false;
+        }
+
+        return (target.Bits & mask.Bits) == (address.Bits & mask.Bits);
+    }
+
+    public async Task<Ipv4AddressSuggestion?> SuggestAsync(
+        Ipv4AddressSuggestionRequest request, CancellationToken cancellationToken)
+    {
+        ArgumentNullException.ThrowIfNull(request);
         cancellationToken.ThrowIfCancellationRequested();
-        IReadOnlyList<string> candidates = GenerateCandidates(deviceAddress, currentGateway);
+        IReadOnlyList<string> candidates = GenerateCandidates(request.DeviceAddress, request.ExcludedAddresses);
         if (candidates.Count == 0)
         {
             return null;
@@ -46,6 +86,12 @@ public sealed class Ipv4AddressSuggestionService(IIpv4ConflictProbe probe)
 
         foreach (string candidate in candidates.Take(5))
         {
+            if (!IsOnAdapterSubnet(candidate, request.AdapterAddress, request.AdapterSubnetMask))
+            {
+                // Probing another network proves nothing, so do not probe and do not claim it is free.
+                return new(candidate, Ipv4AddressSuggestionStatus.Unverified);
+            }
+
             Ipv4ConflictProbeResult result;
             try
             {
@@ -77,6 +123,16 @@ public sealed class Ipv4AddressSuggestionService(IIpv4ConflictProbe probe)
             : null;
     }
 }
+
+/// <param name="DeviceAddress">The target device whose /24 the suggestion is taken from.</param>
+/// <param name="ExcludedAddresses">Addresses that must never be suggested, such as gateways.</param>
+/// <param name="AdapterAddress">The adapter's current IPv4 address, when known.</param>
+/// <param name="AdapterSubnetMask">The adapter's current subnet mask, when known.</param>
+public sealed record Ipv4AddressSuggestionRequest(
+    string DeviceAddress,
+    IReadOnlyList<string?> ExcludedAddresses,
+    string? AdapterAddress,
+    string? AdapterSubnetMask);
 
 public enum Ipv4AddressSuggestionStatus
 {

@@ -258,15 +258,133 @@ public sealed class SafeSwitchCoordinatorTests
     }
 
     [Fact]
-    public async Task RequestExitAsync_TimeoutDuringPrompt_DoesNotOverrideRevertWithKeep()
+    public async Task RequestExitAsync_PromptOpen_PausesCountdownSoKeepIsHonoured()
     {
         Fixture fixture = new();
         fixture.Dialogs.ExitDecision = SafeSwitchExitDecision.Keep;
-        fixture.Dialogs.DuringExitPrompt = () => fixture.Timer.Advance(TimeSpan.FromSeconds(15));
+        bool pausedDuringPrompt = false;
+        fixture.Dialogs.DuringExitPrompt = () =>
+        {
+            pausedDuringPrompt = fixture.Countdown.IsPaused;
+            fixture.Timer.Advance(TimeSpan.FromSeconds(60));
+        };
         Task<SafeSwitchOutcome> run = fixture.Run();
         Assert.True(await fixture.Coordinator.RequestExitAsync(CancellationToken.None));
+        Assert.True(pausedDuringPrompt);
+        Assert.Equal(SafeSwitchStatus.Kept, (await run).Status);
+        Assert.Empty(fixture.Restore.Requests);
+    }
+
+    [Fact]
+    public async Task RequestExitAsync_PromptCancelled_ResumesWithRemainingTimePreserved()
+    {
+        Fixture fixture = new();
+        Task<SafeSwitchOutcome> run = fixture.Run();
+        fixture.Timer.Advance(TimeSpan.FromSeconds(5));
+        fixture.Dialogs.DuringExitPrompt = () => fixture.Timer.Advance(TimeSpan.FromSeconds(60));
+        Assert.False(await fixture.Coordinator.RequestExitAsync(CancellationToken.None));
+        Assert.False(fixture.Countdown.IsPaused);
+        Assert.Equal(10, fixture.Countdown.RemainingSeconds);
+        Assert.True(fixture.Coordinator.IsCountdownActive);
+        fixture.Timer.Advance(TimeSpan.FromSeconds(9));
+        Assert.Empty(fixture.Restore.Requests);
+        fixture.Timer.Advance(TimeSpan.FromSeconds(1));
         Assert.Equal(SafeSwitchStatus.Reverted, (await run).Status);
         Assert.Single(fixture.Restore.Requests);
+    }
+
+    [Theory]
+    [InlineData(SafeSwitchExitDecision.Keep, false)]
+    [InlineData(SafeSwitchExitDecision.Revert, true)]
+    public async Task RequestExitAsync_DecidedElsewhereWhilePromptOpen_ExitsOnlyWhenChoiceMatches(
+        SafeSwitchExitDecision choice, bool canExit)
+    {
+        Fixture fixture = new();
+        fixture.Dialogs.ExitDecision = choice;
+        fixture.Dialogs.DuringExitPrompt = () => fixture.Countdown.Complete(SafetyCountdownDecision.Revert);
+        Task<SafeSwitchOutcome> run = fixture.Run();
+        Assert.Equal(canExit, await fixture.Coordinator.RequestExitAsync(CancellationToken.None));
+        Assert.Equal(SafeSwitchStatus.Reverted, (await run).Status);
+        Assert.Single(fixture.Restore.Requests);
+    }
+
+    [Fact]
+    public async Task RequestExitAsync_ApplyRunning_TellsUserAndKeepsApplying()
+    {
+        Fixture fixture = new();
+        TaskCompletionSource<SafeSwitchApplyResult> applied = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        Task<SafeSwitchOutcome> run = fixture.Coordinator.RunAsync(fixture.Request, _ => applied.Task, CancellationToken.None);
+        Assert.False(await fixture.Coordinator.RequestExitAsync(CancellationToken.None));
+        Assert.Equal(1, fixture.Dialogs.ExitDeferredCount);
+        Assert.Equal(0, fixture.Dialogs.ExitPromptCount);
+        applied.SetResult(SafeSwitchApplyResult.Applied);
+        await fixture.Dialogs.CountdownShown.Task.WaitAsync(TimeSpan.FromSeconds(5));
+        fixture.Countdown.KeepCommand.Execute(null);
+        Assert.Equal(SafeSwitchStatus.Kept, (await run).Status);
+        Assert.True(await fixture.Coordinator.RequestExitAsync(CancellationToken.None));
+        Assert.Equal(1, fixture.Dialogs.ExitDeferredCount);
+    }
+
+    [Fact]
+    public async Task RunAsync_WallClockJumpsBack_CountdownStillTimesOut()
+    {
+        Fixture fixture = new();
+        Task<SafeSwitchOutcome> run = fixture.Run();
+        fixture.Clock.UtcNow -= TimeSpan.FromHours(2);
+        fixture.Timer.Advance(TimeSpan.FromSeconds(14));
+        Assert.Equal(1, fixture.Countdown.RemainingSeconds);
+        fixture.Timer.Advance(TimeSpan.FromSeconds(1));
+        Assert.Equal(SafeSwitchStatus.Reverted, (await run).Status);
+    }
+
+    [Fact]
+    public async Task RunAsync_WallClockJumpsForward_DoesNotRevertEarly()
+    {
+        Fixture fixture = new();
+        Task<SafeSwitchOutcome> run = fixture.Run();
+        fixture.Clock.UtcNow += TimeSpan.FromHours(2);
+        fixture.Timer.Advance(TimeSpan.FromSeconds(1));
+        Assert.Equal(14, fixture.Countdown.RemainingSeconds);
+        Assert.Empty(fixture.Restore.Requests);
+        Assert.True(fixture.Coordinator.IsCountdownActive);
+        fixture.Countdown.KeepCommand.Execute(null);
+        Assert.Equal(SafeSwitchStatus.Kept, (await run).Status);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task RunAsync_AppliedUnverified_StartsCountdownWithHonestTitle(bool timeout)
+    {
+        Fixture fixture = new() { ApplyResult = SafeSwitchApplyResult.AppliedUnverified };
+        Task<SafeSwitchOutcome> run = fixture.Run();
+        Assert.True(fixture.Coordinator.IsCountdownActive);
+        Assert.True(fixture.Countdown.IsUnverified);
+        Assert.Equal(Strings.FormatSafeSwitchUnverifiedCountdownTitle("Saha PLC"), fixture.Countdown.Title);
+        Assert.Equal(Strings.FormatSafeSwitchCountdownBody(15, "Ofis"), fixture.Countdown.Body);
+        if (timeout)
+        {
+            fixture.Timer.Advance(TimeSpan.FromSeconds(15));
+        }
+        else
+        {
+            fixture.Countdown.KeepCommand.Execute(null);
+        }
+        SafeSwitchOutcome outcome = await run;
+        Assert.Equal(timeout ? SafeSwitchStatus.Reverted : SafeSwitchStatus.Kept, outcome.Status);
+        Assert.True(outcome.Unverified);
+        Assert.Equal(timeout ? 1 : 0, fixture.Restore.Requests.Count);
+    }
+
+    [Fact]
+    public async Task RunAsync_Applied_IsNotMarkedUnverified()
+    {
+        Fixture fixture = new();
+        Task<SafeSwitchOutcome> run = fixture.Run();
+        Assert.False(fixture.Countdown.IsUnverified);
+        Assert.Equal(Strings.FormatSafeSwitchCountdownTitle("Saha PLC"), fixture.Countdown.Title);
+        fixture.Countdown.KeepCommand.Execute(null);
+        Assert.False((await run).Unverified);
     }
 
     [Fact]

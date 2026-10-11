@@ -14,7 +14,7 @@ public sealed class SafeSwitchCoordinator : ISafetyCountdownCoordinator
     private readonly ISafetyCountdownDialogService _dialogs;
     private readonly IAppSettingsRepository _settings;
     private readonly IRecoveryRestoreService _restore;
-    private readonly IClock _clock;
+    private readonly IMonotonicClock _clock;
     private readonly ITimerService _timer;
     private readonly IUiDispatcher _dispatcher;
     private ActiveCountdown? _active;
@@ -23,7 +23,7 @@ public sealed class SafeSwitchCoordinator : ISafetyCountdownCoordinator
 
     public SafeSwitchCoordinator(IInternetLossConfirmationService confirmation,
         ISafetyCountdownDialogService dialogs, IAppSettingsRepository settings,
-        IRecoveryRestoreService restore, IClock clock, ITimerService timer, IUiDispatcher dispatcher)
+        IRecoveryRestoreService restore, IMonotonicClock clock, ITimerService timer, IUiDispatcher dispatcher)
     {
         ArgumentNullException.ThrowIfNull(confirmation);
         ArgumentNullException.ThrowIfNull(dialogs);
@@ -106,13 +106,15 @@ public sealed class SafeSwitchCoordinator : ISafetyCountdownCoordinator
             {
                 return new(SafeSwitchStatus.NoChange, PreferenceSaveFailed: preferenceSaveFailed);
             }
-            if (applied != SafeSwitchApplyResult.Applied)
+            if (applied is not (SafeSwitchApplyResult.Applied or SafeSwitchApplyResult.AppliedUnverified))
             {
                 return new(SafeSwitchStatus.ApplyFailed, Strings.SafeSwitchApplyFailed,
                     PreferenceSaveFailed: preferenceSaveFailed);
             }
 
-            using SafetyCountdownViewModel viewModel = new(request, _clock, _timer);
+            // An unverified mutation may still have changed the network, so it is protected too.
+            bool unverified = applied == SafeSwitchApplyResult.AppliedUnverified;
+            using SafetyCountdownViewModel viewModel = new(request, _clock, _timer, unverified);
             ActiveCountdown active = new(viewModel);
             _active = active;
             // Once apply succeeded, caller cancellation must restore rather than abandon protection.
@@ -135,7 +137,7 @@ public sealed class SafeSwitchCoordinator : ISafetyCountdownCoordinator
                 outcome = decision == SafetyCountdownDecision.Keep
                     ? new(SafeSwitchStatus.Kept)
                     : await RestoreAsync(request);
-                outcome = outcome with { PreferenceSaveFailed = preferenceSaveFailed };
+                outcome = outcome with { PreferenceSaveFailed = preferenceSaveFailed, Unverified = unverified };
                 active.Outcome.TrySetResult(outcome);
             }
             finally
@@ -165,17 +167,44 @@ public sealed class SafeSwitchCoordinator : ISafetyCountdownCoordinator
             ActiveCountdown? active = _active;
             if (active is null)
             {
-                return Volatile.Read(ref _running) == 0;
+                if (Volatile.Read(ref _running) == 0)
+                {
+                    return true;
+                }
+                // Applying cannot be interrupted safely; say so instead of ignoring the request.
+                await _dialogs.ShowExitDeferredAsync(cancellationToken);
+                return false;
             }
             if (!active.ViewModel.Decision.IsCompleted)
             {
-                SafeSwitchExitDecision choice = await _dialogs.ConfirmExitAsync(cancellationToken);
+                SafetyCountdownViewModel countdown = active.ViewModel;
+                SafeSwitchExitDecision choice;
+                // The deadline must not decide for the user while the exit question is open.
+                countdown.Pause();
+                try
+                {
+                    choice = await _dialogs.ConfirmExitAsync(cancellationToken);
+                }
+                finally
+                {
+                    countdown.Resume();
+                }
                 if (choice == SafeSwitchExitDecision.Cancel)
                 {
                     return false;
                 }
-                active.ViewModel.Complete(choice == SafeSwitchExitDecision.Keep
-                    ? SafetyCountdownDecision.Keep : SafetyCountdownDecision.Revert);
+                SafetyCountdownDecision requested = choice == SafeSwitchExitDecision.Keep
+                    ? SafetyCountdownDecision.Keep : SafetyCountdownDecision.Revert;
+                if (!countdown.Complete(requested))
+                {
+                    // Something else (e.g. a lost adapter) decided while the question was open.
+                    // Exit only if that matches the user's choice; otherwise the window stays so
+                    // the real result banner is visible.
+                    SafetyCountdownDecision actual = await countdown.Decision;
+                    await active.Outcome.Task;
+                    return actual == requested ||
+                        (requested == SafetyCountdownDecision.Revert && actual == SafetyCountdownDecision.TimedOut);
+                }
             }
             // Restore failures remain available through RunAsync for the result banner before exiting.
             await active.Outcome.Task;

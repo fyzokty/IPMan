@@ -603,4 +603,8 @@
   <data name="ExamplePrimaryDns" xml:space="preserve"><value>8.8.8.8</value></data>
   <data name="ExampleSecondaryDns" xml:space="preserve"><value>1.1.1.1</value></data>
   <data name="ProfileEditorDeviceShortLabel" xml:space="preserve"><value>Cihazın adresi</value></data>
+  <data name="SafeSwitchUnverifiedCountdownTitle" xml:space="preserve"><value>{0} ayarı uygulandı ama doğrulanamadı</value></data>
+  <data name="SafeSwitchKeptUnverified" xml:space="preserve"><value>{0} ayarı korundu ama doğrulanamadı. Bağlantı bilgilerini kontrol edin; gerekirse son değişikliği geri alın.</value></data>
+  <data name="SafeSwitchExitDeferred" xml:space="preserve"><value>Ayar uygulanıyor. Bitince yeniden deneyin.</value></data>
+  <data name="DetailsUnverifiedTitleFormat" xml:space="preserve"><value>{0} ayarı uygulandı ama doğrulanamadı.</value></data>
 </root>

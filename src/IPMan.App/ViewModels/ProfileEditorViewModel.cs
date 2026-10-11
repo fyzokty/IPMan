@@ -19,6 +19,9 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     private readonly Ipv4AddressSuggestionService _suggestions;
     private readonly IDelayProvider _delay;
     private readonly string? _currentGateway;
+    private readonly string? _currentAddress;
+    private readonly string? _currentSubnetMask;
+    private string? _formGatewayExclusion;
     private readonly HashSet<string> _touched = new(StringComparer.Ordinal);
     private NetworkProfile? _profile;
     private CancellationTokenSource? _suggestionCancellation;
@@ -75,13 +78,16 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
 
     public ProfileEditorViewModel(IProfileCatalog catalog,
         IStaticIpv4ConfigurationValidator validator, Ipv4AddressSuggestionService suggestions,
-        IDelayProvider delay, NetworkProfile? profile = null, string? currentGateway = null)
+        IDelayProvider delay, NetworkProfile? profile = null, string? currentGateway = null,
+        string? currentAddress = null, string? currentSubnetMask = null)
     {
         _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
         _validator = validator ?? throw new ArgumentNullException(nameof(validator));
         _suggestions = suggestions ?? throw new ArgumentNullException(nameof(suggestions));
         _delay = delay ?? throw new ArgumentNullException(nameof(delay));
         _currentGateway = currentGateway;
+        _currentAddress = currentAddress;
+        _currentSubnetMask = currentSubnetMask;
         _profile = profile;
         _loading = true;
         if (profile is not null)
@@ -95,6 +101,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
             SecondaryDns = profile.SecondaryDns ?? string.Empty;
         }
         _loading = false;
+        _formGatewayExclusion = NormalizeGateway(Gateway);
         _savedValues = CurrentValues();
         Validate();
     }
@@ -128,6 +135,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         PrimaryDns = values.PrimaryDns;
         SecondaryDns = values.SecondaryDns;
         _loading = false;
+        _formGatewayExclusion = NormalizeGateway(Gateway);
         Validate();
         OnPropertyChanged(nameof(IsDirty));
     }
@@ -331,6 +339,13 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     partial void OnGatewayChanged(string value)
     {
         Edited(nameof(Gateway));
+        // Only a change of the valid gateway alters the excluded address; typing does not.
+        string? exclusion = NormalizeGateway(value);
+        if (!_loading && !string.Equals(exclusion, _formGatewayExclusion, StringComparison.Ordinal))
+        {
+            _formGatewayExclusion = exclusion;
+            RestartSuggestion();
+        }
     }
     partial void OnPrimaryDnsChanged(string value)
     {
@@ -346,17 +361,23 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         CancelSuggestion();
         Suggestion = null;
         if (_disposed || !IsStatic || string.IsNullOrWhiteSpace(DeviceAddress) ||
-            Ipv4AddressSuggestionService.GenerateCandidates(DeviceAddress, _currentGateway).Count == 0) return;
+            Ipv4AddressSuggestionService.GenerateCandidates(DeviceAddress, ExcludedAddresses()).Count == 0) return;
         _suggestionCancellation = new();
-        SuggestionTask = UpdateSuggestionAsync(DeviceAddress, _suggestionCancellation.Token);
+        SuggestionTask = UpdateSuggestionAsync(new(DeviceAddress, ExcludedAddresses(), _currentAddress,
+            _currentSubnetMask), _suggestionCancellation.Token);
     }
 
-    private async Task UpdateSuggestionAsync(string deviceAddress, CancellationToken cancellationToken)
+    private string?[] ExcludedAddresses() => [_currentGateway, _formGatewayExclusion];
+
+    private string? NormalizeGateway(string value) => string.IsNullOrWhiteSpace(value) ? null :
+        _validator.Validate(new(value, "255.255.255.255", null, null, null)).NormalizedConfiguration?.Ipv4Address;
+
+    private async Task UpdateSuggestionAsync(Ipv4AddressSuggestionRequest request, CancellationToken cancellationToken)
     {
         try
         {
             await _delay.DelayAsync(SuggestionDebounce, cancellationToken);
-            Ipv4AddressSuggestion? suggestion = await _suggestions.SuggestAsync(deviceAddress, _currentGateway, cancellationToken);
+            Ipv4AddressSuggestion? suggestion = await _suggestions.SuggestAsync(request, cancellationToken);
             if (!cancellationToken.IsCancellationRequested && !_disposed) Suggestion = suggestion;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { }
@@ -364,7 +385,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         {
             if (!cancellationToken.IsCancellationRequested && !_disposed)
             {
-                IReadOnlyList<string> candidates = Ipv4AddressSuggestionService.GenerateCandidates(deviceAddress, _currentGateway);
+                IReadOnlyList<string> candidates = Ipv4AddressSuggestionService.GenerateCandidates(
+                    request.DeviceAddress, request.ExcludedAddresses);
                 string? candidate = candidates.Count == 0 ? null : candidates[0];
                 Suggestion = candidate is null ? null : new(candidate, Ipv4AddressSuggestionStatus.Unverified);
             }

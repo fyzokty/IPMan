@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Threading;
+using IPMan.App.Resources;
 using IPMan.App.Services;
 using IPMan.App.ViewModels;
 using IPMan.App.Views;
@@ -10,10 +11,9 @@ namespace IPMan.App.Presentation;
 public sealed class WpfSafeSwitchDialogService(Dispatcher dispatcher, WindowsThemeService theme,
     Func<InternetLossConfirmationViewModel, InternetLossConfirmationWindow> confirmationFactory,
     Func<SafetyCountdownViewModel, SafetyCountdownWindow> countdownFactory,
-    Func<SafeSwitchExitWindow> exitFactory) : IInternetLossConfirmationService, ISafetyCountdownDialogService
+    Func<SafeSwitchExitWindow> exitFactory, Action<string>? notify = null)
+    : IInternetLossConfirmationService, ISafetyCountdownDialogService
 {
-    private SafetyCountdownWindow? _countdownWindow;
-
     public async Task<InternetLossConfirmationResult> ConfirmAsync(InternetLossConfirmationViewModel viewModel,
         CancellationToken cancellationToken)
     {
@@ -46,7 +46,6 @@ public sealed class WpfSafeSwitchDialogService(Dispatcher dispatcher, WindowsThe
                 // An independent topmost window stays visible when the shell hides to the tray.
                 // AdapterActionsViewModel keeps mutations disabled until this task completes.
                 DialogWindowPlacement.Prepare(window, null);
-                _countdownWindow = window;
                 window.Show();
             });
             await viewModel.Decision;
@@ -57,7 +56,6 @@ public sealed class WpfSafeSwitchDialogService(Dispatcher dispatcher, WindowsThe
             await dispatcher.InvokeAsync(() =>
             {
                 window?.Close();
-                _countdownWindow = null;
             });
         }
     }
@@ -68,16 +66,22 @@ public sealed class WpfSafeSwitchDialogService(Dispatcher dispatcher, WindowsThe
         {
             cancellationToken.ThrowIfCancellationRequested();
             SafeSwitchExitWindow window = exitFactory();
+            // Never owned by the countdown window: closing the countdown must not close this question.
             Prepare(window);
-            if (_countdownWindow is { IsVisible: true } countdown)
-            {
-                window.Owner = countdown;
-            }
             using CancellationTokenRegistration registration = cancellationToken.Register(() =>
                 dispatcher.BeginInvoke(window.Close));
             window.ShowDialog();
             cancellationToken.ThrowIfCancellationRequested();
             return window.Decision;
+        });
+    }
+
+    public async Task ShowExitDeferredAsync(CancellationToken cancellationToken)
+    {
+        await dispatcher.InvokeAsync(() =>
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            notify?.Invoke(Strings.SafeSwitchExitDeferred);
         });
     }
 

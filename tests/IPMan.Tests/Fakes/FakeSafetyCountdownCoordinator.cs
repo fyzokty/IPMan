@@ -14,18 +14,20 @@ public sealed class FakeSafetyCountdownCoordinator : ISafetyCountdownCoordinator
     public TaskCompletionSource<SafeSwitchOutcome>? PendingOutcome { get; set; }
     public bool ExitApproved { get; set; }
     public int ExitRequests { get; private set; }
+    public CancellationToken LastToken { get; private set; }
 
     public async Task<SafeSwitchOutcome> RunAsync(SafeSwitchRequest request,
         Func<CancellationToken, Task<SafeSwitchApplyResult>> applyAsync, CancellationToken cancellationToken)
     {
         Requests.Add(request);
+        LastToken = cancellationToken;
         if (SkipApply)
         {
             return Outcome;
         }
         SafeSwitchApplyResult applied = await applyAsync(cancellationToken);
         ApplyResults.Add(applied);
-        if (applied != SafeSwitchApplyResult.Applied)
+        if (applied is not (SafeSwitchApplyResult.Applied or SafeSwitchApplyResult.AppliedUnverified))
         {
             return new(applied == SafeSwitchApplyResult.NoChange ? SafeSwitchStatus.NoChange : SafeSwitchStatus.ApplyFailed);
         }

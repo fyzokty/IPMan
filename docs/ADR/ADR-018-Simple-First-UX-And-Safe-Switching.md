@@ -37,7 +37,7 @@ Show a confirmation modal prior to switching only when the mutation is likely to
 Following every successful UI-initiated network mutation (profile switch, manual apply, or DHCP reset, whether triggered from the window or the system tray):
 - A topmost dialog displays a 15-second radial progress countdown: *"Saha PLC ayarına geçildi — Her şey yolunda mı? Yanıt vermezseniz 15 saniye sonra eski ayara (Ofis) otomatik dönülecek."*
 - Actions: "Hayır, geri al" (revert immediately) and "Evet, böyle kalsın" (confirm and dismiss).
-- **Timer location:** The countdown timer resides in an App layer view-model coordinator service (`ISafetyCountdownCoordinator` / `SafetyCountdownViewModel`) injected with a deterministic time abstraction (`ISystemClock` / `ITimerService`) to ensure fully deterministic testing with fakes.
+- **Timer location:** The countdown timer resides in an App layer view-model coordinator service (`ISafetyCountdownCoordinator` / `SafetyCountdownViewModel`) injected with a deterministic time abstraction (`IMonotonicClock` / `ITimerService`) to ensure fully deterministic testing with fakes. The deadline is measured on a monotonic clock so wall-clock adjustments cannot stall or shorten the countdown.
 - **Revert logic:** Timeout or clicking "Hayır, geri al" invokes the pre-mutation snapshot restore workflow via `RecoveryRestoreService` (ADR-016).
 - **Mutation lock:** The cross-process mutation lock (ADR-014) is acquired during both the initial apply and the restore operation.
 - **App exit during countdown:** Attempting to close the window or exit from tray while the countdown is active prompts the user whether to keep the new settings or revert before exiting.

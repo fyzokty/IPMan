@@ -16,7 +16,7 @@ Kullanıcının internet erişimini kesebilecek geçişlerde önceden uyarılmas
 - Geri alma mantığı: Süre dolduğunda veya "Hayır, geri al" seçildiğinde ADR-016 pre-mutation anlık görüntüsünün `RecoveryRestoreService` üzerinden geri yüklenmesi; mutasyon kilidinin (ADR-014) korunması
 - Sayaç açıkken uygulama kapatılmak istendiğinde kullanıcıya ayarın saklanması mı yoksa geri mi alınması gerektiğinin sorulması
 - Geri alma başarısız olursa paniğe sevk etmeyen, sonraki adımı gösteren hata bandı sunulması
-- Zamanlayıcı mimarisi: App katmanında zamanlayıcı soyutlaması (`ISystemClock` / `ITimerService`) kullanılarak birim testlerde sahte nesnelerle (`FakeClock`, `FakeTimer`) deterministik test edilebilmesi; 1.0 sürümünde sayacın zorunlu olması
+- Zamanlayıcı mimarisi: App katmanında zamanlayıcı soyutlaması (`IMonotonicClock` / `ITimerService`) kullanılarak birim testlerde sahte nesnelerle (`FakeClock`, `FakeTimer`) deterministik test edilebilmesi; 1.0 sürümünde sayacın zorunlu olması
 
 ## Bitti sayılır
 - [x] İnternet kesilme kuralı sağlandığında onay diyaloğu açılıyor; "Bir daha sorma" seçildiğinde ayar saklanıyor ve tekrar sormuyor
