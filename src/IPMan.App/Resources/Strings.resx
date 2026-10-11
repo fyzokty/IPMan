@@ -312,12 +312,6 @@
   <data name="TrayApplicationVersion" xml:space="preserve">
     <value>IPMan — Sürüm {0}</value>
   </data>
-  <data name="TrayOpen" xml:space="preserve">
-    <value>Aç</value>
-  </data>
-  <data name="TrayExit" xml:space="preserve">
-    <value>Çıkış</value>
-  </data>
   <data name="TrayPreferenceTitle" xml:space="preserve">
     <value>Tepsi davranışı</value>
   </data>
@@ -688,4 +682,10 @@
   <data name="DetailsMaskExample" xml:space="preserve"><value>Örnek: 255.255.255.0</value></data>
   <data name="DetailsMutationRejected" xml:space="preserve"><value>Windows yeni ayarları kabul etmedi.</value></data>
   <data name="DetailsPartialExplanation" xml:space="preserve"><value>Ayarların tümü uygulanamadı.</value></data>
+  <data name="TraySwitch" xml:space="preserve"><value>Ayara geç</value></data>
+  <data name="TrayMoreSettings" xml:space="preserve"><value>Diğer ayarlar…</value></data>
+  <data name="TrayUndo" xml:space="preserve"><value>Son değişikliği geri al</value></data>
+  <data name="TrayOpen" xml:space="preserve"><value>IPMan'i aç</value></data>
+  <data name="TrayExit" xml:space="preserve"><value>Çıkış</value></data>
+  <data name="TrayCurrentStatus" xml:space="preserve"><value>Şu an: {0} · {1}</value></data>
 </root>

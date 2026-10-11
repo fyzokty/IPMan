@@ -332,6 +332,15 @@ public static class Strings
 
     public static string TrayExit => Get(nameof(TrayExit));
 
+    public static string TraySwitch => Get(nameof(TraySwitch));
+
+    public static string TrayMoreSettings => Get(nameof(TrayMoreSettings));
+
+    public static string TrayUndo => Get(nameof(TrayUndo));
+
+    public static string FormatTrayCurrentStatus(string name, string status) =>
+        Format(Get("TrayCurrentStatus"), CultureInfo.CurrentCulture, name, status);
+
     public static string TrayPreferenceTitle => Get(nameof(TrayPreferenceTitle));
 
     public static string TrayPreferenceMessage => Get(nameof(TrayPreferenceMessage));
