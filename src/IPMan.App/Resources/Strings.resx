@@ -686,4 +686,48 @@
   <data name="ProfileEditorSaveCancelled" xml:space="preserve"><value>Kayıt iptal edildi. Ağınız değişmedi. Yeniden kaydedebilirsiniz.</value></data>
   <data name="ProfileEditorDiscardTitle" xml:space="preserve"><value>Kaydedilmemiş değişiklikler</value></data>
   <data name="ProfileEditorDiscardMessage" xml:space="preserve"><value>Değişiklikler kaydedilmedi. Çıkılsın mı?</value></data>
+
+  <!-- Details page -->
+  <data name="DetailsBack" xml:space="preserve"><value>← Geri</value></data>
+  <data name="DetailsCurrentSettings" xml:space="preserve"><value>Şu anki ayarlar</value></data>
+  <data name="DetailsAutomatic" xml:space="preserve"><value>Otomatik</value></data>
+  <data name="DetailsStatic" xml:space="preserve"><value>Sabit</value></data>
+  <data name="DetailsAddressMode" xml:space="preserve"><value>Adres modu</value></data>
+  <data name="DetailsChanged" xml:space="preserve"><value>değişecek</value></data>
+  <data name="DetailsEmpty" xml:space="preserve"><value>boş</value></data>
+  <data name="DetailsCurrentFormat" xml:space="preserve"><value>şu an: {0}</value></data>
+  <data name="DetailsChangeCountFormat" xml:space="preserve"><value>{0} değişiklik</value></data>
+  <data name="DetailsNoChanges" xml:space="preserve"><value>Değişiklik yok</value></data>
+  <data name="DetailsAddress" xml:space="preserve"><value>Bilgisayarın adresi</value></data>
+  <data name="DetailsMask" xml:space="preserve"><value>Alt ağ maskesi</value></data>
+  <data name="DetailsGateway" xml:space="preserve"><value>Ağ geçidi (modem adresi)</value></data>
+  <data name="DetailsPrimaryDns" xml:space="preserve"><value>Birinci DNS</value></data>
+  <data name="DetailsSecondaryDns" xml:space="preserve"><value>İkinci DNS</value></data>
+  <data name="DetailsAdvanced" xml:space="preserve"><value>Gelişmiş ayarlar ve bağdaştırıcı bilgisi</value></data>
+  <data name="DetailsDns" xml:space="preserve"><value>DNS (alan adı sunucuları)</value></data>
+  <data name="DetailsConnectionInfo" xml:space="preserve"><value>Bağlantı bilgileri</value></data>
+  <data name="DetailsHardware" xml:space="preserve"><value>Donanım adı</value></data>
+  <data name="DetailsMac" xml:space="preserve"><value>MAC adresi</value></data>
+  <data name="DetailsSpeed" xml:space="preserve"><value>Bağlantı hızı</value></data>
+  <data name="DetailsCopy" xml:space="preserve"><value>Bilgileri kopyala</value></data>
+  <data name="DetailsPing" xml:space="preserve"><value>Modeme ulaşılıyor mu?</value></data>
+  <data name="DetailsFlush" xml:space="preserve"><value>DNS önbelleğini temizle</value></data>
+  <data name="DetailsRenew" xml:space="preserve"><value>Adresi yenile</value></data>
+  <data name="DetailsRestore" xml:space="preserve"><value>Son değişikliği geri al</value></data>
+  <data name="DetailsSave" xml:space="preserve"><value>Ayar olarak kaydet</value></data>
+  <data name="DetailsCancel" xml:space="preserve"><value>Vazgeç</value></data>
+  <data name="DetailsApply" xml:space="preserve"><value>Uygula</value></data>
+  <data name="DetailsRetry" xml:space="preserve"><value>Tekrar dene</value></data>
+  <data name="DetailsTechnical" xml:space="preserve"><value>Ayrıntılar</value></data>
+  <data name="DetailsDismiss" xml:space="preserve"><value>Kapat</value></data>
+  <data name="DetailsInternet" xml:space="preserve"><value>Bağlı · İnternet çalışıyor</value></data>
+  <data name="DetailsFailureTitleFormat" xml:space="preserve"><value>{0} ayarına geçilemedi.</value></data>
+  <data name="DetailsUnchangedFormat" xml:space="preserve"><value>Ağınız değişmedi, {0} ile devam ediyorsunuz.</value></data>
+  <data name="DetailsUncertain" xml:space="preserve"><value>Ağın son durumu doğrulanamadı. Bağlantı bilgilerini kontrol edin; gerekirse son değişikliği geri alın.</value></data>
+  <data name="DetailsPartial" xml:space="preserve"><value>Ayarların bir kısmı değişmiş olabilir. Bağlantı bilgilerini kontrol edin; gerekirse son değişikliği geri alın.</value></data>
+  <data name="DetailsModeCurrentFormat" xml:space="preserve"><value>şu an: {0}</value></data>
+  <data name="DetailsValidationExample" xml:space="preserve"><value>Örnek: 192.168.1.50</value></data>
+  <data name="DetailsMaskExample" xml:space="preserve"><value>Örnek: 255.255.255.0</value></data>
+  <data name="DetailsMutationRejected" xml:space="preserve"><value>Windows yeni ayarları kabul etmedi.</value></data>
+  <data name="DetailsPartialExplanation" xml:space="preserve"><value>Ayarların tümü uygulanamadı.</value></data>
 </root>

@@ -578,6 +578,56 @@ public static class Strings
 
     public static string DraftDifferentHint => Get(nameof(DraftDifferentHint));
 
+    // Details page
+    public static string DetailsBack => Get(nameof(DetailsBack));
+    public static string DetailsCurrentSettings => Get(nameof(DetailsCurrentSettings));
+    public static string DetailsAutomatic => Get(nameof(DetailsAutomatic));
+    public static string DetailsStatic => Get(nameof(DetailsStatic));
+    public static string DetailsAddressMode => Get(nameof(DetailsAddressMode));
+    public static string DetailsChanged => Get(nameof(DetailsChanged));
+    public static string DetailsEmpty => Get(nameof(DetailsEmpty));
+    public static string DetailsCurrentFormat => Get(nameof(DetailsCurrentFormat));
+    public static string DetailsChangeCountFormat => Get(nameof(DetailsChangeCountFormat));
+    public static string DetailsNoChanges => Get(nameof(DetailsNoChanges));
+    public static string DetailsAddress => Get(nameof(DetailsAddress));
+    public static string DetailsMask => Get(nameof(DetailsMask));
+    public static string DetailsGateway => Get(nameof(DetailsGateway));
+    public static string DetailsPrimaryDns => Get(nameof(DetailsPrimaryDns));
+    public static string DetailsSecondaryDns => Get(nameof(DetailsSecondaryDns));
+    public static string DetailsAdvanced => Get(nameof(DetailsAdvanced));
+    public static string DetailsDns => Get(nameof(DetailsDns));
+    public static string DetailsConnectionInfo => Get(nameof(DetailsConnectionInfo));
+    public static string DetailsHardware => Get(nameof(DetailsHardware));
+    public static string DetailsMac => Get(nameof(DetailsMac));
+    public static string DetailsSpeed => Get(nameof(DetailsSpeed));
+    public static string DetailsCopy => Get(nameof(DetailsCopy));
+    public static string DetailsPing => Get(nameof(DetailsPing));
+    public static string DetailsFlush => Get(nameof(DetailsFlush));
+    public static string DetailsRenew => Get(nameof(DetailsRenew));
+    public static string DetailsRestore => Get(nameof(DetailsRestore));
+    public static string DetailsSave => Get(nameof(DetailsSave));
+    public static string DetailsCancel => Get(nameof(DetailsCancel));
+    public static string DetailsApply => Get(nameof(DetailsApply));
+    public static string DetailsRetry => Get(nameof(DetailsRetry));
+    public static string DetailsTechnical => Get(nameof(DetailsTechnical));
+    public static string DetailsDismiss => Get(nameof(DetailsDismiss));
+    public static string DetailsInternet => Get(nameof(DetailsInternet));
+    public static string DetailsFailureTitleFormat => Get(nameof(DetailsFailureTitleFormat));
+    public static string DetailsUnchangedFormat => Get(nameof(DetailsUnchangedFormat));
+    public static string DetailsUncertain => Get(nameof(DetailsUncertain));
+    public static string DetailsPartial => Get(nameof(DetailsPartial));
+    public static string DetailsModeCurrentFormat => Get(nameof(DetailsModeCurrentFormat));
+
+    public static string DetailsValidationExample => Get(nameof(DetailsValidationExample));
+    public static string DetailsMaskExample => Get(nameof(DetailsMaskExample));
+    public static string DetailsMutationRejected => Get(nameof(DetailsMutationRejected));
+    public static string DetailsPartialExplanation => Get(nameof(DetailsPartialExplanation));
+    public static string FormatDetailsCurrent(string value) => Format(DetailsCurrentFormat, CultureInfo.CurrentCulture, value);
+    public static string FormatDetailsChangeCount(int value) => Format(DetailsChangeCountFormat, CultureInfo.CurrentCulture, value);
+    public static string FormatDetailsModeCurrent(string value) => Format(DetailsModeCurrentFormat, CultureInfo.CurrentCulture, value);
+    public static string FormatDetailsFailureTitle(string value) => Format(DetailsFailureTitleFormat, CultureInfo.CurrentCulture, value);
+    public static string FormatDetailsUnchanged(string value) => Format(DetailsUnchangedFormat, CultureInfo.CurrentCulture, value);
+
     private static string Get(string name) =>
         Manager.GetString(name, CultureInfo.CurrentUICulture) ?? name;
 
