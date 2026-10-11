@@ -52,6 +52,4 @@ Priorities:
 
 ## Design implication
 
-The UI must serve expert speed without requiring expert knowledge.
-Advanced information may be visible, but the primary workflow must remain
-simple.
+P1 is the primary user: the default path must work for P1 without help, using plain language, safe defaults, direct application, and a safety net after every change. Speed for technicians and power users (P2–P4) is preserved through the compact list view, instant search, starred favorites, system tray switching, and folded Gelişmiş (advanced) sections (ADR-018).

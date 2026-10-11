@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IPMan - Geçiş Onayı</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            winbg: '#f3f3f3',
+            winborder: '#e5e5e5',
+            accent: '#0F6CBD',
+            accentHover: '#0b589a',
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    }
+    .material-symbols-outlined.fill-1 {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+    }
+  </style>
+</head>
+<body class="bg-[#1e1e1e]/60 min-h-screen flex items-center justify-center p-4 antialiased">
+
+  <!-- Desktop App Window (1000x680) -->
+  <div class="relative w-[1000px] h-[680px] bg-[#fbfbfb] rounded-[10px] shadow-2xl border border-black/10 flex flex-col overflow-hidden text-[#1f1f1f]">
+    
+    <!-- Window Title Bar -->
+    <div class="h-9 bg-[#f3f3f3] border-b border-[#e5e5e5] flex items-center justify-between px-3.5 select-none shrink-0">
+      <div class="flex items-center gap-2.5">
+        <div class="w-4 h-4 rounded text-accent flex items-center justify-center">
+          <span class="material-symbols-outlined text-[17px] text-[#0F6CBD]">lan</span>
+        </div>
+        <span class="text-xs font-semibold text-[#3b3b3b] tracking-tight">IPMan</span>
+      </div>
+      <!-- Windows Window Controls -->
+      <div class="flex items-center">
+        <button class="w-10 h-9 inline-flex items-center justify-center hover:bg-[#e6e6e6] text-[#555] transition-colors">
+          <span class="material-symbols-outlined text-[15px]">minimize</span>
+        </button>
+        <button class="w-10 h-9 inline-flex items-center justify-center hover:bg-[#e6e6e6] text-[#555] transition-colors">
+          <span class="material-symbols-outlined text-[14px]">check_box_outline_blank</span>
+        </button>
+        <button class="w-10 h-9 inline-flex items-center justify-center hover:bg-[#c42b1c] hover:text-white text-[#555] transition-colors">
+          <span class="material-symbols-outlined text-[16px]">close</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Window Body (Blurred/Dimmed Background) -->
+    <div class="relative flex-1 p-7 overflow-hidden flex flex-col bg-[#f8f9fa]">
+      
+      <!-- Top Bar: Header & Connection Switcher -->
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-[22px] font-bold text-[#1a1a1a] tracking-tight">Ağ ayarları</h1>
+        
+        <!-- Connection selector pill -->
+        <div class="flex items-center gap-2 bg-white border border-[#e5e5e5] px-3.5 py-1.5 rounded-lg text-[13px] text-[#333] shadow-sm">
+          <span class="material-symbols-outlined text-[17px] text-[#555]">sync_alt</span>
+          <span class="font-medium text-[#555]">Bağlantı:</span>
+          <span class="font-semibold text-[#1a1a1a]">Kablolu (Ethernet)</span>
+          <span class="material-symbols-outlined text-[16px] text-[#777]">expand_more</span>
+        </div>
+      </div>
+
+      <!-- Current Status Card -->
+      <div class="bg-white border border-[#e2e4e8] rounded-xl p-4 mb-6 shadow-sm flex items-center justify-between">
+        <div class="flex items-center gap-3.5">
+          <div class="w-9 h-9 rounded-full bg-[#ecfdf3] text-[#12b76a] flex items-center justify-center shrink-0 border border-[#bcf0da]">
+            <span class="material-symbols-outlined text-[20px] font-bold">check</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-[15px] font-bold text-[#1f1f1f]">Şu an: Ofis ağındasınız</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-[#12b76a]"></span>
+              <span class="text-[13px] text-[#666]">Kablolu bağlantı</span>
+              <span class="text-[13px] text-[#999]">·</span>
+              <span class="text-[13px] text-[#12b76a] font-medium">İnternet çalışıyor</span>
+            </div>
+            <p class="text-[13px] text-[#777] font-mono mt-0.5">Aktif adres: 192.168.10.25</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-1 text-[13px] font-semibold text-accent">
+          <span>Ayrıntılar ve elle ayar</span>
+          <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+        </div>
+      </div>
+
+      <!-- Section Title & Search/View Controls -->
+      <div class="flex items-center justify-between mb-3.5">
+        <h2 class="text-[15px] font-bold text-[#1f1f1f]">Hangi ağa geçmek istiyorsunuz?</h2>
+        <div class="flex items-center gap-2">
+          <div class="relative w-48">
+            <input type="text" placeholder="Ara..." class="w-full bg-white border border-[#e5e5e5] rounded-md pl-7 pr-2.5 py-1 text-[12px] text-[#333] placeholder-[#999]" readonly>
+            <span class="material-symbols-outlined text-[14px] text-[#888] absolute left-2 top-1.5">search</span>
+          </div>
+          <div class="flex bg-[#ebebeb] p-0.5 rounded-md border border-[#e0e0e0]">
+            <div class="px-2.5 py-0.5 text-[12px] font-medium rounded bg-white text-[#1f1f1f] shadow-xs flex items-center gap-1">
+              <span class="material-symbols-outlined text-[13px]">grid_view</span>
+              <span>Kart</span>
+            </div>
+            <div class="px-2.5 py-0.5 text-[12px] font-medium text-[#666] flex items-center gap-1">
+              <span class="material-symbols-outlined text-[13px]">view_list</span>
+              <span>Liste</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Cards Grid -->
+      <div class="grid grid-cols-3 gap-3.5">
+        <!-- Card 1: Otomatik -->
+        <div class="bg-white border border-[#e5e5e5] rounded-lg p-3.5 flex flex-col justify-between shadow-2xs">
+          <div>
+            <div class="flex items-start justify-between mb-2">
+              <h3 class="font-bold text-[14px] text-[#1f1f1f]">Otomatik</h3>
+              <span class="text-[11px] bg-[#eff6ff] text-[#0F6CBD] font-semibold px-2 py-0.5 rounded-full">Çoğu ağ için önerilir</span>
+            </div>
+            <p class="text-[12px] text-[#666] mb-4">Adresi ağ kendisi verir</p>
+          </div>
+          <div class="h-8 border border-[#e0e0e0] rounded-md text-[13px] font-medium text-[#333] flex items-center justify-center">
+            Bu ağa geç
+          </div>
+        </div>
+
+        <!-- Card 2: Ofis (Active) -->
+        <div class="bg-white border-2 border-accent rounded-lg p-3.5 flex flex-col justify-between shadow-xs">
+          <div>
+            <div class="flex items-start justify-between mb-1.5">
+              <div class="flex items-center gap-1.5">
+                <h3 class="font-bold text-[14px] text-[#1f1f1f]">Ofis</h3>
+                <span class="inline-flex items-center gap-1 bg-[#ecfdf3] text-[#12b76a] text-[11px] font-semibold px-1.5 py-0.5 rounded">
+                  <span class="w-1.5 h-1.5 rounded-full bg-[#12b76a]"></span> Şu an kullanılıyor
+                </span>
+              </div>
+              <span class="material-symbols-outlined text-[18px] text-[#f59e0b] fill-1">star</span>
+            </div>
+            <p class="text-[12px] text-[#666] mb-4">Sabit adres <span class="font-mono text-[#1a1a1a] font-semibold">192.168.10.25</span></p>
+          </div>
+          <div class="h-8 bg-[#f5f5f5] rounded-md text-[13px] font-semibold text-[#12b76a] flex items-center justify-center gap-1">
+            <span class="material-symbols-outlined text-[15px]">check</span> Etkin
+          </div>
+        </div>
+
+        <!-- Card 3: Saha PLC (Target) -->
+        <div class="bg-white border border-[#e5e5e5] rounded-lg p-3.5 flex flex-col justify-between shadow-2xs">
+          <div>
+            <div class="flex items-start justify-between mb-1.5">
+              <h3 class="font-bold text-[14px] text-[#1f1f1f]">Saha PLC</h3>
+              <span class="material-symbols-outlined text-[18px] text-[#f59e0b] fill-1">star</span>
+            </div>
+            <p class="text-[12px] text-[#666] mb-4">Sabit adres <span class="font-mono text-[#1a1a1a] font-semibold">192.168.0.50</span></p>
+          </div>
+          <div class="h-8 bg-accent text-white rounded-md text-[13px] font-semibold flex items-center justify-center">
+            Bu ağa geç
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MODAL OVERLAY BACKDROP -->
+    <div class="absolute inset-0 bg-black/35 backdrop-blur-[2px] flex items-center justify-center p-4 z-50">
+      
+      <!-- Windows 11 Fluent Modal Dialog (width: 480px) -->
+      <div class="w-[480px] bg-white rounded-xl shadow-[0_20px_50px_rgba(0,0,0,0.22),0_4px_12px_rgba(0,0,0,0.08)] border border-[#e0e0e0] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+        
+        <!-- Dialog Content Container -->
+        <div class="p-6">
+          
+          <!-- Dialog Header -->
+          <div class="flex items-start justify-between mb-4">
+            <h3 class="text-[18px] font-bold text-[#1f1f1f] leading-snug">
+              Saha PLC ayarına geçilsin mi?
+            </h3>
+            <button class="w-7 h-7 -mr-1.5 -mt-1 rounded-md flex items-center justify-center text-[#737373] hover:bg-[#f0f0f0] hover:text-[#111] transition-colors" title="Kapat">
+              <span class="material-symbols-outlined text-[18px]">close</span>
+            </button>
+          </div>
+
+          <!-- Light Grey Box with Before/After Rows -->
+          <div class="bg-[#f7f8f9] border border-[#e6e8eb] rounded-lg p-3.5 mb-3.5 space-y-2.5 text-[14px]">
+            <!-- Row 1: Bilgisayarınızın adresi -->
+            <div class="flex items-center justify-between">
+              <span class="text-[#595959] font-medium">Bilgisayarınızın adresi</span>
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-[13px] text-[#6e6e6e]">192.168.10.25</span>
+                <span class="text-[#8c8c8c] text-[13px]">→</span>
+                <span class="font-mono text-[13px] font-bold text-accent bg-[#e8f2fc] px-2 py-0.5 rounded border border-[#cbe1f7]">
+                  192.168.0.50
+                </span>
+              </div>
+            </div>
+
+            <!-- Subtle Divider -->
+            <div class="border-t border-[#eceef1]"></div>
+
+            <!-- Row 2: Bağlantı -->
+            <div class="flex items-center justify-between">
+              <span class="text-[#595959] font-medium">Bağlantı</span>
+              <div class="flex items-center gap-1.5 text-[#262626] font-semibold text-[13px]">
+                <span class="material-symbols-outlined text-[16px] text-accent">cable</span>
+                <span>Kablolu (Ethernet)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Amber Warning/Note Box -->
+          <div class="bg-[#fff9eb] border border-[#fedf89] rounded-lg p-3 mb-3.5 flex items-start gap-2.5">
+            <span class="material-symbols-outlined text-[#b54708] text-[19px] shrink-0 mt-0.5">info</span>
+            <p class="text-[13px] leading-snug text-[#7a2e0e]">
+              Bu ayarda internet çalışmayabilir. İşiniz bitince tek tıkla <span class="font-semibold text-[#b54708]">Otomatik</span> ayara dönebilirsiniz.
+            </p>
+          </div>
+
+          <!-- Collapsed Technical Details Link -->
+          <div class="flex items-center">
+            <button class="inline-flex items-center gap-1 text-[13px] font-medium text-[#595959] hover:text-[#1f1f1f] transition-colors py-0.5">
+              <span>Teknik ayrıntılar</span>
+              <span class="text-[10px] text-[#8c8c8c]">▸</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Dialog Footer / Actions Bar -->
+        <div class="bg-[#f9fafb] border-t border-[#e9ebed] px-6 py-3.5 flex items-center justify-between">
+          <!-- Bottom-left: "Bir daha sorma" Checkbox -->
+          <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" class="w-4 h-4 rounded border-[#d0d5dd] text-accent focus:ring-accent focus:ring-offset-0 cursor-pointer">
+            <span class="text-[13px] text-[#595959] font-medium">Bir daha sorma</span>
+          </label>
+
+          <!-- Right-aligned Action Buttons -->
+          <div class="flex items-center gap-2.5">
+            <button class="px-4 py-2 rounded-md bg-white border border-[#d0d5dd] hover:bg-[#f3f4f6] active:bg-[#e5e7eb] text-[14px] font-semibold text-[#344054] shadow-2xs transition-all min-w-[80px]">
+              Vazgeç
+            </button>
+            <button class="px-5 py-2 rounded-md bg-accent hover:bg-accentHover active:bg-[#09477d] text-[14px] font-semibold text-white shadow-2xs transition-all min-w-[80px]">
+              Geç
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</body>
+</html>

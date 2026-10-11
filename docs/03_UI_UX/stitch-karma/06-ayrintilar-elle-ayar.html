@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html class="light" lang="tr"><head>
+<meta charset="utf-8"/>
+<title>IPMan - Ayrıntılar ve Elle Ayar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&amp;family=Plus+Jakarta+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-error": "#ffffff",
+            "error": "#ba1a1a",
+            "surface-variant": "#e4e2e2",
+            "inverse-surface": "#303030",
+            "on-surface-variant": "#414751",
+            "primary-fixed": "#d3e3ff",
+            "inverse-on-surface": "#f2f0f0",
+            "surface-container-lowest": "#ffffff",
+            "surface-container": "#efeded",
+            "secondary": "#006e06",
+            "on-tertiary-container": "#ffe7e1",
+            "surface-dim": "#dbdad9",
+            "outline": "#717783",
+            "tertiary-fixed-dim": "#ffb5a0",
+            "on-primary": "#ffffff",
+            "on-secondary-fixed-variant": "#005303",
+            "on-secondary": "#ffffff",
+            "on-tertiary-fixed": "#3b0900",
+            "surface": "#fbf9f8",
+            "on-surface": "#1b1c1c",
+            "tertiary": "#9b2800",
+            "secondary-fixed": "#94fa81",
+            "outline-variant": "#c1c7d3",
+            "secondary-fixed-dim": "#79dd68",
+            "error-container": "#ffdad6",
+            "primary-container": "#0f6cbd",
+            "on-secondary-fixed": "#002200",
+            "on-secondary-container": "#007306",
+            "primary": "#005396",
+            "on-tertiary": "#ffffff",
+            "background": "#fbf9f8",
+            "tertiary-fixed": "#ffdbd1",
+            "on-primary-fixed": "#001c39",
+            "on-background": "#1b1c1c",
+            "surface-tint": "#0060ab",
+            "on-error-container": "#93000a",
+            "surface-container-low": "#f5f3f3",
+            "secondary-container": "#91f77e",
+            "surface-container-high": "#e9e8e7",
+            "tertiary-container": "#c63500",
+            "surface-container-highest": "#e4e2e2",
+            "surface-bright": "#fbf9f8",
+            "primary-fixed-dim": "#a3c9ff",
+            "on-primary-fixed-variant": "#004883",
+            "on-primary-container": "#e3ecff",
+            "on-tertiary-fixed-variant": "#872100",
+            "inverse-primary": "#a3c9ff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "space-xl": "1.5rem",
+            "space-md": "0.75rem",
+            "space-lg": "1rem",
+            "space-xs": "0.25rem",
+            "space-sm": "0.5rem",
+            "margin": "1rem",
+            "gutter-sm": "0.75rem",
+            "gutter": "1rem",
+            "margin-window": "0px",
+            "gutter-lg": "1.5rem"
+          },
+          "fontFamily": {
+            "caption": ["Plus Jakarta Sans"],
+            "data-mono": ["JetBrains Mono"],
+            "headline-md": ["Plus Jakarta Sans"],
+            "display": ["Plus Jakarta Sans"],
+            "data-mono-sm": ["JetBrains Mono"],
+            "caption-strong": ["Plus Jakarta Sans"],
+            "headline-lg": ["Plus Jakarta Sans"],
+            "headline-sm": ["Plus Jakarta Sans"],
+            "title-app": ["Plus Jakarta Sans"],
+            "body-default": ["Plus Jakarta Sans"],
+            "body-strong": ["Plus Jakarta Sans"]
+          },
+          "fontSize": {
+            "caption": ["12px", {"lineHeight": "16px", "letterSpacing": "0px", "fontWeight": "400"}],
+            "data-mono": ["12px", {"lineHeight": "18px", "letterSpacing": "0.01em", "fontWeight": "500"}],
+            "headline-md": ["16px", {"lineHeight": "22px", "letterSpacing": "-0.005em", "fontWeight": "600"}],
+            "display": ["28px", {"lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+            "data-mono-sm": ["11px", {"lineHeight": "14px", "letterSpacing": "0.02em", "fontWeight": "400"}],
+            "caption-strong": ["12px", {"lineHeight": "16px", "letterSpacing": "0px", "fontWeight": "600"}],
+            "headline-lg": ["20px", {"lineHeight": "26px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+            "headline-sm": ["14px", {"lineHeight": "20px", "letterSpacing": "0px", "fontWeight": "600"}],
+            "title-app": ["12px", {"lineHeight": "32px", "letterSpacing": "0px", "fontWeight": "400"}],
+            "body-default": ["14px", {"lineHeight": "20px", "letterSpacing": "0px", "fontWeight": "400"}],
+            "body-strong": ["14px", {"lineHeight": "20px", "letterSpacing": "0px", "fontWeight": "600"}]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      background-color: #d8d8d8;
+      margin: 0;
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #c1c7d3;
+      border-radius: 4px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb:hover {
+      background: #717783;
+    }
+  </style>
+</head>
+<body>
+<!-- Native 1000x680 Windows 11 App Window Shell -->
+<div class="w-[1000px] h-[680px] bg-[#f3f3f3] rounded-lg shadow-[0_20px_50px_rgba(0,0,0,0.22)] border border-[#d1d1d1] flex flex-col overflow-hidden relative font-body-default text-[#242424]">
+<!-- 1. Native Fluent Title Bar (Rigid 32px) -->
+<header class="h-8 bg-surface-container-low flex items-center justify-between pl-3 pr-0 border-b border-outline-variant select-none shrink-0">
+<!-- Title & App Icon -->
+<div class="flex items-center gap-2">
+<div class="w-4 h-4 bg-primary-container rounded flex items-center justify-center text-white text-[10px] font-bold">
+<span class="material-symbols-outlined text-[12px] leading-none text-white">lan</span>
+</div>
+<span class="font-title-app text-title-app text-on-surface font-semibold tracking-tight">IPMan - Ayrıntılar ve Elle Ayar</span>
+</div>
+<!-- Native Windows Caption Buttons -->
+<div class="flex h-8 items-center">
+<button class="w-[46px] h-8 flex items-center justify-center hover:bg-black/5 text-[#5c5c5c] transition-colors duration-150">
+<span class="material-symbols-outlined text-[15px]">remove</span>
+</button>
+<button class="w-[46px] h-8 flex items-center justify-center hover:bg-black/5 text-[#5c5c5c] transition-colors duration-150">
+<span class="material-symbols-outlined text-[13px]">crop_square</span>
+</button>
+<button class="w-[46px] h-8 flex items-center justify-center hover:bg-[#c42b1c] hover:text-white text-[#5c5c5c] transition-colors duration-150">
+<span class="material-symbols-outlined text-[15px]">close</span>
+</button>
+</div>
+</header>
+<!-- 2. Sub-Header Navigation & Connection Status -->
+<section class="h-14 px-6 bg-surface-container-low flex items-center justify-between border-b border-[#e5e5e5] shrink-0">
+<div class="flex items-center gap-3">
+<button class="flex items-center gap-1.5 px-2.5 py-1 text-on-surface hover:bg-surface-variant rounded border border-[#e5e5e5] bg-white transition-all text-xs font-body-strong shadow-sm active:bg-surface-dim">
+<span class="material-symbols-outlined text-[15px]">arrow_back</span>
+<span>Geri</span>
+</button>
+<div class="h-4 w-[1px] bg-outline-variant"></div>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[20px] text-primary">cable</span>
+<h1 class="font-headline-md text-headline-md text-on-surface font-bold tracking-tight">Kablolu bağlantı (Ethernet)</h1>
+</div>
+</div>
+<!-- Status Badge (Online Verified) -->
+<div class="inline-flex items-center gap-1.5 h-6 px-3 rounded-full bg-[#dff6dd] text-[#107c10] border border-[#107c10]/20 font-caption-strong text-caption">
+<span class="w-2 h-2 rounded-full bg-[#107c10]"></span>
+<span>Bağlı · İnternet çalışıyor</span>
+</div>
+</section>
+<!-- 3. Scrollable Main Content Area -->
+<main class="flex-1 overflow-y-auto px-6 py-4 space-y-4 custom-scroll">
+<!-- Central Card: Şu anki ayarlar -->
+<section class="bg-surface-container-lowest rounded-lg border border-[#e5e5e5] shadow-[0_2px_4px_rgba(0,0,0,0.04),0_0_2px_rgba(0,0,0,0.02)] p-4 space-y-4">
+<!-- Header row of Card & Segmented Control -->
+<div class="flex items-center justify-between pb-3 border-b border-[#f0f0f0]">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Şu anki ayarlar</h2>
+<p class="font-caption text-caption text-on-surface-variant">Ağ bağdaştırıcısına atanmış olan IPv4 yapılandırması</p>
+</div>
+<!-- Segmented Control: [Otomatik] [Sabit] -->
+<div class="flex items-center gap-2">
+<span class="font-caption-strong text-caption text-on-surface-variant">Adres:</span>
+<div class="inline-flex bg-[#efeded] p-0.5 rounded border border-[#d1d1d1]">
+<button class="px-3 py-1 text-xs font-body-default text-on-surface-variant rounded hover:text-on-surface transition-all" type="button">
+                Otomatik
+              </button>
+<button class="px-3 py-1 text-xs font-body-strong text-primary-container bg-white rounded shadow-sm border border-black/5" type="button">
+                Sabit
+              </button>
+</div>
+</div>
+</div>
+<!-- Inputs Grid -->
+<div class="space-y-3.5">
+<!-- Field 1: Bilgisayarın adresi (Modified/Amber State) -->
+<div class="p-2.5 rounded border border-[#d1d1d1] border-l-4 border-l-[#d87c01] bg-[#fffcf5] flex items-center justify-between gap-4">
+<div class="w-56 shrink-0">
+<label class="block font-body-strong text-xs text-on-surface">Bilgisayarın adresi</label>
+<span class="font-caption text-caption text-outline">IP adresi</span>
+</div>
+<div class="flex-1 flex items-center gap-3">
+<div class="relative flex-1">
+<input class="w-full h-8 px-2.5 font-data-mono text-data-mono bg-white border border-[#d1d1d1] border-b-2 border-b-[#d87c01] rounded text-[#242424] focus:outline-none focus:border-[#d87c01]" type="text" value="192.168.0.50"/>
+</div>
+<!-- Amber Badge -->
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-caption-strong bg-[#fff0d6] text-[#b35b00] border border-[#d87c01]/30 shrink-0">
+<span class="material-symbols-outlined text-[13px]">change_circle</span>
+                değişecek
+              </span>
+<!-- Current IP Note -->
+<div class="text-right shrink-0">
+<span class="font-caption text-caption text-outline block">şu an:</span>
+<span class="font-data-mono-sm text-data-mono-sm text-on-surface-variant font-medium">192.168.10.25</span>
+</div>
+</div>
+</div>
+<!-- Field 2: Alt ağ maskesi -->
+<div class="p-2.5 rounded border border-[#e5e5e5] bg-white flex items-center justify-between gap-4">
+<div class="w-56 shrink-0">
+<label class="block font-body-strong text-xs text-on-surface">Alt ağ maskesi</label>
+<span class="font-caption text-caption text-outline">Subnet Mask</span>
+</div>
+<div class="flex-1 flex items-center gap-3">
+<input class="flex-1 h-8 px-2.5 font-data-mono text-data-mono bg-white border border-[#d1d1d1] border-b-2 border-b-[#5c5c5c] rounded text-[#242424] focus:outline-none focus:border-b-primary-container" type="text" value="255.255.255.0"/>
+<span class="font-caption text-caption text-outline shrink-0 italic">otomatik dolduruldu</span>
+</div>
+</div>
+<!-- Field 3: Ağ geçidi (modem adresi) -->
+<div class="p-2.5 rounded border border-[#e5e5e5] bg-white flex items-center justify-between gap-4">
+<div class="w-56 shrink-0">
+<label class="block font-body-strong text-xs text-on-surface">Ağ geçidi (modem adresi)</label>
+<span class="font-caption text-caption text-outline">Varsayılan ağ geçidi</span>
+</div>
+<div class="flex-1 flex items-center gap-3">
+<input class="flex-1 h-8 px-2.5 font-data-mono text-data-mono bg-white border border-[#d1d1d1] border-b-2 border-b-[#5c5c5c] rounded text-[#242424] focus:outline-none focus:border-b-primary-container" type="text" value="192.168.10.1"/>
+<span class="w-28 text-right font-caption text-caption text-outline shrink-0">etkin</span>
+</div>
+</div>
+</div>
+<!-- Section 4: Genişletilmiş 'Gelişmiş' bölümü (Expanded accordion/section) -->
+<div class="border-t border-[#f0f0f0] pt-3 mt-4 space-y-4">
+<div class="flex items-center justify-between cursor-pointer">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-primary">expand_more</span>
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Gelişmiş ayarlar ve bağdaştırıcı bilgisi</span>
+</div>
+<span class="font-caption text-caption text-outline">Açık</span>
+</div>
+<!-- Sub-section: DNS Girişleri -->
+<div class="bg-surface-container-low p-3 rounded-lg border border-[#e5e5e5] space-y-2.5">
+<h3 class="font-caption-strong text-caption text-on-surface">DNS (alan adı sunucuları)</h3>
+<div class="grid grid-cols-2 gap-3">
+<div>
+<label class="block font-caption text-caption text-outline mb-1">Birinci DNS</label>
+<input class="w-full h-8 px-2.5 font-data-mono text-data-mono bg-white border border-[#d1d1d1] border-b-2 border-b-[#5c5c5c] rounded text-[#242424] focus:outline-none focus:border-b-primary-container" type="text" value="192.168.10.1"/>
+</div>
+<div>
+<label class="block font-caption text-caption text-outline mb-1">İkinci DNS</label>
+<input class="w-full h-8 px-2.5 font-data-mono text-data-mono bg-white border border-[#d1d1d1] border-b-2 border-b-[#5c5c5c] rounded text-[#242424] placeholder-outline-variant focus:outline-none focus:border-b-primary-container" placeholder="İsteğe bağlı" type="text"/>
+</div>
+</div>
+</div>
+<!-- Sub-section: Bağlantı Bilgileri Bento/Data Grid -->
+<div class="space-y-1.5">
+<h3 class="font-caption-strong text-caption text-on-surface">Bağlantı bilgileri</h3>
+<div class="grid grid-cols-3 gap-2 bg-surface-container-low p-3 rounded-lg border border-[#e5e5e5]">
+<div class="space-y-0.5">
+<span class="font-caption text-caption text-outline block">Donanım</span>
+<span class="font-body-strong text-xs text-on-surface truncate block" title="Intel(R) Ethernet I219-LM">Intel(R) Ethernet I219-LM</span>
+</div>
+<div class="space-y-0.5 border-l border-[#e5e5e5] pl-3">
+<span class="font-caption text-caption text-outline block">MAC adresi</span>
+<span class="font-data-mono text-xs text-on-surface font-medium block">3C-52-82-1A-4F-77</span>
+</div>
+<div class="space-y-0.5 border-l border-[#e5e5e5] pl-3">
+<span class="font-caption text-caption text-outline block">Hız</span>
+<span class="font-body-strong text-xs text-secondary font-semibold block flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">speed</span>
+                  1 Gbps
+                </span>
+</div>
+</div>
+</div>
+<!-- Sub-section: Araçlar (Action Buttons Row) -->
+<div class="space-y-1.5 pt-1">
+<span class="font-caption-strong text-caption text-on-surface">Araçlar</span>
+<div class="flex items-center gap-2 flex-wrap">
+<button class="h-8 px-3 inline-flex items-center gap-1.5 bg-white border border-[#e5e5e5] hover:border-[#d1d1d1] hover:bg-[#f9f9f9] text-[#242424] rounded text-xs font-body-default shadow-sm transition-all active:bg-[#f5f5f5]" type="button">
+<span class="material-symbols-outlined text-[15px] text-on-surface-variant">content_copy</span>
+<span>Bilgileri kopyala</span>
+</button>
+<button class="h-8 px-3 inline-flex items-center gap-1.5 bg-white border border-[#e5e5e5] hover:border-[#d1d1d1] hover:bg-[#f9f9f9] text-[#242424] rounded text-xs font-body-default shadow-sm transition-all active:bg-[#f5f5f5]" type="button">
+<span class="material-symbols-outlined text-[15px] text-on-surface-variant">router</span>
+<span>Modeme ulaşılıyor mu?</span>
+</button>
+<button class="h-8 px-3 inline-flex items-center gap-1.5 bg-white border border-[#e5e5e5] hover:border-[#d1d1d1] hover:bg-[#f9f9f9] text-[#242424] rounded text-xs font-body-default shadow-sm transition-all active:bg-[#f5f5f5]" type="button">
+<span class="material-symbols-outlined text-[15px] text-on-surface-variant">cleaning_services</span>
+<span>DNS önbelleğini temizle</span>
+</button>
+<button class="h-8 px-3 inline-flex items-center gap-1.5 bg-white border border-[#e5e5e5] hover:border-[#d1d1d1] hover:bg-[#f9f9f9] text-[#242424] rounded text-xs font-body-default shadow-sm transition-all active:bg-[#f5f5f5]" type="button">
+<span class="material-symbols-outlined text-[15px] text-on-surface-variant">refresh</span>
+<span>Adresi yenile</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- 4. Sticky Bottom Action Bar (Fluent styling #ebf3fc surface container) -->
+<footer class="h-14 px-6 bg-[#ebf3fc] border-t border-[#d3e3ff] flex items-center justify-between shrink-0 select-none">
+<!-- Left side info & quick link -->
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5 text-xs text-on-surface-variant font-body-strong">
+<span class="w-2 h-2 rounded-full bg-[#d87c01]"></span>
+<span>1 değişiklik</span>
+</div>
+<span class="text-[#c1c7d3]">•</span>
+<button class="text-xs text-primary font-body-strong hover:underline flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">bookmark_add</span>
+<span>Ayar olarak kaydet</span>
+</button>
+</div>
+<!-- Right side commit/cancel buttons -->
+<div class="flex items-center gap-2.5">
+<button class="h-8 px-4 bg-white border border-[#e5e5e5] text-[#242424] hover:bg-[#f9f9f9] hover:border-[#d1d1d1] rounded font-body-strong text-xs shadow-sm transition-all active:bg-[#f5f5f5]" type="button">
+          Vazgeç
+        </button>
+<button class="h-8 px-5 bg-primary-container text-white border border-[#0f6cbd] border-b-[#0c3b5e] hover:bg-[#115ea3] active:bg-[#0c3b5e] rounded font-body-strong text-xs shadow-sm transition-all flex items-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[15px]">check</span>
+<span>Uygula</span>
+</button>
+</div>
+</footer>
+</div>
+</body></html>
