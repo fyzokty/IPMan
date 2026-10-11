@@ -24,6 +24,8 @@ public sealed class FakeProfileEditorCatalog : IProfileCatalog
         return Task.FromResult(SaveResult ?? ProfileSaveResult.Success(profile));
     }
 
+    public void RaiseChanged() => Changed?.Invoke(this, EventArgs.Empty);
+
     public Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     public void StartWatching() { }
     public void StopWatching() { }

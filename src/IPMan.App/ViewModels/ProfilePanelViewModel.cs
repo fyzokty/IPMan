@@ -21,7 +21,6 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
     private readonly IUiDispatcher _uiDispatcher;
     private AdapterDraftViewModel? _draft;
     private bool _isDisposed;
-    private NetworkProfile? _editingProfile;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasStatusMessage))]
@@ -80,60 +79,11 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
 
     public bool HasStatusMessage => StatusMessage.Length > 0;
 
-    public string SaveLabel => _editingProfile is null ? Strings.CommandSaveProfile : Strings.UpdateSetting;
-
     public IReadOnlyList<NetworkProfile> AllProfiles => _catalog.Profiles;
-
-    public void BeginNewSetting()
-    {
-        _editingProfile = null;
-        OnPropertyChanged(nameof(SaveLabel));
-        SelectedProfile = null;
-        NewProfileName = string.Empty;
-        NewProfileDescription = string.Empty;
-        NewProfileUsesDhcp = false;
-    }
-
-    public bool EditSetting(ProfileListItemViewModel item)
-    {
-        ArgumentNullException.ThrowIfNull(item);
-        if (_draft is null)
-        {
-            return false;
-        }
-        if (!ConfirmDraftReplacement())
-        {
-            StatusMessage = Strings.ProfileLoadCancelled;
-            return false;
-        }
-
-        SelectedProfile = item;
-        LoadForEditing(item);
-        return true;
-    }
-
-    private bool ConfirmDraftReplacement() => _draft?.IsDirty != true ||
-        _confirmationService.Confirm(new UserConfirmationRequest(
-            Strings.ConfirmProfileLoadTitle, Strings.ConfirmProfileLoadMessage));
-
-    private void LoadForEditing(ProfileListItemViewModel item)
-    {
-        _draft!.LoadProfile(item.Profile);
-        _editingProfile = item.Profile;
-        OnPropertyChanged(nameof(SaveLabel));
-        NewProfileName = item.Name;
-        NewProfileDescription = item.Description;
-        NewProfileUsesDhcp = item.Profile.Mode == NetworkConfigurationMode.Dhcp;
-    }
 
     /// <summary>Associates the selected adapter draft; null disables draft-specific commands.</summary>
     public void SetDraft(AdapterDraftViewModel? draft)
     {
-        if (!ReferenceEquals(_draft, draft))
-        {
-            _editingProfile = null;
-            OnPropertyChanged(nameof(SaveLabel));
-        }
         _draft = draft;
         SaveCommand.NotifyCanExecuteChanged();
     }
@@ -166,23 +116,10 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
         }
 
         NetworkProfile profile = _draft.CreateProfile(NewProfileName, NewProfileDescription, NewProfileUsesDhcp);
-        if (_editingProfile is not null)
-        {
-            profile = profile with
-            {
-                ProfileId = _editingProfile.ProfileId,
-                CreatedAtUtc = _editingProfile.CreatedAtUtc,
-                IsFavorite = _editingProfile.IsFavorite,
-                OriginAdapterName = _editingProfile.OriginAdapterName
-            };
-        }
-
         ProfileSaveResult result = await _catalog.SaveAsync(profile, CancellationToken.None);
         StatusMessage = ProfileResultMessageFormatter.Describe(result.Status);
         if (result.IsSuccess && result.Profile is not null)
         {
-            _editingProfile = result.Profile;
-            OnPropertyChanged(nameof(SaveLabel));
             ClearFilterAndSelect(result.Profile.ProfileId);
         }
     }

@@ -10,6 +10,7 @@
         WindowStartupLocation="Manual"
         xmlns:res="clr-namespace:IPMan.App.Resources"
         xmlns:vm="clr-namespace:IPMan.App.ViewModels"
+        xmlns:views="clr-namespace:IPMan.App.Views"
         xmlns:motion="clr-namespace:IPMan.App.Presentation"
         motion:FluentMotion.Entrance="True"
         FontFamily="{StaticResource BodyFont}"
@@ -710,6 +711,7 @@
                 </Grid>
             </Border>
         </DataTemplate>
+        <DataTemplate DataType="{x:Type vm:ProfileEditorViewModel}"><views:ProfileEditorView /></DataTemplate>
     </Window.Resources>
     <DockPanel LastChildFill="True" Margin="20">
         <Grid DockPanel.Dock="Top" Margin="0,0,0,16">
@@ -903,7 +905,7 @@
                                     <StackPanel Margin="0,0,8,0"><TextBlock Text="{x:Static res:Strings.ProfileDescriptionLabel}" Foreground="{DynamicResource SecondaryTextBrush}" Margin="0,0,0,4" />
                                         <TextBox Width="220" Height="32" Text="{Binding NewProfileDescription, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="{x:Static res:Strings.ProfileDescriptionLabel}" /></StackPanel>
                                     <CheckBox Content="{x:Static res:Strings.ProfileUseDhcpLabel}" IsChecked="{Binding NewProfileUsesDhcp}" VerticalAlignment="Bottom" Margin="0,0,8,0" />
-                                    <Button Content="{Binding SaveLabel}" Command="{Binding SaveCommand}" VerticalAlignment="Bottom" />
+                                    <Button Content="{x:Static res:Strings.CommandSaveProfile}" Command="{Binding SaveCommand}" VerticalAlignment="Bottom" />
                                 </WrapPanel>
                                 <TextBlock Text="{Binding StatusMessage}" Visibility="{Binding HasStatusMessage, Converter={StaticResource BooleanToVisibility}}" TextWrapping="Wrap" Margin="0,8,0,0" />
                             </StackPanel>
@@ -911,6 +913,7 @@
                     </StackPanel>
                     <ContentControl Content="{Binding SelectedAdapter}" ContentTemplate="{StaticResource AdapterDetailsTemplate}" />
                 </DockPanel>
+                <ContentControl Content="{Binding ProfileEditor}" Visibility="{Binding IsProfileEditorOpen, Converter={StaticResource BooleanToVisibility}}" />
             </Grid>
         </Grid>
     </DockPanel>

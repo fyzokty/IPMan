@@ -2,72 +2,72 @@
  xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
  xmlns:res="clr-namespace:IPMan.App.Resources"
- FontFamily="{StaticResource BodyFont}" FontSize="14" Foreground="{DynamicResource PrimaryTextBrush}" Background="{DynamicResource WindowBackgroundBrush}">
+ FontFamily="{DynamicResource BodyFont}" FontSize="14" Foreground="{DynamicResource PrimaryTextBrush}" Background="{DynamicResource WindowBackgroundBrush}">
  <UserControl.Resources><BooleanToVisibilityConverter x:Key="ProfileEditorVisibility"/></UserControl.Resources>
  <DockPanel>
   <Border DockPanel.Dock="Top" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="0,0,0,1" Padding="20,8">
-   <StackPanel Orientation="Horizontal"><Button Content="{x:Static res:Strings.ProfileEditorBack}" Command="{Binding BackCommand}" Style="{StaticResource SubtleButtonStyle}"/><TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Margin="16,0,0,0"/></StackPanel>
+   <StackPanel Orientation="Horizontal"><Button Content="{x:Static res:Strings.ProfileEditorBack}" Command="{Binding BackCommand}" Style="{DynamicResource SubtleButtonStyle}"/><TextBlock Text="{Binding Title}" FontSize="20" FontWeight="SemiBold" VerticalAlignment="Center" Margin="16,0,0,0"/></StackPanel>
   </Border>
   <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-   <Border MaxWidth="640" HorizontalAlignment="Stretch" Margin="20" Padding="24" Style="{StaticResource CardStyle}">
+   <Border MaxWidth="640" HorizontalAlignment="Stretch" Margin="20" Padding="24" Style="{DynamicResource CardStyle}">
     <StackPanel>
 <StackPanel Margin="0,0,0,12">
- <Label Content="{x:Static res:Strings.ProfileEditorNameLabel}" Target="{Binding ElementName=NameInput}" Style="{StaticResource ProfileEditorLabelStyle}"/>
- <TextBox x:Name="NameInput" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding NameError}" Style="{StaticResource ProfileEditorInputStyle}"/>
- <TextBlock Text="{Binding NameError}" Style="{StaticResource ProfileEditorErrorTextStyle}"/>
+ <Label Content="{x:Static res:Strings.ProfileEditorNameLabel}" Target="{Binding ElementName=NameInput}" Style="{DynamicResource ProfileEditorLabelStyle}"/>
+ <TextBox x:Name="NameInput" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding NameError}" Style="{DynamicResource ProfileEditorInputStyle}"/>
+ <TextBlock Text="{Binding NameError}" Style="{DynamicResource ProfileEditorErrorTextStyle}"/>
  <TextBlock Text="{x:Static res:Strings.ProfileEditorNameHint}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,4,0,0"/></StackPanel>
      <TextBlock Text="{x:Static res:Strings.ProfileEditorModeLabel}" FontWeight="SemiBold" Margin="0,4,0,8"/>
      <Grid Margin="0,0,0,20"><Grid.ColumnDefinitions><ColumnDefinition/><ColumnDefinition Width="12"/><ColumnDefinition/></Grid.ColumnDefinitions>
-<RadioButton Grid.Column="0" GroupName="AddressMode" IsChecked="{Binding IsAutomatic, Mode=TwoWay}" Style="{StaticResource ProfileEditorRadioCardStyle}"><StackPanel><TextBlock Text="{x:Static res:Strings.ProfileEditorAutomatic}" FontWeight="SemiBold"/><TextBlock Text="{x:Static res:Strings.ProfileEditorAutomaticHint}" TextWrapping="Wrap" FontSize="12" Margin="0,4,0,0"/></StackPanel></RadioButton><RadioButton Grid.Column="2" GroupName="AddressMode" IsChecked="{Binding IsStatic, Mode=TwoWay}" Style="{StaticResource ProfileEditorRadioCardStyle}"><StackPanel><TextBlock Text="{x:Static res:Strings.ProfileEditorStatic}" FontWeight="SemiBold"/><TextBlock Text="{x:Static res:Strings.ProfileEditorStaticHint}" TextWrapping="Wrap" FontSize="12" Margin="0,4,0,0"/></StackPanel></RadioButton></Grid>
+<RadioButton Grid.Column="0" GroupName="AddressMode" IsChecked="{Binding IsAutomatic, Mode=TwoWay}" Style="{DynamicResource ProfileEditorRadioCardStyle}"><StackPanel><TextBlock Text="{x:Static res:Strings.ProfileEditorAutomatic}" FontWeight="SemiBold"/><TextBlock Text="{x:Static res:Strings.ProfileEditorAutomaticHint}" TextWrapping="Wrap" FontSize="12" Margin="0,4,0,0"/></StackPanel></RadioButton><RadioButton Grid.Column="2" GroupName="AddressMode" IsChecked="{Binding IsStatic, Mode=TwoWay}" Style="{DynamicResource ProfileEditorRadioCardStyle}"><StackPanel><TextBlock Text="{x:Static res:Strings.ProfileEditorStatic}" FontWeight="SemiBold"/><TextBlock Text="{x:Static res:Strings.ProfileEditorStaticHint}" TextWrapping="Wrap" FontSize="12" Margin="0,4,0,0"/></StackPanel></RadioButton></Grid>
      <StackPanel Visibility="{Binding IsStatic, Converter={StaticResource ProfileEditorVisibility}}">
       <Border Background="{DynamicResource WindowBackgroundBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="8" Padding="16"><StackPanel>
 <StackPanel Margin="0,0,0,12">
- <Label Content="{x:Static res:Strings.ProfileEditorDeviceLabel}" Target="{Binding ElementName=DeviceAddressInput}" Style="{StaticResource ProfileEditorLabelStyle}"/>
- <TextBox x:Name="DeviceAddressInput" Text="{Binding DeviceAddress, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding DeviceAddressError}" Style="{StaticResource ProfileEditorAddressStyle}"/>
- <TextBlock Text="{Binding DeviceAddressError}" Style="{StaticResource ProfileEditorErrorTextStyle}"/>
+ <Label Content="{x:Static res:Strings.ProfileEditorDeviceLabel}" Target="{Binding ElementName=DeviceAddressInput}" Style="{DynamicResource ProfileEditorLabelStyle}"/>
+ <TextBox x:Name="DeviceAddressInput" Text="{Binding DeviceAddress, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding DeviceAddressError}" Style="{DynamicResource ProfileEditorAddressStyle}"/>
+ <TextBlock Text="{Binding DeviceAddressError}" Style="{DynamicResource ProfileEditorErrorTextStyle}"/>
  <TextBlock Text="{x:Static res:Strings.ProfileEditorDeviceHint}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,4,0,0"/></StackPanel>
-       <Border Style="{StaticResource CardStyle}" Padding="12" Margin="0,0,0,12" Visibility="{Binding HasSuggestion, Converter={StaticResource ProfileEditorVisibility}}">
-        <DockPanel><Button DockPanel.Dock="Right" Content="{x:Static res:Strings.ProfileEditorUseSuggestion}" Command="{Binding UseSuggestionCommand}" Style="{StaticResource SecondaryActionButtonStyle}" Margin="12,0,0,0" VerticalAlignment="Center"/>
-         <StackPanel><TextBlock Text="{x:Static res:Strings.ProfileEditorSuggestionLabel}" FontSize="12"/><TextBlock Text="{Binding Suggestion.Address}" FontFamily="{StaticResource MonoFont}" Foreground="{DynamicResource AccentBrush}" Margin="0,4,0,4"/>
-          <Border Style="{StaticResource ProfileEditorSuggestionBadgeStyle}">
-           <TextBlock Text="{Binding SuggestionStatusText}" Style="{StaticResource ProfileEditorSuggestionTextStyle}"/>
+       <Border Style="{DynamicResource CardStyle}" Padding="12" Margin="0,0,0,12" Visibility="{Binding HasSuggestion, Converter={StaticResource ProfileEditorVisibility}}">
+        <DockPanel><Button DockPanel.Dock="Right" Content="{x:Static res:Strings.ProfileEditorUseSuggestion}" Command="{Binding UseSuggestionCommand}" Style="{DynamicResource SecondaryActionButtonStyle}" Margin="12,0,0,0" VerticalAlignment="Center"/>
+         <StackPanel><TextBlock Text="{x:Static res:Strings.ProfileEditorSuggestionLabel}" FontSize="12"/><TextBlock Text="{Binding Suggestion.Address}" FontFamily="{DynamicResource MonoFont}" Foreground="{DynamicResource AccentBrush}" Margin="0,4,0,4"/>
+          <Border Style="{DynamicResource ProfileEditorSuggestionBadgeStyle}">
+           <TextBlock Text="{Binding SuggestionStatusText}" Style="{DynamicResource ProfileEditorSuggestionTextStyle}"/>
           </Border>
          </StackPanel>
         </DockPanel>
        </Border>
 <StackPanel Margin="0,0,0,12">
- <Label Content="{x:Static res:Strings.ProfileEditorAddressLabel}" Target="{Binding ElementName=Ipv4AddressInput}" Style="{StaticResource ProfileEditorLabelStyle}"/>
- <TextBox x:Name="Ipv4AddressInput" Text="{Binding Ipv4Address, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding Ipv4AddressError}" Style="{StaticResource ProfileEditorAddressStyle}"/>
- <TextBlock Text="{Binding Ipv4AddressError}" Style="{StaticResource ProfileEditorErrorTextStyle}"/>
+ <Label Content="{x:Static res:Strings.ProfileEditorAddressLabel}" Target="{Binding ElementName=Ipv4AddressInput}" Style="{DynamicResource ProfileEditorLabelStyle}"/>
+ <TextBox x:Name="Ipv4AddressInput" Text="{Binding Ipv4Address, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding Ipv4AddressError}" Style="{DynamicResource ProfileEditorAddressStyle}"/>
+ <TextBlock Text="{Binding Ipv4AddressError}" Style="{DynamicResource ProfileEditorErrorTextStyle}"/>
  </StackPanel><StackPanel Margin="0,0,0,12">
- <Label Content="{x:Static res:Strings.ProfileEditorGatewayLabel}" Target="{Binding ElementName=GatewayInput}" Style="{StaticResource ProfileEditorLabelStyle}"/>
- <Border Tag="{Binding GatewayWarning}" Style="{StaticResource ProfileEditorGatewayWarningStyle}"><TextBox x:Name="GatewayInput" Text="{Binding Gateway, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding GatewayError}" Style="{StaticResource ProfileEditorAddressStyle}"/></Border>
- <TextBlock Text="{Binding GatewayError}" Style="{StaticResource ProfileEditorErrorTextStyle}"/>
+ <Label Content="{x:Static res:Strings.ProfileEditorGatewayLabel}" Target="{Binding ElementName=GatewayInput}" Style="{DynamicResource ProfileEditorLabelStyle}"/>
+ <Border Tag="{Binding GatewayWarning}" Style="{DynamicResource ProfileEditorGatewayWarningStyle}"><TextBox x:Name="GatewayInput" Text="{Binding Gateway, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding GatewayError}" Style="{DynamicResource ProfileEditorAddressStyle}"/></Border>
+ <TextBlock Text="{Binding GatewayError}" Style="{DynamicResource ProfileEditorErrorTextStyle}"/>
  <TextBlock Text="{x:Static res:Strings.ProfileEditorGatewayHint}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="0,4,0,0"/></StackPanel>
        <TextBlock Text="{Binding GatewayWarning}" TextWrapping="Wrap" Foreground="{DynamicResource WarningBorderBrush}" FontSize="12"/>
       </StackPanel></Border>
-      <Expander Margin="0,16,0,0" Style="{StaticResource ProfileEditorAdvancedStyle}" IsExpanded="{Binding IsAdvancedExpanded, Mode=TwoWay}"><Expander.Header><StackPanel Orientation="Horizontal"><TextBlock Text="{x:Static res:Strings.ProfileEditorAdvanced}"/><TextBlock Text="{x:Static res:Strings.ProfileEditorMaskAutoFilled}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="12,0,0,0" Visibility="{Binding IsMaskAutoFilled, Converter={StaticResource ProfileEditorVisibility}}"/></StackPanel></Expander.Header>
+      <Expander Margin="0,16,0,0" Style="{DynamicResource ProfileEditorAdvancedStyle}" IsExpanded="{Binding IsAdvancedExpanded, Mode=TwoWay}"><Expander.Header><StackPanel Orientation="Horizontal"><TextBlock Text="{x:Static res:Strings.ProfileEditorAdvanced}"/><TextBlock Text="{x:Static res:Strings.ProfileEditorMaskAutoFilled}" Foreground="{DynamicResource SecondaryTextBrush}" FontSize="12" Margin="12,0,0,0" Visibility="{Binding IsMaskAutoFilled, Converter={StaticResource ProfileEditorVisibility}}"/></StackPanel></Expander.Header>
        <StackPanel Margin="12">
 <StackPanel Margin="0,0,0,12">
- <Label Content="{x:Static res:Strings.ProfileEditorMaskLabel}" Target="{Binding ElementName=SubnetMaskInput}" Style="{StaticResource ProfileEditorLabelStyle}"/>
- <TextBox x:Name="SubnetMaskInput" Text="{Binding SubnetMask, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding SubnetMaskError}" Style="{StaticResource ProfileEditorAddressStyle}"/>
- <TextBlock Text="{Binding SubnetMaskError}" Style="{StaticResource ProfileEditorErrorTextStyle}"/>
+ <Label Content="{x:Static res:Strings.ProfileEditorMaskLabel}" Target="{Binding ElementName=SubnetMaskInput}" Style="{DynamicResource ProfileEditorLabelStyle}"/>
+ <TextBox x:Name="SubnetMaskInput" Text="{Binding SubnetMask, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding SubnetMaskError}" Style="{DynamicResource ProfileEditorAddressStyle}"/>
+ <TextBlock Text="{Binding SubnetMaskError}" Style="{DynamicResource ProfileEditorErrorTextStyle}"/>
  </StackPanel><StackPanel Margin="0,0,0,12">
- <Label Content="{x:Static res:Strings.ProfileEditorPrimaryDnsLabel}" Target="{Binding ElementName=PrimaryDnsInput}" Style="{StaticResource ProfileEditorLabelStyle}"/>
- <TextBox x:Name="PrimaryDnsInput" Text="{Binding PrimaryDns, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding PrimaryDnsError}" Style="{StaticResource ProfileEditorAddressStyle}"/>
- <TextBlock Text="{Binding PrimaryDnsError}" Style="{StaticResource ProfileEditorErrorTextStyle}"/>
+ <Label Content="{x:Static res:Strings.ProfileEditorPrimaryDnsLabel}" Target="{Binding ElementName=PrimaryDnsInput}" Style="{DynamicResource ProfileEditorLabelStyle}"/>
+ <TextBox x:Name="PrimaryDnsInput" Text="{Binding PrimaryDns, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding PrimaryDnsError}" Style="{DynamicResource ProfileEditorAddressStyle}"/>
+ <TextBlock Text="{Binding PrimaryDnsError}" Style="{DynamicResource ProfileEditorErrorTextStyle}"/>
  </StackPanel><StackPanel Margin="0,0,0,12">
- <Label Content="{x:Static res:Strings.ProfileEditorSecondaryDnsLabel}" Target="{Binding ElementName=SecondaryDnsInput}" Style="{StaticResource ProfileEditorLabelStyle}"/>
- <TextBox x:Name="SecondaryDnsInput" Text="{Binding SecondaryDns, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding SecondaryDnsError}" Style="{StaticResource ProfileEditorAddressStyle}"/>
- <TextBlock Text="{Binding SecondaryDnsError}" Style="{StaticResource ProfileEditorErrorTextStyle}"/>
+ <Label Content="{x:Static res:Strings.ProfileEditorSecondaryDnsLabel}" Target="{Binding ElementName=SecondaryDnsInput}" Style="{DynamicResource ProfileEditorLabelStyle}"/>
+ <TextBox x:Name="SecondaryDnsInput" Text="{Binding SecondaryDns, UpdateSourceTrigger=PropertyChanged}" Tag="{Binding SecondaryDnsError}" Style="{DynamicResource ProfileEditorAddressStyle}"/>
+ <TextBlock Text="{Binding SecondaryDnsError}" Style="{DynamicResource ProfileEditorErrorTextStyle}"/>
  </StackPanel>
        </StackPanel>
       </Expander>
      </StackPanel>
-     <TextBlock Text="{Binding SaveError}" Style="{StaticResource ProfileEditorErrorTextStyle}" AutomationProperties.LiveSetting="Assertive"/>
+     <TextBlock Text="{Binding SaveError}" Style="{DynamicResource ProfileEditorErrorTextStyle}" AutomationProperties.LiveSetting="Assertive"/>
      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,20,0,0">
-      <Button Content="{x:Static res:Strings.ProfileEditorSaveOnly}" Command="{Binding SaveOnlyCommand}" Style="{StaticResource SecondaryActionButtonStyle}"/>
-      <Button Content="{x:Static res:Strings.ProfileEditorSaveAndSwitch}" Command="{Binding SaveAndSwitchCommand}" Style="{StaticResource PrimaryActionButtonStyle}" Margin="8,0,0,0"/>
+      <Button Content="{x:Static res:Strings.ProfileEditorSaveOnly}" Command="{Binding SaveOnlyCommand}" Style="{DynamicResource SecondaryActionButtonStyle}"/>
+      <Button Content="{x:Static res:Strings.ProfileEditorSaveAndSwitch}" Command="{Binding SaveAndSwitchCommand}" Style="{DynamicResource PrimaryActionButtonStyle}" Margin="8,0,0,0"/>
      </StackPanel>
     </StackPanel>
    </Border>

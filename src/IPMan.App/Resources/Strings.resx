@@ -684,4 +684,6 @@
   <data name="ProfileEditorGatewayWarning" xml:space="preserve"><value>Ağ geçidi bilgisayarın adresiyle aynı ağda görünmüyor. İnternet çalışmayabilir.</value></data>
   <data name="ProfileEditorSaveFailed" xml:space="preserve"><value>Ayar kaydedilemedi. Ağınız değişmedi. Tekrar kaydetmeyi deneyin.</value></data>
   <data name="ProfileEditorSaveCancelled" xml:space="preserve"><value>Kayıt iptal edildi. Ağınız değişmedi. Yeniden kaydedebilirsiniz.</value></data>
+  <data name="ProfileEditorDiscardTitle" xml:space="preserve"><value>Kaydedilmemiş değişiklikler</value></data>
+  <data name="ProfileEditorDiscardMessage" xml:space="preserve"><value>Değişiklikler kaydedilmedi. Çıkılsın mı?</value></data>
 </root>

@@ -179,6 +179,7 @@ public partial class App : System.Windows.Application
         services.AddSingleton<INetworkAdapterReader, NetworkAdapterReader>();
         services.AddSingleton(new Ipv4ConflictProbeOptions());
         services.AddSingleton<IIpv4ConflictProbe, PingIpv4ConflictProbe>();
+        services.AddSingleton<Ipv4AddressSuggestionService>();
         services.AddSingleton<IStaticIpv4ConfigurationValidator, StaticIpv4ConfigurationValidator>();
         services.AddSingleton<IStaticIpv4ConfigurationComparer, StaticIpv4ConfigurationComparer>();
         services.AddSingleton<INetworkConfigurationPreflightService, NetworkConfigurationPreflightService>();
@@ -245,6 +246,12 @@ public partial class App : System.Windows.Application
         services.AddSingleton<OperationNotificationService>();
         services.AddSingleton<AdapterActionsViewModel>();
         services.AddSingleton<ProfilePanelViewModel>();
+        services.AddSingleton<Func<IPMan.Domain.Profiles.NetworkProfile?, string?, ProfileEditorViewModel>>(provider =>
+            (profile, gateway) => new ProfileEditorViewModel(
+                provider.GetRequiredService<IProfileCatalog>(),
+                provider.GetRequiredService<IStaticIpv4ConfigurationValidator>(),
+                provider.GetRequiredService<Ipv4AddressSuggestionService>(),
+                provider.GetRequiredService<IDelayProvider>(), profile, gateway));
         services.AddSingleton<SettingsViewModel>();
         services.AddSingleton<MainWindowViewModel>();
         services.AddTransient<DiagnosticsViewModel>(provider => new DiagnosticsViewModel(

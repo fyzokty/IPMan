@@ -1,6 +1,6 @@
 # 15 — Yeni ve düzenle ayar sayfası
 
-- **Durum:** yapılacak
+- **Durum:** bitti
 - **Bağımlılık:** 13
 - **Gereksinimler:** ADR-018 · Ekran 05, 07
 
@@ -25,8 +25,15 @@ Teknik terimler ve karmaşık ağ parametreleri içinde kaybolmadan, kullanıcı
 - İşlem butonları: "Sadece kaydet" ve "Kaydet ve geç"
 
 ## Bitti sayılır
-- [ ] Yeni/düzenle formu açılıyor, Otomatik ve Sabit radyo kartları arasında sorunsuz geçiş yapılıyor
-- [ ] Cihaz IP'si yazıldığında aynı alt ağdan boş IP taranıp öneriliyor; sorgu sonucuna göre dürüst onay metni gösteriliyor
-- [ ] Boş alt ağ maskesi otomatik olarak `255.255.255.0` değerini alıyor
-- [ ] Doğrulama hataları kırmızı ve örnekli gösterilip kaydetmeyi engelliyor; uyarılar amber renkle kaydedilebilir kalıyor
-- [ ] "Sadece kaydet" ayarı listeye ekliyor; "Kaydet ve geç" ayarı kaydedip doğrudan uygulama ve sayaç akışını tetikliyor
+- [x] Yeni/düzenle formu açılıyor, Otomatik ve Sabit radyo kartları arasında sorunsuz geçiş yapılıyor
+- [x] Cihaz IP'si yazıldığında aynı alt ağdan boş IP taranıp öneriliyor; sorgu sonucuna göre dürüst onay metni gösteriliyor
+- [x] Boş alt ağ maskesi otomatik olarak `255.255.255.0` değerini alıyor
+- [x] Doğrulama hataları kırmızı ve örnekli gösterilip kaydetmeyi engelliyor; uyarılar amber renkle kaydedilebilir kalıyor
+- [x] "Sadece kaydet" ayarı listeye ekliyor; "Kaydet ve geç" ayarı kaydedip doğrudan uygulama ve sayaç akışını tetikliyor
+
+## Tamamlanan bağlama
+- Ana pencere `Home / Details / ProfileEditor` durumlarıyla tam sayfa formu açar; 16 mevcut `Details` görünümünü değiştirebilir.
+- Yeni/düzenle, sadece kaydet, güvenli geçiş üzerinden kaydet ve geç (sabit/DHCP), meşgul bağdaştırıcı kilidi ve kaydedilmemiş değişiklik onayı bağlandı.
+- Adres önerisi gerçek servis/probe ile kuruldu; form açılırken mevcut ağ geçidi dışlanır.
+- Sahtelerle gezinme ve kayıt/geçiş testleri; ana pencere içinde açık/koyu form render testleri eklendi.
+- Eski ayrıntılar sayfasındaki taslağı ayar olarak kaydetme 16'ya kadar korunur. Gerçek ağ doğrulaması 11 kapsamındadır.

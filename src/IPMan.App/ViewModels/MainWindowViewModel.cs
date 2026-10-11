@@ -12,6 +12,7 @@ using IPMan.Domain.Networking;
 using IPMan.Domain.Settings;
 using IPMan.Domain.Adapters;
 using IPMan.Application.Profiles;
+using IPMan.Domain.Profiles;
 
 namespace IPMan.App.ViewModels;
 
@@ -32,6 +33,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly IClock _clock;
     private readonly IStaticIpv4ConfigurationValidator _validator;
     private readonly OperationNotificationService? _operationNotificationService;
+    private readonly Func<NetworkProfile?, string?, ProfileEditorViewModel>? _editorFactory;
+    private readonly IUserConfirmationService? _confirmationService;
+    private NetworkAdapterId? _editorAdapterId;
 
     private DateTimeOffset? _lastSuccessfulRefreshUtc;
     private string? _lastSelectedAdapterId;
@@ -90,7 +94,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         AdapterActionsViewModel actions,
         IStaticIpv4ConfigurationValidator validator,
         ProfilePanelViewModel? profilePanel,
-        OperationNotificationService? operationNotificationService = null)
+        OperationNotificationService? operationNotificationService = null,
+        Func<NetworkProfile?, string?, ProfileEditorViewModel>? editorFactory = null,
+        IUserConfirmationService? confirmationService = null)
     {
         ArgumentNullException.ThrowIfNull(refreshCoordinator);
         ArgumentNullException.ThrowIfNull(uiDispatcher);
@@ -107,6 +113,8 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _clock = clock;
         _validator = validator;
         _operationNotificationService = operationNotificationService;
+        _editorFactory = editorFactory;
+        _confirmationService = confirmationService;
         ProfilePanel = profilePanel;
 
         Actions = actions;
@@ -148,7 +156,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     /// <summary>The shared action state for the currently selected adapter.</summary>
     public AdapterActionsViewModel Actions { get; }
 
-    /// <summary>The shared saved-setting operations and temporary editor.</summary>
+    /// <summary>The shared saved-setting catalog and operations.</summary>
     public ProfilePanelViewModel? ProfilePanel { get; }
 
     /// <summary>Gets the session-only history of adapter operation notifications.</summary>
@@ -162,9 +170,9 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     private bool _isHistoryOpen;
 
     /// <summary>Shown when discovery has completed and Windows reported no adapters.</summary>
-    public bool IsEmptyStateVisible => !IsLoading && Adapters.Count == 0;
+    public bool IsEmptyStateVisible => !IsLoading && Adapters.Count == 0 && !IsProfileEditorOpen;
 
-    public bool IsContentVisible => !IsLoading && Adapters.Count > 0;
+    public bool IsContentVisible => !IsLoading && (Adapters.Count > 0 || IsProfileEditorOpen);
 
     /// <summary>Gets the stable identifier that should be persisted for the selected adapter.</summary>
     public string? LastSelectedAdapterId => _lastSelectedAdapterId;
@@ -173,7 +181,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     public bool IsBusy => Actions.IsBusy;
 
     /// <summary>Connection selection remains fixed while an action targets the selected adapter.</summary>
-    public bool IsConnectionSelectionEnabled => !IsBusy;
+    public bool IsConnectionSelectionEnabled => !IsBusy && !IsProfileEditorOpen;
 
     /// <summary>Gets whether any adapter draft contains unapplied changes.</summary>
     public bool HasDirtyDrafts => Adapters.Any(adapter => adapter.Draft.IsDirty);
@@ -238,6 +246,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         }
 
         _isDisposed = true;
+        CloseEditor();
 
         _refreshCoordinator.Refreshed -= OnAdaptersRefreshed;
         _refreshCoordinator.RefreshFailed -= OnAdapterRefreshFailed;
@@ -256,6 +265,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
         _lastSelectedAdapterId = value?.Id.Value;
         UpdateSelectedAdapterStatus();
         Actions.Attach(value);
+        UpdateEditorAvailability();
         ProfilePanel?.SetDraft(value?.Draft);
         UpdateHome();
     }
@@ -408,6 +418,7 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         if (e.PropertyName == nameof(AdapterActionsViewModel.IsBusy))
         {
+            UpdateEditorAvailability();
             OnPropertyChanged(nameof(IsBusy));
             OnPropertyChanged(nameof(IsConnectionSelectionEnabled));
             foreach (SettingItemViewModel item in Settings)
@@ -432,7 +443,15 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsHomeVisible))]
-    private bool _isDetailsOpen;
+    [NotifyPropertyChangedFor(nameof(IsDetailsOpen))]
+    [NotifyPropertyChangedFor(nameof(IsProfileEditorOpen))]
+    [NotifyPropertyChangedFor(nameof(IsConnectionSelectionEnabled))]
+    [NotifyPropertyChangedFor(nameof(IsContentVisible))]
+    [NotifyPropertyChangedFor(nameof(IsEmptyStateVisible))]
+    private MainWindowPage _currentPage;
+
+    [ObservableProperty]
+    private ProfileEditorViewModel? _profileEditor;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsCardView))]
@@ -441,7 +460,10 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public event EventHandler? ViewModeChanged;
 
-    public bool IsHomeVisible => !IsDetailsOpen;
+    public bool IsHomeVisible => CurrentPage == MainWindowPage.Home;
+    public bool IsDetailsOpen => CurrentPage == MainWindowPage.Details;
+    public bool IsProfileEditorOpen => CurrentPage == MainWindowPage.ProfileEditor;
+    public Task ProfileSwitchTask { get; private set; } = Task.CompletedTask;
     public bool IsCardView => PreferredViewMode == PreferredViewMode.Card ||
         (PreferredViewMode == PreferredViewMode.Auto && (ProfilePanel?.AllProfiles.Count ?? 0) <= 6);
     public bool IsListView => !IsCardView;
@@ -491,25 +513,86 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
                 ? Strings.ConnectionStatusUnknown : SelectedAdapter.ConnectionState);
 
     [RelayCommand]
-    private void OpenDetails() => IsDetailsOpen = true;
-
-    // Returning preserves per-connection drafts; closing still uses the existing dirty-draft prompt.
-    [RelayCommand]
-    private void GoBack() => IsDetailsOpen = false;
-
-    [RelayCommand]
-    private void NewSetting()
+    private void OpenDetails()
     {
-        ProfilePanel?.BeginNewSetting();
-        IsDetailsOpen = true;
+        if (ConfirmEditorExit())
+        {
+            CloseEditor();
+            CurrentPage = MainWindowPage.Details;
+        }
     }
+
+    [RelayCommand]
+    private void GoBack()
+    {
+        if (!ConfirmEditorExit()) return;
+        CloseEditor();
+        CurrentPage = MainWindowPage.Home;
+    }
+
+    [RelayCommand]
+    private void NewSetting() => OpenEditor(null);
 
     [RelayCommand]
     private void EditSetting(ProfileListItemViewModel? item)
     {
-        if (item is not null && ProfilePanel?.EditSetting(item) == true)
+        if (item is not null) OpenEditor(item.Profile);
+    }
+
+    private void OpenEditor(NetworkProfile? profile)
+    {
+        if (_editorFactory is null || !ConfirmEditorExit()) return;
+        CloseEditor();
+        _editorAdapterId = SelectedAdapter?.Id;
+        ProfileEditor = _editorFactory(profile, SelectedAdapter?.Snapshot.Gateway);
+        UpdateEditorAvailability();
+        ProfileEditor.BackRequested += OnEditorBackRequested;
+        ProfileEditor.SaveRequested += OnEditorSaved;
+        ProfileEditor.SaveAndSwitchRequested += OnEditorSavedAndSwitch;
+        CurrentPage = MainWindowPage.ProfileEditor;
+    }
+
+    /// <summary>Shared guard for editor navigation and window/tray exit.</summary>
+    public bool ConfirmEditorExit() => ProfileEditor?.IsBusy != true &&
+        (ProfileEditor?.IsDirty != true || _confirmationService?.Confirm(new UserConfirmationRequest(
+            Strings.ProfileEditorDiscardTitle, Strings.ProfileEditorDiscardMessage)) == true);
+
+    private void OnEditorBackRequested(object? sender, EventArgs e) => GoBack();
+
+    private void OnEditorSaved(object? sender, ProfileEditorSavedEventArgs e)
+    {
+        CloseEditor();
+        if (ProfilePanel is not null) ProfilePanel.SearchText = string.Empty;
+        CurrentPage = MainWindowPage.Home;
+        UpdateHome();
+    }
+
+    private void OnEditorSavedAndSwitch(object? sender, ProfileEditorSavedEventArgs e)
+    {
+        NetworkAdapterId? adapterId = _editorAdapterId;
+        OnEditorSaved(sender, e);
+        if (SelectedAdapter?.Id == adapterId && Actions.ApplyProfileCommand.CanExecute(e.Profile))
         {
-            IsDetailsOpen = true;
+            ProfileSwitchTask = Actions.ApplyProfileCommand.ExecuteAsync(e.Profile);
+        }
+    }
+
+    private void CloseEditor()
+    {
+        if (ProfileEditor is null) return;
+        ProfileEditor.BackRequested -= OnEditorBackRequested;
+        ProfileEditor.SaveRequested -= OnEditorSaved;
+        ProfileEditor.SaveAndSwitchRequested -= OnEditorSavedAndSwitch;
+        ProfileEditor.Dispose();
+        ProfileEditor = null;
+        _editorAdapterId = null;
+    }
+
+    private void UpdateEditorAvailability()
+    {
+        if (ProfileEditor is not null)
+        {
+            ProfileEditor.IsAdapterBusy = IsBusy || SelectedAdapter is null || SelectedAdapter.Id != _editorAdapterId;
         }
     }
 
@@ -571,4 +654,11 @@ public sealed partial class MainWindowViewModel : ObservableObject, IDisposable
             OnPropertyChanged(property);
         }
     }
+}
+
+public enum MainWindowPage
+{
+    Home,
+    Details,
+    ProfileEditor
 }

@@ -26,6 +26,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     private bool _disposed;
     private bool _showAllErrors;
     private bool _isValid;
+    private EditorValues _savedValues;
 
     [ObservableProperty]
     private string _name = string.Empty;
@@ -66,6 +67,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     [ObservableProperty]
     private bool _isBusy;
     [ObservableProperty]
+    private bool _isAdapterBusy;
+    [ObservableProperty]
     private bool _isStatic = true;
     [ObservableProperty]
     private Ipv4AddressSuggestion? _suggestion;
@@ -92,6 +95,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
             SecondaryDns = profile.SecondaryDns ?? string.Empty;
         }
         _loading = false;
+        _savedValues = CurrentValues();
         Validate();
     }
 
@@ -102,6 +106,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         NameError.Length > 0 || DeviceAddressError.Length > 0 || Ipv4AddressError.Length > 0 ||
         SubnetMaskError.Length > 0 || GatewayError.Length > 0 || PrimaryDnsError.Length > 0 || SecondaryDnsError.Length > 0;
     public bool CanSave => !IsBusy && !HasErrors && !_disposed;
+    public bool CanSaveAndSwitch => CanSave && !IsAdapterBusy;
+    public bool IsDirty => CurrentValues() != _savedValues;
     public bool HasSuggestion => Suggestion is not null;
     public bool IsSuggestionVerified => Suggestion?.Status == Ipv4AddressSuggestionStatus.VerifiedFree;
     public string SuggestionStatusText => IsSuggestionVerified
@@ -125,14 +131,14 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     [RelayCommand(CanExecute = nameof(CanSave))]
     private Task SaveOnlyAsync(CancellationToken cancellationToken) => SaveAsync(false, cancellationToken);
 
-    [RelayCommand(CanExecute = nameof(CanSave))]
+    [RelayCommand(CanExecute = nameof(CanSaveAndSwitch))]
     private Task SaveAndSwitchAsync(CancellationToken cancellationToken) => SaveAsync(true, cancellationToken);
 
     /// <summary>Saves and raises exactly one host event only after persistence succeeds.</summary>
     public async Task SaveAsync(bool switchAfterSave, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(_disposed, this);
-        if (IsBusy) return;
+        if (IsBusy || (switchAfterSave && IsAdapterBusy)) return;
         _showAllErrors = true;
         Validate();
         if (!IsValid) return;
@@ -164,6 +170,8 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
             return;
         }
         _profile = result.Profile!;
+        _savedValues = CurrentValues();
+        OnPropertyChanged(nameof(IsDirty));
         OnPropertyChanged(nameof(Title));
         ProfileEditorSavedEventArgs args = new(_profile);
         if (switchAfterSave) SaveAndSwitchRequested?.Invoke(this, args);
@@ -194,6 +202,7 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     private void Edited(string field)
     {
         if (_loading) return;
+        OnPropertyChanged(nameof(IsDirty));
         _touched.Add(field);
         SaveError = string.Empty;
         Validate();
@@ -259,15 +268,18 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
     private void NotifySaveCommands()
     {
         OnPropertyChanged(nameof(CanSave));
+        OnPropertyChanged(nameof(CanSaveAndSwitch));
         SaveOnlyCommand.NotifyCanExecuteChanged();
         SaveAndSwitchCommand.NotifyCanExecuteChanged();
     }
 
     partial void OnIsBusyChanged(bool value) => NotifySaveCommands();
+    partial void OnIsAdapterBusyChanged(bool value) => NotifySaveCommands();
     partial void OnIsStaticChanged(bool value)
     {
         OnPropertyChanged(nameof(IsAutomatic));
         if (_loading) return;
+        OnPropertyChanged(nameof(IsDirty));
         Validate();
         RestartSuggestion();
     }
@@ -351,6 +363,12 @@ public sealed partial class ProfileEditorViewModel : ObservableObject, IDisposab
         _suggestionCancellation?.Dispose();
         _suggestionCancellation = null;
     }
+
+    private EditorValues CurrentValues() => new(Name, IsStatic, DeviceAddress, Ipv4Address,
+        SubnetMask, Gateway, PrimaryDns, SecondaryDns);
+
+    private readonly record struct EditorValues(string Name, bool IsStatic, string DeviceAddress,
+        string Ipv4Address, string SubnetMask, string Gateway, string PrimaryDns, string SecondaryDns);
 
     public void Dispose()
     {

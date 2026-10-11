@@ -664,4 +664,6 @@ public static class Strings
     public static string ProfileEditorGatewayWarning => Get(nameof(ProfileEditorGatewayWarning));
     public static string ProfileEditorSaveFailed => Get(nameof(ProfileEditorSaveFailed));
     public static string ProfileEditorSaveCancelled => Get(nameof(ProfileEditorSaveCancelled));
+    public static string ProfileEditorDiscardTitle => Get(nameof(ProfileEditorDiscardTitle));
+    public static string ProfileEditorDiscardMessage => Get(nameof(ProfileEditorDiscardMessage));
 }
