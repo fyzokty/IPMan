@@ -51,6 +51,9 @@ public sealed class TrayIconManager : IDisposable
     /// <summary>Raised when the user asks to exit the application.</summary>
     public event EventHandler? ExitRequested;
 
+    /// <summary>Allows the safety coordinator to complete keep/restore or cancel before publishing exit.</summary>
+    public Func<Task<bool>>? ExitGuard { get; set; }
+
     /// <summary>Raised when an operation-result notification is clicked.</summary>
     public event EventHandler<string>? NotificationClicked;
 
@@ -155,8 +158,16 @@ public sealed class TrayIconManager : IDisposable
     private void OnOpenClick(object? sender, EventArgs e) =>
         OpenRequested?.Invoke(this, EventArgs.Empty);
 
-    private void OnExitClick(object? sender, EventArgs e) =>
-        ExitRequested?.Invoke(this, EventArgs.Empty);
+    private async void OnExitClick(object? sender, EventArgs e)
+        => await RequestExitAsync();
+
+    internal async Task RequestExitAsync()
+    {
+        if (ExitGuard is null || await ExitGuard())
+        {
+            ExitRequested?.Invoke(this, EventArgs.Empty);
+        }
+    }
 
     private void OnBalloonTipClicked(object? sender, EventArgs e)
     {

@@ -13,18 +13,23 @@ public sealed class FakeRecoveryRestoreService : IRecoveryRestoreService
 
     public Exception? Failure { get; set; }
 
+    public Task<RecoveryRestoreResult>? PendingResult { get; set; }
+
+    public TaskCompletionSource RestoreStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
     public Task<RecoveryRestoreResult> RestoreLatestAsync(
         RecoveryRestoreRequest request,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         Requests.Add(request);
+        RestoreStarted.TrySetResult();
 
         if (Failure is not null)
         {
             return Task.FromException<RecoveryRestoreResult>(Failure);
         }
 
-        return Task.FromResult(QueuedResults.Count > 0 ? QueuedResults.Dequeue() : Result);
+        return PendingResult ?? Task.FromResult(QueuedResults.Count > 0 ? QueuedResults.Dequeue() : Result);
     }
 }

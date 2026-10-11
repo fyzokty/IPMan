@@ -26,6 +26,7 @@ public partial class SettingsWindow : Window
         _themeService = themeService;
         InitializeComponent();
         DataContext = viewModel;
+        viewModel.RefreshInternetLossConfirmationPreference();
         AskRadioButton.IsChecked = viewModel.CloseToTray is null;
         TrayRadioButton.IsChecked = viewModel.CloseToTray == true;
         ExitRadioButton.IsChecked = viewModel.CloseToTray == false;

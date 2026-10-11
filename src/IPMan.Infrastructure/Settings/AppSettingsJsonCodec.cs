@@ -47,7 +47,8 @@ internal sealed class AppSettingsJsonCodec
             document.SkipDhcpQuickActionConfirmation ?? defaults.SkipDhcpQuickActionConfirmation,
             ReadNotificationMode(document.NotificationMode, document.NotificationsEnabled),
             document.NotificationPromptShown ?? defaults.NotificationPromptShown,
-            ReadViewMode(document.PreferredViewMode));
+            ReadViewMode(document.PreferredViewMode),
+            document.SkipInternetLossConfirmation ?? defaults.SkipInternetLossConfirmation);
         Validate(settings);
         return new AppSettingsReadResult(settings, themeWasCorrected);
     }
@@ -201,7 +202,8 @@ internal sealed class AppSettingsJsonCodec
         bool? SkipDhcpQuickActionConfirmation,
         JsonElement? NotificationMode,
         bool? NotificationPromptShown,
-        JsonElement? PreferredViewMode);
+        JsonElement? PreferredViewMode,
+        bool? SkipInternetLossConfirmation);
 }
 
 internal sealed record AppSettingsReadResult(AppSettings Settings, bool ThemeWasCorrected);

@@ -401,4 +401,38 @@
         </Setter.Value></Setter>
     </Style>
     <Style TargetType="ScrollBar"><Setter Property="Background" Value="{DynamicResource ControlBackgroundBrush}" /><Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" /></Style>
+    <Style x:Key="SafeSwitchDetailsExpanderStyle" TargetType="Expander">
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Expander">
+                    <StackPanel>
+                        <ToggleButton IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                      HorizontalAlignment="Left" Foreground="{TemplateBinding Foreground}">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="Header" Background="{StaticResource TransparentBrush}" BorderThickness="1" Padding="2,4">
+                                        <StackPanel Orientation="Horizontal">
+                                            <ContentPresenter Content="{Binding Header, RelativeSource={RelativeSource AncestorType=Expander}}" />
+                                            <TextBlock x:Name="Arrow" Text="&#xE76C;" Style="{StaticResource IconStyle}"
+                                                       Foreground="{DynamicResource SecondaryTextBrush}" FontSize="10" Margin="8,0,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsChecked" Value="True"><Setter TargetName="Arrow" Property="Text" Value="&#xE70D;" /></Trigger>
+                                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Header" Property="BorderBrush" Value="{DynamicResource FocusBrush}" /></Trigger>
+                                        <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Header" Property="Background" Value="{DynamicResource ControlHoverBrush}" /></Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <ContentPresenter x:Name="Body" Visibility="Collapsed" />
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsExpanded" Value="True"><Setter TargetName="Body" Property="Visibility" Value="Visible" /></Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>

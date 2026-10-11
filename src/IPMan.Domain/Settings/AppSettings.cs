@@ -16,7 +16,8 @@ public sealed record AppSettings(
     bool SkipDhcpQuickActionConfirmation = false,
     NotificationMode NotificationMode = NotificationMode.Disabled,
     bool NotificationPromptShown = false,
-    PreferredViewMode PreferredViewMode = PreferredViewMode.Auto)
+    PreferredViewMode PreferredViewMode = PreferredViewMode.Auto,
+    bool SkipInternetLossConfirmation = false)
 {
     /// <summary>The settings schema version understood by this release.</summary>
     public const int CurrentSchemaVersion = 1;

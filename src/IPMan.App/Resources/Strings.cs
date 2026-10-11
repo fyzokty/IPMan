@@ -586,4 +586,40 @@ public static class Strings
         IFormatProvider formatProvider,
         params object?[] arguments) =>
         string.Format(formatProvider, format, arguments);
+
+    public static string SafeSwitchConfirmationTitle => Get(nameof(SafeSwitchConfirmationTitle));
+    public static string SafeSwitchComputerAddress => Get(nameof(SafeSwitchComputerAddress));
+    public static string SafeSwitchAddressArrow => Get(nameof(SafeSwitchAddressArrow));
+    public static string SafeSwitchConnection => Get(nameof(SafeSwitchConnection));
+    public static string SafeSwitchInternetAdvisory => Get(nameof(SafeSwitchInternetAdvisory));
+    public static string SafeSwitchTechnicalDetails => Get(nameof(SafeSwitchTechnicalDetails));
+    public static string SafeSwitchSubnetMask => Get(nameof(SafeSwitchSubnetMask));
+    public static string SafeSwitchGateway => Get(nameof(SafeSwitchGateway));
+    public static string SafeSwitchDns => Get(nameof(SafeSwitchDns));
+    public static string SafeSwitchDoNotAskAgain => Get(nameof(SafeSwitchDoNotAskAgain));
+    public static string SafeSwitchCancel => Get(nameof(SafeSwitchCancel));
+    public static string SafeSwitchGo => Get(nameof(SafeSwitchGo));
+    public static string SafeSwitchAutomatic => Get(nameof(SafeSwitchAutomatic));
+    public static string SafeSwitchEmptyValue => Get(nameof(SafeSwitchEmptyValue));
+    public static string SafeSwitchListSeparator => Get(nameof(SafeSwitchListSeparator));
+    public static string SafeSwitchCountdownTitle => Get(nameof(SafeSwitchCountdownTitle));
+    public static string SafeSwitchCountdownBody => Get(nameof(SafeSwitchCountdownBody));
+    public static string SafeSwitchSeconds => Get(nameof(SafeSwitchSeconds));
+    public static string SafeSwitchRevert => Get(nameof(SafeSwitchRevert));
+    public static string SafeSwitchKeep => Get(nameof(SafeSwitchKeep));
+    public static string SafeSwitchCountdownAccessibleName => Get(nameof(SafeSwitchCountdownAccessibleName));
+    public static string SafeSwitchResetConfirmation => Get(nameof(SafeSwitchResetConfirmation));
+    public static string SafeSwitchExitTitle => Get(nameof(SafeSwitchExitTitle));
+    public static string SafeSwitchExitQuestion => Get(nameof(SafeSwitchExitQuestion));
+    public static string SafeSwitchExitKeep => Get(nameof(SafeSwitchExitKeep));
+    public static string SafeSwitchExitRevert => Get(nameof(SafeSwitchExitRevert));
+    public static string SafeSwitchBusy => Get(nameof(SafeSwitchBusy));
+    public static string SafeSwitchApplyFailed => Get(nameof(SafeSwitchApplyFailed));
+    public static string SafeSwitchRevertFailed => Get(nameof(SafeSwitchRevertFailed));
+    public static string FormatSafeSwitchConfirmationTitle(string name) =>
+        Format(SafeSwitchConfirmationTitle, CultureInfo.CurrentCulture, name);
+    public static string FormatSafeSwitchCountdownTitle(string name) =>
+        Format(SafeSwitchCountdownTitle, CultureInfo.CurrentCulture, name);
+    public static string FormatSafeSwitchCountdownBody(int seconds, string name) =>
+        Format(SafeSwitchCountdownBody, CultureInfo.CurrentCulture, seconds, name);
 }
