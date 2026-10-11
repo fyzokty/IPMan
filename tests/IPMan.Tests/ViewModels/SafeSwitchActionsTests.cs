@@ -27,7 +27,9 @@ public sealed class SafeSwitchActionsTests
         fixture.Countdown.KeepCommand.Execute(null);
         await apply;
         Assert.False(fixture.Actions.IsBusy);
-        Assert.Equal(dhcp ? "Otomatik ayarına geçildi." : "Elle ayar ayarına geçildi.", fixture.Actions.StatusMessage);
+        Assert.Equal(
+            Strings.FormatSafeSwitchKept(dhcp ? Strings.SafeSwitchAutomatic : Strings.SafeSwitchManualSetting),
+            fixture.Actions.StatusMessage);
         Assert.Equal(ApplyStatusSeverity.Information, fixture.Actions.StatusSeverity);
         Assert.True(Assert.Single(fixture.Notifications.History).Succeeded);
         Assert.Empty(fixture.Restore.Requests);
@@ -76,8 +78,7 @@ public sealed class SafeSwitchActionsTests
         }
         await apply;
         Assert.Equal(fixture.Adapter.Id, Assert.Single(fixture.Restore.Requests).AdapterId);
-        Assert.Equal(restoreFails ? "Eski ayara dönüş tamamlanamadı. Ağınız şu an yeni ayarda olabilir. Otomatik'e geçerek ya da Ayrıntılar'dan elle düzelterek devam edebilirsiniz." :
-            "Eski ayara (Ofis) dönüldü. Ağınız eskisi gibi.", fixture.Actions.StatusMessage);
+        Assert.Equal(restoreFails ? Strings.SafeSwitchRevertFailed : Strings.FormatSafeSwitchReverted("Ofis"), fixture.Actions.StatusMessage);
         Assert.Equal(restoreFails ? ApplyStatusSeverity.Error : ApplyStatusSeverity.Information, fixture.Actions.StatusSeverity);
         OperationNotificationService.OperationNotificationRecord notification = Assert.Single(fixture.Notifications.History);
         Assert.Equal(Strings.NotificationOperationRestore, notification.Operation);

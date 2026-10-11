@@ -41,7 +41,6 @@ public static class Strings
 
     public static string DetailsAndManualSettings => Get(nameof(DetailsAndManualSettings));
 
-    public static string GoBack => Get(nameof(GoBack));
 
     public static string SwitchToWireless => Get(nameof(SwitchToWireless));
 
@@ -61,7 +60,6 @@ public static class Strings
 
     public static string FavoriteSetting => Get(nameof(FavoriteSetting));
 
-    public static string UpdateSetting => Get(nameof(UpdateSetting));
 
     public static string ConnectionStatusUnknown => Get(nameof(ConnectionStatusUnknown));
 
@@ -144,7 +142,6 @@ public static class Strings
 
     public static string QuickActionDhcpRequired => Get(nameof(QuickActionDhcpRequired));
 
-    public static string QuickActionDhcpAlreadyEnabled => Get(nameof(QuickActionDhcpAlreadyEnabled));
 
     public static string QuickActionUnsupportedAdapter => Get(nameof(QuickActionUnsupportedAdapter));
 
@@ -298,23 +295,11 @@ public static class Strings
     /// <summary>Gets the recovery restore prompt title.</summary>
     public static string ConfirmRestoreTitle => Get(nameof(ConfirmRestoreTitle));
 
-    /// <summary>Gets the non-contiguous subnet mask validation message.</summary>
-    public static string ValidationNonContiguousSubnetMask => Get(nameof(ValidationNonContiguousSubnetMask));
 
-    /// <summary>Gets the network-address validation message.</summary>
-    public static string ValidationNetworkAddressNotAllowed => Get(nameof(ValidationNetworkAddressNotAllowed));
 
-    /// <summary>Gets the broadcast-address validation message.</summary>
-    public static string ValidationBroadcastAddressNotAllowed => Get(nameof(ValidationBroadcastAddressNotAllowed));
 
-    /// <summary>Gets the gateway-outside-subnet validation message.</summary>
-    public static string ValidationGatewayOutsideSubnet => Get(nameof(ValidationGatewayOutsideSubnet));
 
-    /// <summary>Gets the primary-DNS-required validation message.</summary>
-    public static string ValidationPrimaryDnsRequired => Get(nameof(ValidationPrimaryDnsRequired));
 
-    /// <summary>Gets the gateway-equals-host validation message.</summary>
-    public static string ValidationGatewayMatchesHostAddress => Get(nameof(ValidationGatewayMatchesHostAddress));
 
     public static string LoadingAdapters => Get(nameof(LoadingAdapters));
 
@@ -345,7 +330,6 @@ public static class Strings
 
     public static string TrayPreferenceMessage => Get(nameof(TrayPreferenceMessage));
 
-    public static string TrayBalloonMessage => Get(nameof(TrayBalloonMessage));
 
     public static string ExitConfirmationTitle => Get(nameof(ExitConfirmationTitle));
 
@@ -362,7 +346,6 @@ public static class Strings
 
     public static string StatusLastRefreshNever => Get(nameof(StatusLastRefreshNever));
 
-    public static string ProfilePanelHeader => Get(nameof(ProfilePanelHeader));
     public static string ProfileSearchPlaceholder => Get(nameof(ProfileSearchPlaceholder));
     public static string ProfileGroupFavorites => Get(nameof(ProfileGroupFavorites));
     public static string ProfileGroupOthers => Get(nameof(ProfileGroupOthers));
@@ -372,7 +355,6 @@ public static class Strings
     public static string CommandExportProfile => Get(nameof(CommandExportProfile));
     public static string CommandRenameProfile => Get(nameof(CommandRenameProfile));
     public static string CommandDuplicateProfile => Get(nameof(CommandDuplicateProfile));
-    public static string CommandToggleFavorite => Get(nameof(CommandToggleFavorite));
     public static string CommandDeleteProfile => Get(nameof(CommandDeleteProfile));
     public static string CommandOk => Get(nameof(CommandOk));
     public static string CommandCancel => Get(nameof(CommandCancel));
@@ -381,13 +363,11 @@ public static class Strings
     public static string ProfileJsonFileFilter => Get(nameof(ProfileJsonFileFilter));
     public static string ProfileRenameTitle => Get(nameof(ProfileRenameTitle));
     public static string ProfileNameRequired => Get(nameof(ProfileNameRequired));
-    public static string ProfileLoadCancelled => Get(nameof(ProfileLoadCancelled));
     public static string ConfirmProfileDeleteTitle => Get(nameof(ConfirmProfileDeleteTitle));
     public static string ProfileSaveSuccess => Get(nameof(ProfileSaveSuccess));
     public static string ProfileDeleteSuccess => Get(nameof(ProfileDeleteSuccess));
     public static string ProfileImportSuccess => Get(nameof(ProfileImportSuccess));
     public static string ProfileExportSuccess => Get(nameof(ProfileExportSuccess));
-    public static string ProfileApplied => Get(nameof(ProfileApplied));
     public static string ProfileInvalidContent => Get(nameof(ProfileInvalidContent));
     public static string ProfileAccessDenied => Get(nameof(ProfileAccessDenied));
     public static string ProfileIoFailure => Get(nameof(ProfileIoFailure));
@@ -402,7 +382,6 @@ public static class Strings
     public static string SettingsThemeLight => Get(nameof(SettingsThemeLight));
     public static string SettingsThemeDark => Get(nameof(SettingsThemeDark));
     public static string SettingsThemeSystem => Get(nameof(SettingsThemeSystem));
-    public static string SettingsThemeSoon => Get(nameof(SettingsThemeSoon));
     public static string SettingsCloseBehavior => Get(nameof(SettingsCloseBehavior));
     public static string SettingsCloseAsk => Get(nameof(SettingsCloseAsk));
     public static string SettingsCloseTray => Get(nameof(SettingsCloseTray));
@@ -411,7 +390,6 @@ public static class Strings
     public static string SettingsNotificationsDisabled => Get(nameof(SettingsNotificationsDisabled));
     public static string SettingsNotificationsWhenUnfocused => Get(nameof(SettingsNotificationsWhenUnfocused));
     public static string SettingsNotificationsAlways => Get(nameof(SettingsNotificationsAlways));
-    public static string SettingsApplyOnSelection => Get(nameof(SettingsApplyOnSelection));
     public static string SettingsShowVirtual => Get(nameof(SettingsShowVirtual));
     public static string SettingsRememberWindow => Get(nameof(SettingsRememberWindow));
     public static string SettingsReset => Get(nameof(SettingsReset));
@@ -421,7 +399,6 @@ public static class Strings
     public static string SettingsHelpTheme => Get(nameof(SettingsHelpTheme));
     public static string SettingsHelpClose => Get(nameof(SettingsHelpClose));
     public static string SettingsHelpNotifications => Get(nameof(SettingsHelpNotifications));
-    public static string SettingsHelpApplyOnSelection => Get(nameof(SettingsHelpApplyOnSelection));
     public static string SettingsHelpShowVirtual => Get(nameof(SettingsHelpShowVirtual));
     public static string SettingsHelpRememberWindow => Get(nameof(SettingsHelpRememberWindow));
 
@@ -533,16 +510,16 @@ public static class Strings
         Format(Get("ConfirmRestoreMessage"), CultureInfo.CurrentCulture, adapterName);
 
     /// <summary>Formats a required-field validation message.</summary>
-    public static string FormatValidationRequired(string fieldLabel) =>
-        Format(Get("ValidationRequired"), CultureInfo.CurrentCulture, fieldLabel);
+    public static string FormatValidationRequired(string fieldLabel, string example) =>
+        Format(Get("ValidationRequired"), CultureInfo.CurrentCulture, fieldLabel, example);
 
     /// <summary>Formats an invalid-IPv4 validation message.</summary>
-    public static string FormatValidationInvalidIpv4(string fieldLabel) =>
-        Format(Get("ValidationInvalidIpv4"), CultureInfo.CurrentCulture, fieldLabel);
+    public static string FormatValidationInvalidIpv4(string fieldLabel, string example) =>
+        Format(Get("ValidationInvalidIpv4"), CultureInfo.CurrentCulture, fieldLabel, example);
 
     /// <summary>Formats a disallowed-address validation message.</summary>
-    public static string FormatValidationAddressNotAllowed(string fieldLabel) =>
-        Format(Get("ValidationAddressNotAllowed"), CultureInfo.CurrentCulture, fieldLabel);
+    public static string FormatValidationAddressNotAllowed(string fieldLabel, string example) =>
+        Format(Get("ValidationAddressNotAllowed"), CultureInfo.CurrentCulture, fieldLabel, example);
 
 
     // Details page
@@ -586,10 +563,6 @@ public static class Strings
     public static string DetailsPartial => Get(nameof(DetailsPartial));
     public static string DetailsModeCurrentFormat => Get(nameof(DetailsModeCurrentFormat));
 
-    public static string DetailsValidationExample => Get(nameof(DetailsValidationExample));
-    public static string DetailsMaskExample => Get(nameof(DetailsMaskExample));
-    public static string DetailsMutationRejected => Get(nameof(DetailsMutationRejected));
-    public static string DetailsPartialExplanation => Get(nameof(DetailsPartialExplanation));
     public static string FormatDetailsCurrent(string value) => Format(DetailsCurrentFormat, CultureInfo.CurrentCulture, value);
     public static string FormatDetailsChangeCount(int value) => Format(DetailsChangeCountFormat, CultureInfo.CurrentCulture, value);
     public static string FormatDetailsModeCurrent(string value) => Format(DetailsModeCurrentFormat, CultureInfo.CurrentCulture, value);
@@ -674,13 +647,56 @@ public static class Strings
     public static string ProfileEditorSaveAndSwitch => Get(nameof(ProfileEditorSaveAndSwitch));
     public static string ProfileEditorNameRequired => Get(nameof(ProfileEditorNameRequired));
     public static string ProfileEditorDuplicateName => Get(nameof(ProfileEditorDuplicateName));
-    public static string ProfileEditorOctetError => Get(nameof(ProfileEditorOctetError));
-    public static string ProfileEditorAddressFormatError => Get(nameof(ProfileEditorAddressFormatError));
-    public static string ProfileEditorAddressExample => Get(nameof(ProfileEditorAddressExample));
-    public static string ProfileEditorMaskExample => Get(nameof(ProfileEditorMaskExample));
     public static string ProfileEditorGatewayWarning => Get(nameof(ProfileEditorGatewayWarning));
     public static string ProfileEditorSaveFailed => Get(nameof(ProfileEditorSaveFailed));
     public static string ProfileEditorSaveCancelled => Get(nameof(ProfileEditorSaveCancelled));
     public static string ProfileEditorDiscardTitle => Get(nameof(ProfileEditorDiscardTitle));
     public static string ProfileEditorDiscardMessage => Get(nameof(ProfileEditorDiscardMessage));
+
+    // Sentence parts for the three-step result messages (what happened, did the network change, what to do).
+    public static string ApplyValidationAction => Get(nameof(ApplyValidationAction));
+    public static string ApplyMutationFailedAction => Get(nameof(ApplyMutationFailedAction));
+    public static string ApplyPartialFailureAction => Get(nameof(ApplyPartialFailureAction));
+    public static string ApplyAdapterUnavailableDuringVerificationAction => Get(nameof(ApplyAdapterUnavailableDuringVerificationAction));
+    public static string ApplyConflictUnconfirmedAction => Get(nameof(ApplyConflictUnconfirmedAction));
+    public static string ApplyProbeIndeterminateUnconfirmedAction => Get(nameof(ApplyProbeIndeterminateUnconfirmedAction));
+    public static string SafetyMultipleIpv4AddressesAction => Get(nameof(SafetyMultipleIpv4AddressesAction));
+    public static string SafetyMultipleIpv4GatewaysAction => Get(nameof(SafetyMultipleIpv4GatewaysAction));
+    public static string SafetyTooManyIpv4DnsServersAction => Get(nameof(SafetyTooManyIpv4DnsServersAction));
+    public static string SafetyNotElevatedAction => Get(nameof(SafetyNotElevatedAction));
+    public static string NextRetry => Get(nameof(NextRetry));
+    public static string NextRefreshAndRetry => Get(nameof(NextRefreshAndRetry));
+    public static string NextCheckDetails => Get(nameof(NextCheckDetails));
+    public static string NextManualEntry => Get(nameof(NextManualEntry));
+    public static string NextSelectConnection => Get(nameof(NextSelectConnection));
+    public static string NextRetryIfWanted => Get(nameof(NextRetryIfWanted));
+    public static string NextFixDisk => Get(nameof(NextFixDisk));
+    public static string NextWaitReady => Get(nameof(NextWaitReady));
+    public static string NetworkUnchanged => Get(nameof(NetworkUnchanged));
+    public static string NetworkPartial => Get(nameof(NetworkPartial));
+    public static string NetworkUnverified => Get(nameof(NetworkUnverified));
+    public static string ExampleAddress => Get(nameof(ExampleAddress));
+    public static string ExampleMask => Get(nameof(ExampleMask));
+    public static string ExampleGateway => Get(nameof(ExampleGateway));
+    public static string ExamplePrimaryDns => Get(nameof(ExamplePrimaryDns));
+    public static string ExampleSecondaryDns => Get(nameof(ExampleSecondaryDns));
+    public static string ProfileEditorDeviceShortLabel => Get(nameof(ProfileEditorDeviceShortLabel));
+
+    // Validation messages that carry a concrete example.
+    public static string FormatValidationNonContiguousSubnetMask(string example) =>
+        Format(Get("ValidationNonContiguousSubnetMask"), CultureInfo.CurrentCulture, example);
+    public static string FormatValidationNetworkAddressNotAllowed(string example) =>
+        Format(Get("ValidationNetworkAddressNotAllowed"), CultureInfo.CurrentCulture, example);
+    public static string FormatValidationBroadcastAddressNotAllowed(string example) =>
+        Format(Get("ValidationBroadcastAddressNotAllowed"), CultureInfo.CurrentCulture, example);
+    public static string FormatValidationGatewayOutsideSubnet(string addressExample, string gatewayExample) =>
+        Format(Get("ValidationGatewayOutsideSubnet"), CultureInfo.CurrentCulture, addressExample, gatewayExample);
+    public static string FormatValidationPrimaryDnsRequired(string example) =>
+        Format(Get("ValidationPrimaryDnsRequired"), CultureInfo.CurrentCulture, example);
+    public static string FormatValidationGatewayMatchesHostAddress(string addressExample, string gatewayExample) =>
+        Format(Get("ValidationGatewayMatchesHostAddress"), CultureInfo.CurrentCulture, addressExample, gatewayExample);
+    public static string FormatProfileEditorOctetError(string example) =>
+        Format(Get("ProfileEditorOctetError"), CultureInfo.CurrentCulture, example);
+    public static string FormatProfileEditorAddressFormatError(string example) =>
+        Format(Get("ProfileEditorAddressFormatError"), CultureInfo.CurrentCulture, example);
 }

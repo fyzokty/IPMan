@@ -135,8 +135,8 @@ public sealed class AdapterDisplayFormatterTests
     [Fact]
     public void FormatConnectionState_UsesTurkishText_NotColourAlone()
     {
-        Assert.Equal("Bağlı", AdapterDisplayFormatter.FormatConnectionState(true));
-        Assert.Equal("Bağlı Değil", AdapterDisplayFormatter.FormatConnectionState(false));
+        Assert.Equal(Strings.ConnectionStateConnected, AdapterDisplayFormatter.FormatConnectionState(true));
+        Assert.Equal(Strings.ConnectionStateDisconnected, AdapterDisplayFormatter.FormatConnectionState(false));
     }
 
     [Theory]
@@ -235,9 +235,9 @@ public sealed class AdapterDisplayFormatterTests
 
         string text = AdapterDisplayFormatter.FormatCopySummary(snapshot);
 
-        Assert.Contains("Bağlantı adı: Ethernet", text, StringComparison.Ordinal);
+        Assert.Contains($"{Strings.FieldAdapterName}: Ethernet", text, StringComparison.Ordinal);
         Assert.Contains("192.168.1.50 (255.255.255.0)", text, StringComparison.Ordinal);
-        Assert.Contains("DNS sunucuları: 192.168.1.1", text, StringComparison.Ordinal);
+        Assert.Contains($"{Strings.FieldDnsServers}: 192.168.1.1", text, StringComparison.Ordinal);
         Assert.DoesNotContain("IPv6", text, StringComparison.OrdinalIgnoreCase);
     }
 

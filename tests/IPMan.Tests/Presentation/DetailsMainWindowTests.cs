@@ -41,7 +41,7 @@ public sealed partial class WindowXamlSmokeTests
             Assert.DoesNotContain(Descendants(content).OfType<TextBlock>(),
                 block => block.IsVisible && block.Text.Contains("taslak", StringComparison.OrdinalIgnoreCase));
             page.ShowFailure(new(Strings.FormatDetailsFailureTitle(Strings.SafeSwitchManualSetting),
-                Strings.DetailsMutationRejected, Strings.DetailsUncertain, "Failure code"), page.CreateRequest());
+                Strings.ApplyMutationFailed, Strings.DetailsUncertain, "Failure code"), page.CreateRequest());
             Layout(main);
             Assert.Contains(Descendants(view).OfType<TextBlock>(), block => block.Text == Strings.DetailsUncertain);
             Assert.Single(Descendants(view).OfType<Button>(), button => ReferenceEquals(button.Command, page.RetryCommand));

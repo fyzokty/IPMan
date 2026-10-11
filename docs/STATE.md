@@ -46,14 +46,13 @@ Elevation: whole app runs `requireAdministrator`, helper split rejected (ADR-013
 Distribution: win-x64 self-contained portable zip and Inno Setup installer tooling added; tagged CI creates a draft Release, pending CI and clean Windows verification (10).
 Single instance: `Local\` mutex + admin-only pipe activation; mutation serialized
 machine-wide by a `Global\` mutex (ADR-011, ADR-014).
-i18n: `Strings.resx`, single language (Turkish).
-Design: Windows 11 Fluent tokens and simplified component specifications in `docs/03_UI_UX/DESIGN.md`, UX principles in `docs/03_UI_UX/UX-ilkeleri.md`, and 10 canonical reference screens in `docs/03_UI_UX/stitch-karma/` (ADR-018). The legacy technician layout in `docs/03_UI_UX/stitch/` is superseded. The main window follows the new design (13); 17 remains. Shared styles live in `Themes/Controls.xaml`.
+i18n: `Strings.resx`, single language (Turkish); UI text follows the UX glossary and the what happened / network changed? / what to do formula (17), guarded by `StringsTerminologyTests`.
+Design: Windows 11 Fluent tokens and simplified component specifications in `docs/03_UI_UX/DESIGN.md`, UX principles in `docs/03_UI_UX/UX-ilkeleri.md`, and 10 canonical reference screens in `docs/03_UI_UX/stitch-karma/` (ADR-018). The legacy technician layout in `docs/03_UI_UX/stitch/` is superseded. The main window follows the new design (13, 17). Shared styles live in `Themes/Controls.xaml`.
 
 # Next
 Order and details live in `docs/backlog/`:
 1. 10 — portable package and installer
 2. 11 — real-adapter verification on an isolated VM (can run in parallel)
-3. 17 — remaining simple-first UX overhaul (ADR-018: plain terminology)
 
 # Constraints
 - Destructive network tests are opt-in and must run only on an isolated VM adapter

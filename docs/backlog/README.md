@@ -30,7 +30,7 @@ Sıra, uygulama sırasıdır. Tüm maddeler 1.0 kapsamındadır.
 | 14 | [Güvenli geçiş: koşullu onay ve geri alma sayacı](14-guvenli-gecis.md) | tamamlandı |
 | 15 | [Yeni ve düzenle ayar sayfası](15-yeni-ayar-sayfasi.md) | tamamlandı |
 | 16 | [Ayrıntılar ve elle ayar sayfası](16-ayrintilar-sayfasi.md) | tamamlandı |
-| 17 | [Sade metinler ve terim sözlüğü uyumu](17-sade-metinler.md) | yapılacak |
+| 17 | [Sade metinler ve terim sözlüğü uyumu](17-sade-metinler.md) | tamamlandı |
 | 18 | [Tepsi menüsünden ayar değiştirme](18-tepsiden-ayar-degistirme.md) | tamamlandı |
 
 ## Kaynaklar

@@ -291,7 +291,7 @@ public sealed partial class AdapterDraftViewModel : ObservableObject
         isTouched
             ? string.Join(
                 Environment.NewLine,
-                Errors.Where(error => error.Field == field).Select(ValidationMessageFormatter.Describe))
+                Errors.Where(error => error.Field == field).Select(error => ValidationMessageFormatter.Describe(error)))
             : string.Empty;
 
     private void ResetTouchedFields()
