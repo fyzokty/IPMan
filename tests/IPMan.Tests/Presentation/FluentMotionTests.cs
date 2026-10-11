@@ -14,10 +14,12 @@ namespace IPMan.Tests.Presentation;
 [Collection(WpfTestCollectionDefinition.Name)]
 public sealed class FluentMotionTests
 {
+    private static readonly string[] MotionDurationKeys = ["Motion.Fast", "Motion.Normal", "Motion.Slow", "Motion.Busy"];
+
     [Fact]
     public void SelectionAndFeedback_KeepMeasuredGeometryAndCommands()
     {
-        WpfTestRunner.Run(() =>
+        WpfTestRunner.RunWithSystemAnimations(() =>
         {
             StackPanel host = Host();
             FluentMotion.SetIsEnabled(host, false);
@@ -65,7 +67,7 @@ public sealed class FluentMotionTests
     [Fact]
     public void EntranceAndDisableSwitch_StartAndStopStoryboardsWithoutNativeWindows()
     {
-        WpfTestRunner.Run(() =>
+        WpfTestRunner.RunWithSystemAnimations(() =>
         {
             StackPanel host = Host();
             Border content = new() { Background = Brushes.White };
@@ -73,7 +75,7 @@ public sealed class FluentMotionTests
                 new Binding { Path = new PropertyPath(FluentMotion.VisualOpacityProperty), Source = content });
             host.Children.Add(content);
             FluentMotion.Enter(content);
-            Assert.Equal(SystemParameters.ClientAreaAnimation, content.HasAnimatedProperties);
+            Assert.True(content.HasAnimatedProperties);
             FluentMotion.SetIsEnabled(host, false);
             Assert.False(content.HasAnimatedProperties);
             Assert.False(content.RenderTransform.HasAnimatedProperties);
@@ -94,7 +96,7 @@ public sealed class FluentMotionTests
     [InlineData(false)]
     public void CopyClick_ObservesCommandResultAndOnlyAnimatesClickedButton(bool succeeds)
     {
-        WpfTestRunner.Run(() =>
+        WpfTestRunner.RunWithSystemAnimations(() =>
         {
             FakeClipboardService clipboard = new() { Succeeds = succeeds };
             AdapterViewModel adapter = new(TestData.Snapshot(), clipboard, new StaticIpv4ConfigurationValidator());
@@ -125,9 +127,49 @@ public sealed class FluentMotionTests
     }
 
     [Fact]
+    public void Motion_WhenSystemAnimationsDisabled_UsesZeroDurationsAndNoAnimations()
+    {
+        WpfTestRunner.RunWithSystemAnimations(() =>
+        {
+            StackPanel host = Host();
+            Border content = new() { Width = 100, Height = 32 };
+            content.SetBinding(UIElement.OpacityProperty,
+                new Binding { Path = new PropertyPath(FluentMotion.VisualOpacityProperty), Source = content });
+            host.Children.Add(content);
+            using System.Windows.Interop.HwndSource source = DisabledAppearanceTests.Show(host);
+            DisabledAppearanceTests.Pump(5);
+            Assert.True(content.IsLoaded);
+            Assert.True(FluentMotion.GetIsEnabled(content));
+            foreach (string key in MotionDurationKeys)
+            {
+                Assert.NotEqual(TimeSpan.Zero, Assert.IsType<TimeSpan>(host.FindResource(key)));
+                Assert.Equal(TimeSpan.Zero, FluentMotion.Duration(content, key));
+            }
+
+            FluentMotion.Enter(content);
+            FluentMotion.SetBackground(content, Brushes.Red);
+            FluentMotion.SetBackground(content, Brushes.Green);
+            FluentMotion.SetBorderBrush(content, Brushes.Blue);
+            FluentMotion.SetBorderBrush(content, Brushes.Yellow);
+            FluentMotion.SetPressed(content, true);
+            FluentMotion.SetAngle(content, 90);
+            FluentMotion.SetBusy(content, true);
+            FluentMotion.SetReveal(content, false);
+            Assert.Equal(0, content.Opacity);
+            FluentMotion.SetReveal(content, true);
+            Assert.Equal(1, content.Opacity);
+            Assert.False(content.HasAnimatedProperties);
+            TransformGroup transforms = Assert.IsType<TransformGroup>(content.RenderTransform);
+            Assert.All(transforms.Children, transform => Assert.False(transform.HasAnimatedProperties));
+            Assert.False(Assert.IsType<SolidColorBrush>(FluentMotion.GetVisualBackground(content)).HasAnimatedProperties);
+            Assert.False(Assert.IsType<SolidColorBrush>(FluentMotion.GetVisualBorderBrush(content)).HasAnimatedProperties);
+        }, "System-disabled motion timed out.", enabled: false);
+    }
+
+    [Fact]
     public void CopyFeedback_UsesConfiguredHoldAndResetsThroughDispatcher()
     {
-        WpfTestRunner.Run(() =>
+        WpfTestRunner.RunWithSystemAnimations(() =>
         {
             StackPanel host = Host();
             Assert.Equal(TimeSpan.FromSeconds(1.5), host.Resources["Motion.CopyHold"]);
@@ -146,7 +188,7 @@ public sealed class FluentMotionTests
     [Fact]
     public void CopyClick_WhenUnloadedBeforeCommandFeedbackDispatch_DiscardsPendingFeedback()
     {
-        WpfTestRunner.Run(() =>
+        WpfTestRunner.RunWithSystemAnimations(() =>
         {
             StackPanel host = Host();
             AdapterViewModel adapter = new(TestData.Snapshot(), new FakeClipboardService(), new StaticIpv4ConfigurationValidator());
@@ -162,7 +204,7 @@ public sealed class FluentMotionTests
     [Fact]
     public void ErrorShake_UsesPrivateTransformsAndObeysCentralDisableSwitch()
     {
-        WpfTestRunner.Run(() =>
+        WpfTestRunner.RunWithSystemAnimations(() =>
         {
             StackPanel host = Host();
             TestButton button = new() { Style = (Style)host.Resources["CopyButtonStyle"] };
@@ -172,7 +214,7 @@ public sealed class FluentMotionTests
             Border chrome = (Border)button.Template.FindName("Chrome", button);
             TranslateTransform translation = FluentMotion.Translation(chrome);
             Assert.False(translation.IsFrozen);
-            Assert.Equal(SystemParameters.ClientAreaAnimation, translation.HasAnimatedProperties);
+            Assert.True(translation.HasAnimatedProperties);
             FluentMotion.SetIsEnabled(host, false);
             Assert.False(translation.HasAnimatedProperties);
             Assert.Equal(0, translation.X);
@@ -183,7 +225,7 @@ public sealed class FluentMotionTests
     [Fact]
     public void PrivateAnimatedBrushes_FollowThemeReplacementWithoutMutatingResources()
     {
-        WpfTestRunner.Run(() =>
+        WpfTestRunner.RunWithSystemAnimations(() =>
         {
             StackPanel host = Host();
             FluentMotion.SetIsEnabled(host, false);
@@ -207,9 +249,8 @@ public sealed class FluentMotionTests
     [Fact]
     public void Motion_WithOpacityBindingAndNativeBrushTrigger_RestoresDeclarativeValues()
     {
-        WpfTestRunner.Run(() =>
+        WpfTestRunner.RunWithSystemAnimations(() =>
         {
-            Assert.True(SystemParameters.ClientAreaAnimation);
             StackPanel host = Host();
             DisabledAppearanceTests.ShortenMotion(host);
             Border content = new() { Width = 100, Height = 32 };
@@ -258,9 +299,8 @@ public sealed class FluentMotionTests
     [Fact]
     public void CopyAndReveal_WithMotionOn_SettleOnLatestTemplateState()
     {
-        WpfTestRunner.Run(() =>
+        WpfTestRunner.RunWithSystemAnimations(() =>
         {
-            Assert.True(SystemParameters.ClientAreaAnimation);
             StackPanel host = Host();
             DisabledAppearanceTests.ShortenMotion(host);
             Button copy = new() { Style = (Style)host.Resources["CopyButtonStyle"] };

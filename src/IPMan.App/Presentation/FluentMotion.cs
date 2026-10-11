@@ -19,6 +19,8 @@ public static class FluentMotion
     private static readonly List<WeakReference<FrameworkElement>> Owners = [];
     private static readonly ConditionalWeakTable<FrameworkElement, object> Tracked = new();
 
+    internal static Func<bool> SystemAnimationsEnabled { get; set; } = () => SystemParameters.ClientAreaAnimation;
+
     static FluentMotion() => SystemParameters.StaticPropertyChanged += OnSystemParametersChanged;
 
     public static readonly DependencyProperty IsEnabledProperty = DependencyProperty.RegisterAttached(
@@ -95,14 +97,14 @@ public static class FluentMotion
             }
         }
 
-        return GetIsEnabled(element) && SystemParameters.ClientAreaAnimation
+        return GetIsEnabled(element) && SystemAnimationsEnabled()
             ? element.TryFindResource(key) as TimeSpan? ?? TimeSpan.FromMilliseconds(167)
             : TimeSpan.Zero;
     }
 
     private static void OnSystemParametersChanged(object? sender, PropertyChangedEventArgs args)
     {
-        if (args.PropertyName != nameof(SystemParameters.ClientAreaAnimation))
+        if (args.PropertyName != "ClientAreaAnimation")
         {
             return;
         }
@@ -115,7 +117,7 @@ public static class FluentMotion
                 {
                     _ = element.Dispatcher.BeginInvoke(() =>
                     {
-                        if (!SystemParameters.ClientAreaAnimation)
+                        if (!SystemAnimationsEnabled())
                         {
                             StopAnimations(element);
                         }

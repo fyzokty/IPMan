@@ -18,11 +18,10 @@ public sealed partial class WindowXamlSmokeTests
     [InlineData("Light")]
     [InlineData("Dark")]
     public void DhcpButton_WhenAdapterBecomesDhcpWithMotionOn_LooksDisabled(string theme) =>
-        WpfTestRunner.Run(() => VerifyDhcpButtonDisables(theme), $"{theme} DHCP button state timed out.");
+        WpfTestRunner.RunWithSystemAnimations(() => VerifyDhcpButtonDisables(theme), $"{theme} DHCP button state timed out.");
 
     private static void VerifyDhcpButtonDisables(string theme)
     {
-        Assert.True(SystemParameters.ClientAreaAnimation, "Client area animation is off; motion races cannot be reproduced.");
         NetworkAdapterSnapshot staticAdapter = TestData.Snapshot(mode: NetworkConfigurationMode.Static);
         using WindowFixture fixture = new(theme, adapters: [staticAdapter]);
         MainWindow main = FakeWindowServices.CreateWindow<MainWindow>(window => AttachResources(window, theme),

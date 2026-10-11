@@ -26,9 +26,8 @@ public sealed class DisabledAppearanceTests
     [InlineData("Dark")]
     public void DisabledControls_AfterAnimatedEnableSequences_SettleOnTheDisabledLook(string theme)
     {
-        WpfTestRunner.Run(() =>
+        WpfTestRunner.RunWithSystemAnimations(() =>
         {
-            Assert.True(SystemParameters.ClientAreaAnimation, "Client area animation is off; motion races cannot be reproduced.");
             Grid host = Host(theme);
             using HwndSource source = Show(host);
             List<string> failures = [];

@@ -1,11 +1,27 @@
 using System.Runtime.ExceptionServices;
 using System.Windows.Threading;
+using IPMan.App.Presentation;
 using Xunit;
 
 namespace IPMan.Tests.Presentation;
 
 internal static class WpfTestRunner
 {
+    internal static void RunWithSystemAnimations(Action action, string timeoutMessage, bool enabled = true) =>
+        Run(() =>
+        {
+            Func<bool> previous = FluentMotion.SystemAnimationsEnabled;
+            try
+            {
+                FluentMotion.SystemAnimationsEnabled = () => enabled;
+                action();
+            }
+            finally
+            {
+                FluentMotion.SystemAnimationsEnabled = previous;
+            }
+        }, timeoutMessage);
+
     // Call only from the WPF/STA collection so each dispatcher is shut down before the next test starts.
     internal static void Run(Action action, string timeoutMessage)
     {
