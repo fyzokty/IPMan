@@ -144,11 +144,13 @@ public sealed class DiagnosticsViewModelTests
         viewModel.CopyCommand.Execute(null);
 
         Assert.Equal(Strings.DiagnosticsCopyFailed, viewModel.CopyStatus);
+        Assert.False(viewModel.CopySucceeded);
         Assert.Equal(report, viewModel.ReportText);
         clipboard.Succeeds = true;
         clipboard.Failure = null;
         viewModel.CopyCommand.Execute(null);
         Assert.Equal(Strings.DiagnosticsCopySucceeded, viewModel.CopyStatus);
+        Assert.True(viewModel.CopySucceeded);
     }
 
     [Fact]
@@ -199,6 +201,44 @@ public sealed class DiagnosticsViewModelTests
 
         Assert.NotNull(expected);
         Assert.Equal(expected, provider.InformationalVersion);
+    }
+
+    [Fact]
+    public void ReportRows_PreserveValuesAndTheOriginalPlainTextClipboardFormat()
+    {
+        FakeDiagnosticsSources sources = new() { VersionValue = "version: details" + Environment.NewLine + "second line" };
+        using FakeProfileCatalog profiles = CreateProfiles();
+        FakeClipboardService clipboard = new();
+        DiagnosticsViewModel viewModel = Create(sources, profiles, clipboard);
+
+        viewModel.RefreshCommand.Execute(null);
+        viewModel.CopyCommand.Execute(null);
+
+        Assert.Equal(10, viewModel.ReportRows.Count);
+        Assert.Equal(sources.VersionValue, viewModel.ReportRows.Single(row => row.Name == Strings.DiagnosticsApplicationVersion).Value);
+        Assert.Equal(string.Join(Environment.NewLine, viewModel.ReportRows.Select(row => $"{row.Name}: {row.Value}")), viewModel.ReportText);
+        Assert.Equal(viewModel.ReportText, clipboard.LastCopiedText);
+    }
+
+    [Fact]
+    public void ReportRows_RefreshFailedSourcesIndependentlyAndNotifyTheView()
+    {
+        FakeDiagnosticsSources sources = new();
+        using FakeProfileCatalog profiles = new();
+        DiagnosticsViewModel viewModel = Create(sources, profiles);
+        viewModel.RefreshCommand.Execute(null);
+        IReadOnlyList<DiagnosticsReportRow> firstRows = viewModel.ReportRows;
+        List<string?> changes = new();
+        viewModel.PropertyChanged += (_, args) => changes.Add(args.PropertyName);
+        sources.FailingSources.Add(nameof(FakeDiagnosticsSources.ReadWindowsVersion));
+        sources.AdapterCount = 7;
+
+        viewModel.RefreshCommand.Execute(null);
+
+        Assert.NotSame(firstRows, viewModel.ReportRows);
+        Assert.Contains(nameof(DiagnosticsViewModel.ReportRows), changes);
+        Assert.Equal(Strings.DiagnosticsUnreadable, viewModel.ReportRows.Single(row => row.Name == Strings.DiagnosticsWindowsVersion).Value);
+        Assert.Equal("7", viewModel.ReportRows.Single(row => row.Name == Strings.DiagnosticsAdapterCount).Value);
     }
 
     private static FakeProfileCatalog CreateProfiles() => new()

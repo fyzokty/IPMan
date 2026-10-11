@@ -1,6 +1,8 @@
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Automation;
 using IPMan.App.Resources;
+using IPMan.App.Views;
 
 namespace IPMan.App.Presentation;
 
@@ -14,40 +16,19 @@ public sealed class WpfUserTextInputService : IUserTextInputService
         ArgumentException.ThrowIfNullOrWhiteSpace(label);
         ArgumentNullException.ThrowIfNull(initialValue);
 
-        TextBox input = new() { Text = initialValue, MinWidth = 260 };
-        Window window = new()
-        {
-            Title = title,
-            Width = 360,
-            Height = 150,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            ResizeMode = ResizeMode.NoResize,
-            Owner = System.Windows.Application.Current?.MainWindow,
-            Content = CreateContent(label, input)
-        };
-
+        PromptWindow window = CreatePrompt(title, label, initialValue, out TextBox input);
         return window.ShowDialog() == true ? input.Text : null;
     }
 
-    private static StackPanel CreateContent(string label, TextBox input)
+    internal static PromptWindow CreatePrompt(string title, string label, string initialValue, out TextBox input)
     {
-        StackPanel panel = new() { Margin = new Thickness(16) };
-        panel.Children.Add(new TextBlock { Text = label });
-        panel.Children.Add(input);
-
-        Button accept = new() { Content = Strings.CommandOk, IsDefault = true, MinWidth = 75 };
-        accept.Click += (_, _) => Window.GetWindow(accept)!.DialogResult = true;
-        Button cancel = new() { Content = Strings.CommandCancel, IsCancel = true, MinWidth = 75 };
-
-        StackPanel buttons = new()
-        {
-            Orientation = Orientation.Horizontal,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            Margin = new Thickness(0, 12, 0, 0)
-        };
-        buttons.Children.Add(accept);
-        buttons.Children.Add(cancel);
-        panel.Children.Add(buttons);
-        return panel;
+        input = new TextBox { Text = initialValue, MinWidth = 260 };
+        AutomationProperties.SetName(input, label);
+        PromptWindow window = new(title, "\uE8AC", informational: true);
+        window.Body.Children.Add(new TextBlock { Text = label, FontWeight = FontWeights.SemiBold, Margin = new Thickness(0, 0, 0, 8) });
+        window.Body.Children.Add(input);
+        window.AddButton(Strings.CommandCancel, false);
+        window.AddButton(Strings.CommandOk, true);
+        return window;
     }
 }

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+
+<html class="light" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IPMan - Profili yeniden adlandır</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            background: '#F3F3F3',
+            surface: '#FFFFFF',
+            outline: '#D1D1D1',
+            'on-surface': '#1B1B1B',
+            'on-surface-variant': '#5D5D5D',
+            primary: '#0F6CBD',
+            'on-primary': '#FFFFFF',
+            focus: '#005FB8',
+            hover: '#E8F1FB',
+            disabled: '#E5E5E5',
+            success: '#107C10',
+            'success-container': '#DFF6DD',
+            warning: '#B8860B',
+            'warning-container': '#FFF4CE',
+            error: '#A80000',
+            'error-container': '#FDE7E9',
+            info: '#0F6CBD',
+            'info-container': '#EFF6FC',
+            connected: '#107C10',
+            disconnected: '#6B6968'
+          },
+          borderRadius: {
+            DEFAULT: "0.125rem",
+            lg: "0.25rem",
+            xl: "0.5rem",
+            full: "0.75rem"
+          },
+          fontFamily: {
+            headline: ["Inter", "sans-serif"],
+            display: ["Inter", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+            label: ["Inter", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      line-height: 1;
+    }
+    .win-drop-shadow {
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body h-screen w-screen flex items-center justify-center overflow-hidden select-none m-0 p-0 relative">
+<!-- Desktop App Background Canvas (Simulating owner IPMan app in background) -->
+<div class="absolute inset-0 bg-background filter blur-[1px] opacity-40 pointer-events-none flex flex-col">
+<!-- Mocked Top Title Bar -->
+<div class="h-10 bg-background border-b border-outline flex items-center justify-between px-3">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">lan</span>
+<span class="font-headline text-[13px] font-semibold text-on-surface">IPMan - Ağ Yöneticisi</span>
+</div>
+<div class="flex items-center space-x-1">
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">minimize</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">check_box_outline_blank</span>
+<span class="material-symbols-outlined text-on-surface-variant text-[16px]">close</span>
+</div>
+</div>
+<!-- Mocked Body Layout -->
+<div class="flex-1 flex">
+<div class="w-[280px] bg-surface border-r border-outline p-4 flex flex-col gap-2">
+<div class="h-4 bg-outline/40 rounded w-24"></div>
+<div class="h-8 bg-hover border-l-2 border-primary rounded-r"></div>
+<div class="h-8 bg-surface rounded"></div>
+<div class="h-8 bg-surface rounded"></div>
+</div>
+<div class="flex-1 p-6 flex flex-col gap-4">
+<div class="h-8 bg-surface rounded border border-outline w-1/3"></div>
+<div class="h-48 bg-surface rounded-xl border border-outline"></div>
+</div>
+</div>
+</div>
+<!-- Semi-transparent Fluent backdrop dimming overlay -->
+<div class="absolute inset-0 bg-black/15 backdrop-blur-[2px]"></div>
+<!-- Windows 11 Native Dialog Modal Window -->
+<div aria-labelledby="dialog-title" aria-modal="true" class="relative z-10 w-[420px] bg-surface rounded-xl border border-outline win-drop-shadow overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150" role="dialog">
+<!-- Windows 11 Fluent Modal Title Bar -->
+<div class="h-9 px-3 bg-surface flex items-center justify-between border-b border-outline/50 select-none cursor-default">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="lan">lan</span>
+<span class="font-headline text-[12px] font-semibold text-on-surface tracking-tight" id="dialog-title">
+          Profili yeniden adlandır
+        </span>
+</div>
+<button aria-label="Kapat" class="h-7 w-9 flex items-center justify-center rounded-lg hover:bg-error hover:text-white text-on-surface-variant transition-colors duration-100" type="button">
+<span class="material-symbols-outlined text-[16px]" data-icon="close">close</span>
+</button>
+</div>
+<!-- Dialog Content -->
+<form class="p-5 flex flex-col gap-3" onsubmit="event.preventDefault();">
+<!-- Input Group -->
+<div class="flex flex-col gap-1.5">
+<label class="text-[13px] font-semibold text-on-surface flex items-center justify-between" for="profile-name-input">
+<span>Ad</span>
+<span class="text-[11px] font-normal text-on-surface-variant">Mevcut: PLC Hattı 1</span>
+</label>
+<!-- Text Box with Fluent Windows 11 Styling -->
+<div class="relative flex items-center">
+<input autocomplete="off" class="w-full h-8 px-2.5 pr-8 bg-surface text-on-surface text-[13px] font-body rounded-lg border border-outline focus:border-primary focus:ring-0 focus:outline-none transition-all duration-100 shadow-[inset_0_-1px_0_0_#D1D1D1] focus:shadow-[inset_0_-2px_0_0_#0F6CBD]" id="profile-name-input" spellcheck="false" type="text" value="PLC Hattı 1"/>
+<button aria-label="Metni temizle" class="absolute right-1.5 p-1 rounded hover:bg-disabled/60 text-on-surface-variant flex items-center justify-center transition-colors" onclick="document.getElementById('profile-name-input').value=''; document.getElementById('profile-name-input').focus();" tabindex="-1" type="button">
+<span class="material-symbols-outlined text-[14px]" data-icon="cancel">cancel</span>
+</button>
+</div>
+<!-- Validation Warning Caption in Red -->
+<div class="flex items-center gap-1 mt-0.5" role="alert">
+<span class="material-symbols-outlined text-error text-[13px]" data-icon="error">error</span>
+<p class="text-error text-[11px] font-body leading-tight">
+            Profil adı zorunludur.
+          </p>
+</div>
+</div>
+<!-- Footer Action Buttons (Aligned to Bottom Right, Win11 Hierarchy) -->
+<div class="flex items-center justify-end gap-2 pt-3 mt-1 border-t border-outline/40">
+<!-- Secondary Button (İptal) -->
+<button class="h-8 min-w-[84px] px-3 bg-surface hover:bg-hover active:bg-disabled text-on-surface border border-outline rounded-lg text-[13px] font-semibold transition-colors duration-100 flex items-center justify-center focus:outline-none focus:ring-1 focus:ring-focus" type="button">
+          İptal
+        </button>
+<!-- Primary Accent Button (Tamam - #0F6CBD) -->
+<button class="h-8 min-w-[84px] px-3 bg-primary hover:bg-[#115EA3] active:bg-[#0F548C] text-on-primary rounded-lg text-[13px] font-semibold transition-colors duration-100 flex items-center justify-center shadow-sm focus:outline-none focus:ring-2 focus:ring-focus focus:ring-offset-1" type="submit">
+          Tamam
+        </button>
+</div>
+</form>
+</div>
+</body></html>

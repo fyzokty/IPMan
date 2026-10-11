@@ -33,6 +33,7 @@ public partial class MainWindow : Window
     private bool _isHidingToTray;
     private bool _isExiting;
     private bool _isSessionEnding;
+    private bool _isRestoringProfileSelection;
     private SettingsWindow? _settingsWindow;
 
     /// <summary>Creates the main window and restores the user-scoped preferences.</summary>
@@ -166,6 +167,34 @@ public partial class MainWindow : Window
 
     private void OnProfileMouseDown(object sender, System.Windows.Input.MouseButtonEventArgs e) =>
         _viewModel.ProfilePanel?.BeginExplicitProfileSelection();
+
+    private void OnProfileSelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isRestoringProfileSelection || sender is not ListBox list || _viewModel.ProfilePanel is not { } panel)
+        {
+            return;
+        }
+
+        ProfileListItemViewModel? requested = list.SelectedItem as ProfileListItemViewModel;
+        panel.SelectedProfile = requested;
+        if (!ReferenceEquals(requested, panel.SelectedProfile))
+        {
+            // Restore containers after WPF finishes the rejected selection transaction.
+            _ = list.Dispatcher.InvokeAsync(() =>
+            {
+                _isRestoringProfileSelection = true;
+                try
+                {
+                    list.UnselectAll();
+                    list.GetBindingExpression(ListBox.SelectedItemProperty)?.UpdateTarget();
+                }
+                finally
+                {
+                    _isRestoringProfileSelection = false;
+                }
+            }, System.Windows.Threading.DispatcherPriority.DataBind);
+        }
+    }
 
     private void OnClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {

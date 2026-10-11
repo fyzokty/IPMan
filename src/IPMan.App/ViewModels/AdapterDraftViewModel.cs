@@ -212,7 +212,21 @@ public sealed partial class AdapterDraftViewModel : ObservableObject
 
     /// <summary>Copies a single field's draft text. Empty text clears the clipboard.</summary>
     [RelayCommand]
-    public void CopyField(DraftField field) => _clipboardService.SetText(GetFieldText(field));
+    public void CopyField(DraftField field)
+    {
+        string text = GetFieldText(field);
+        try
+        {
+            CopySucceeded = _clipboardService.SetText(text);
+        }
+        catch (Exception)
+        {
+            CopySucceeded = false;
+        }
+    }
+
+    [ObservableProperty]
+    private bool _copySucceeded;
 
     /// <summary>Makes every current validation error visible after an apply attempt.</summary>
     public void MarkAllFieldsTouched()

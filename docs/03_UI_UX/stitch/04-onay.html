@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+
+<html class="h-full select-none" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>IPMan - Ağ Yöneticisi</title>
+<!-- Google Fonts: Inter & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Google Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config verbatim -->
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            background: '#F3F3F3',
+            surface: '#FFFFFF',
+            outline: '#D1D1D1',
+            'on-surface': '#1B1B1B',
+            'on-surface-variant': '#5D5D5D',
+            primary: '#0F6CBD',
+            'on-primary': '#FFFFFF',
+            focus: '#005FB8',
+            hover: '#E8F1FB',
+            disabled: '#E5E5E5',
+            success: '#107C10',
+            'success-container': '#DFF6DD',
+            warning: '#B8860B',
+            'warning-container': '#FFF4CE',
+            error: '#A80000',
+            'error-container': '#FDE7E9',
+            info: '#0F6CBD',
+            'info-container': '#EFF6FC',
+            connected: '#107C10',
+            disconnected: '#6B6968',
+          },
+          borderRadius: {
+            "DEFAULT": "0.125rem",
+            "control": "4px",
+            "card": "8px",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          spacing: {
+            xs: '4px',
+            sm: '8px',
+            md: '12px',
+            lg: '20px'
+          },
+          fontFamily: {
+            headline: ["Inter", "sans-serif"],
+            display: ["Inter", "sans-serif"],
+            body: ["Inter", "sans-serif"],
+            label: ["Inter", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          },
+          fontSize: {
+            title: ['1.25rem', { lineHeight: '1.75rem', fontWeight: '600' }],
+            subtitle: ['1rem', { lineHeight: '1.5rem', fontWeight: '600' }],
+            body: ['0.875rem', { lineHeight: '1.25rem', fontWeight: '400' }],
+            caption: ['0.75rem', { lineHeight: '1rem', fontWeight: '400' }]
+          }
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+      line-height: 1;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    /* Fluent scrollbar simulation */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #D1D1D1;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #A0A0A0;
+    }
+  </style>
+</head>
+<body class="bg-background text-on-surface font-body antialiased h-screen overflow-hidden flex flex-col justify-between">
+<!-- ========================================== -->
+<!-- BACKGROUND MAIN APP CANVAS (SCREEN_2 SHELL) -->
+<!-- ========================================== -->
+<!-- TopNavBar (Window Header & Tabs) -->
+<header class="bg-background docked full-width top-0 h-10 select-none border-b border-outline flex justify-between items-center w-full px-3 shrink-0 z-0">
+<!-- Title / Drag Area -->
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary text-[18px]">dns</span>
+<span class="font-headline text-subtitle font-semibold text-on-surface">IPMan - Ağ Yöneticisi</span>
+</div>
+<!-- Adapter Tabs -->
+<div class="flex items-center space-x-4 h-full pt-1 text-sm font-medium">
+<!-- Ethernet 1 (Active tab) -->
+<button class="border-b-2 border-primary text-primary font-semibold pb-1 flex items-center space-x-1.5 px-2 transition-colors">
+<span class="w-2 h-2 rounded-full bg-connected"></span>
+<span>Ethernet 1</span>
+</button>
+<!-- Wi-Fi 6 -->
+<button class="text-on-surface-variant hover:text-on-surface pb-1 flex items-center space-x-1.5 px-2 transition-colors">
+<span class="w-2 h-2 rounded-full bg-connected"></span>
+<span>Wi-Fi 6</span>
+</button>
+<!-- Sanal Adaptör (vEthernet) -->
+<button class="text-on-surface-variant hover:text-on-surface pb-1 flex items-center space-x-1.5 px-2 transition-colors">
+<span class="w-2 h-2 rounded-full bg-disconnected"></span>
+<span>Sanal Adaptör (vEthernet)</span>
+</button>
+</div>
+<!-- Window Actions (Fluent standard chrome) -->
+<div class="flex items-center -mr-1">
+<button class="w-10 h-8 flex items-center justify-center hover:bg-hover text-on-surface transition-colors" title="Simge Durumuna Küçült">
+<span class="material-symbols-outlined text-[16px]">minimize</span>
+</button>
+<button class="w-10 h-8 flex items-center justify-center hover:bg-hover text-on-surface transition-colors" title="Ekranı Kapla">
+<span class="material-symbols-outlined text-[16px]">check_box_outline_blank</span>
+</button>
+<button class="w-10 h-8 flex items-center justify-center hover:bg-error hover:text-white text-on-surface transition-colors" title="Kapat">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</header>
+<!-- Main App Workspace (Sidebar + Adapter View Canvas) -->
+<div class="flex-1 flex overflow-hidden relative">
+<!-- SideNavBar (Registered Profiles) -->
+<aside class="bg-surface docked left-0 top-10 bottom-7 w-[280px] h-[calc(100vh-68px)] border-r border-outline flex flex-col justify-between p-3 shrink-0 select-none">
+<div class="flex flex-col space-y-3">
+<!-- Sidebar Header -->
+<div class="flex items-center justify-between pb-2 border-b border-outline/50">
+<div>
+<h2 class="font-headline text-subtitle font-semibold text-on-surface">Kayıtlı Profiller</h2>
+<p class="text-caption text-on-surface-variant">Hızlı Yapılandırma</p>
+</div>
+<button class="text-primary hover:bg-hover p-1.5 rounded-control transition-colors" title="Yeni Profil">
+<span class="material-symbols-outlined text-[18px]">add</span>
+</button>
+</div>
+<!-- CTA Button -->
+<button class="w-full bg-surface border border-outline hover:bg-hover text-on-surface text-body font-medium py-1.5 px-3 rounded-control flex items-center justify-center space-x-2 transition-colors shadow-sm">
+<span class="material-symbols-outlined text-[16px] text-primary">add_circle</span>
+<span>Yeni Profil</span>
+</button>
+<!-- Profile Tabs List -->
+<nav class="flex flex-col space-y-1 mt-2">
+<!-- Active Tab: Ofis Ağı -->
+<div class="bg-hover text-primary font-semibold border-l-[3px] border-primary pl-2 rounded-r-lg h-9 flex items-center justify-between pr-2 cursor-pointer transition-colors">
+<div class="flex items-center space-x-2.5">
+<span class="material-symbols-outlined text-[18px]">apartment</span>
+<span class="text-body font-medium">Ofis Ağı</span>
+</div>
+<span class="material-symbols-outlined text-[16px] text-amber-500" style="font-variation-settings: 'FILL' 1;">star</span>
+</div>
+<!-- Saha PLC Lab -->
+<div class="text-on-surface-variant pl-3 hover:text-on-surface hover:bg-hover/50 h-9 rounded-control flex items-center justify-between pr-2 cursor-pointer transition-colors">
+<div class="flex items-center space-x-2.5">
+<span class="material-symbols-outlined text-[18px]">precision_manufacturing</span>
+<span class="text-body">Saha PLC Lab</span>
+</div>
+</div>
+<!-- Statik Test -->
+<div class="text-on-surface-variant pl-3 hover:text-on-surface hover:bg-hover/50 h-9 rounded-control flex items-center justify-between pr-2 cursor-pointer transition-colors">
+<div class="flex items-center space-x-2.5">
+<span class="material-symbols-outlined text-[18px]">tune</span>
+<span class="text-body">Statik Test</span>
+</div>
+</div>
+<!-- Varsayılan DHCP -->
+<div class="text-on-surface-variant pl-3 hover:text-on-surface hover:bg-hover/50 h-9 rounded-control flex items-center justify-between pr-2 cursor-pointer transition-colors">
+<div class="flex items-center space-x-2.5">
+<span class="material-symbols-outlined text-[18px]">router</span>
+<span class="text-body">Varsayılan DHCP</span>
+</div>
+</div>
+</nav>
+</div>
+<!-- Sidebar Footer Links -->
+<div class="pt-2 border-t border-outline/50 flex flex-col space-y-1">
+<button class="w-full text-left text-on-surface-variant hover:text-on-surface hover:bg-hover p-2 rounded-control flex items-center space-x-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">settings</span>
+<span class="text-body">Ayarlar</span>
+</button>
+<button class="w-full text-left text-on-surface-variant hover:text-on-surface hover:bg-hover p-2 rounded-control flex items-center space-x-2 transition-colors">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span class="text-body">Günlük Kayıtları</span>
+</button>
+</div>
+</aside>
+<!-- Main Content Canvas (Adapter Detail Cards) -->
+<main class="flex-1 bg-background p-5 overflow-y-auto">
+<div class="max-w-4xl mx-auto space-y-4">
+<!-- Adapter Status Banner -->
+<div class="bg-surface border border-outline rounded-card p-4 flex items-center justify-between shadow-sm">
+<div class="flex items-center space-x-3">
+<div class="w-10 h-10 rounded-control bg-info-container text-info flex items-center justify-center">
+<span class="material-symbols-outlined text-[24px]">lan</span>
+</div>
+<div>
+<h1 class="text-subtitle text-on-surface font-semibold flex items-center space-x-2">
+<span>Realtek PCIe 2.5GbE Family Controller</span>
+<span class="text-caption px-2 py-0.5 rounded-full bg-success-container text-success font-medium">Bağlandı</span>
+</h1>
+<p class="text-caption text-on-surface-variant font-mono">MAC: 00:1A:7D:DA:71:13 • Hız: 1.0 Gbps • IPv4 Etkin</p>
+</div>
+</div>
+<button class="px-3 py-1.5 text-body text-primary hover:bg-hover rounded-control border border-outline font-medium transition-colors">
+            Bağdaştırıcıyı Sıfırla
+          </button>
+</div>
+<!-- IPv4 Configuration Card (Form Mockup in Background) -->
+<div class="bg-surface border border-outline rounded-card p-5 space-y-5 shadow-sm">
+<div class="flex items-center justify-between border-b border-outline/40 pb-3">
+<div>
+<h2 class="text-subtitle font-semibold text-on-surface">IPv4 Yapılandırması</h2>
+<p class="text-caption text-on-surface-variant">Bağdaştırıcı IP, alt ağ maskesi ve ağ geçidi atamaları</p>
+</div>
+<div class="flex bg-background p-1 rounded-control border border-outline text-caption">
+<button class="px-3 py-1 rounded-control bg-white font-medium shadow-xs text-primary">Statik IP</button>
+<button class="px-3 py-1 rounded-control text-on-surface-variant">Otomatik (DHCP)</button>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">IP Adresi</label>
+<div class="relative">
+<input class="w-full bg-white border border-outline rounded-control px-3 py-1.5 font-mono text-body text-on-surface" readonly="" type="text" value="192.168.1.145"/>
+</div>
+</div>
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Alt Ağ Maskesi</label>
+<input class="w-full bg-white border border-outline rounded-control px-3 py-1.5 font-mono text-body text-on-surface" readonly="" type="text" value="255.255.255.0"/>
+</div>
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Varsayılan Ağ Geçidi</label>
+<input class="w-full bg-white border border-outline rounded-control px-3 py-1.5 font-mono text-body text-on-surface" readonly="" type="text" value="192.168.1.1"/>
+</div>
+<div class="space-y-1">
+<label class="text-caption font-medium text-on-surface-variant">Tercih Edilen DNS</label>
+<input class="w-full bg-white border border-outline rounded-control px-3 py-1.5 font-mono text-body text-on-surface" readonly="" type="text" value="1.1.1.1"/>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Status Bar (Windows 11 Desktop Style) -->
+<footer class="h-7 bg-background border-t border-outline flex items-center justify-between px-3 text-caption text-on-surface-variant select-none shrink-0 z-0">
+<div class="flex items-center space-x-3">
+<span class="flex items-center space-x-1.5">
+<span class="w-2 h-2 rounded-full bg-success"></span>
+<span>Ağ Aktif (Ethernet 1)</span>
+</span>
+<span class="text-outline">|</span>
+<span>Profil: <strong>Ofis Ağı</strong></span>
+</div>
+<div class="flex items-center space-x-3">
+<span>Ping: 14 ms</span>
+<span class="text-outline">|</span>
+<span>v2.4.1 Win11 Pro Fluent</span>
+</div>
+</footer>
+<!-- ========================================================================= -->
+<!-- NATIVE WINDOWS 11 MODAL BACKDROP & DIALOG (FLOATING IN CENTER)             -->
+<!-- ========================================================================= -->
+<div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/45 backdrop-blur-[6px] transition-all duration-200">
+<!-- Windows 11 ContentDialog Box -->
+<div aria-labelledby="dialog-title" aria-modal="true" class="w-full max-w-[448px] bg-surface rounded-xl border border-neutral-300 shadow-[0_20px_50px_rgba(0,0,0,0.28)] overflow-hidden flex flex-col transition-all transform scale-100 animate-in fade-in zoom-in-95 duration-150" role="dialog">
+<!-- Content Container with Fluent padding (24px) -->
+<div class="p-6 pb-5 space-y-4">
+<!-- Title Row with Icon -->
+<div class="flex items-start space-x-3.5">
+<!-- Win11 Warning / Info Icon (Fluent styled Amber/Orange) -->
+<div class="flex-shrink-0 w-8 h-8 rounded-full bg-warning-container text-warning flex items-center justify-center mt-0.5">
+<span class="material-symbols-outlined text-[20px]" style="font-variation-settings: 'FILL' 1;">warning</span>
+</div>
+<!-- Dialog Title -->
+<div class="flex-1">
+<h2 class="font-headline text-[1.125rem] font-semibold text-on-surface leading-tight tracking-tight" id="dialog-title">
+              DHCP'ye geçilsin mi?
+            </h2>
+</div>
+</div>
+<!-- Message Body Text -->
+<div class="pl-[46px]">
+<p class="text-body text-on-surface-variant leading-relaxed">
+            Seçili bağdaştırıcının statik ayarları otomatik yapılandırmaya geçirilecek. Mevcut değerler geri yükleme kaydına yazılır.
+          </p>
+</div>
+<!-- Custom Native Windows 11 Checkbox -->
+<div class="pl-[46px] pt-1">
+<label class="inline-flex items-center space-x-2.5 cursor-pointer group">
+<input class="w-4 h-4 rounded-control border-outline text-primary focus:ring-0 focus:ring-offset-0 transition-colors cursor-pointer group-hover:border-on-surface-variant" type="checkbox"/>
+<span class="text-caption sm:text-body text-on-surface select-none group-hover:text-on-surface transition-colors">
+              Bu pencereyi bir daha gösterme
+            </span>
+</label>
+</div>
+</div>
+<!-- Dialog Footer Actions (Gray tonal separation background in Fluent ContentDialog) -->
+<div class="bg-background/80 border-t border-outline/60 px-6 py-3.5 flex items-center justify-end space-x-2">
+<!-- Secondary Action: İptal -->
+<button class="px-5 py-1.5 text-body font-normal text-on-surface bg-surface border border-outline hover:bg-hover hover:border-neutral-400 active:bg-disabled rounded-control transition-colors shadow-xs" onclick="console.log('Dialog iptal edildi');" type="button">
+          İptal
+        </button>
+<!-- Primary Action: Tamam -->
+<button class="px-6 py-1.5 text-body font-medium text-white bg-primary hover:bg-[#005FB8] active:opacity-90 rounded-control transition-colors shadow-sm flex items-center justify-center" onclick="console.log('DHCP onaylandı');" type="button">
+          Tamam
+        </button>
+</div>
+</div>
+</div>
+</body></html>

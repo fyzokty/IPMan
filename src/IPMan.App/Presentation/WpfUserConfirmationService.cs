@@ -1,85 +1,52 @@
 using System.Windows;
 using System.Windows.Controls;
 using IPMan.App.Resources;
+using IPMan.App.Views;
 
 namespace IPMan.App.Presentation;
 
-/// <summary>Shows network-state confirmation prompts through the WPF message box.</summary>
+/// <summary>Shows network-state confirmation prompts in a themed modal WPF window.</summary>
 public sealed class WpfUserConfirmationService : IUserConfirmationService
 {
     /// <inheritdoc />
     public bool Confirm(UserConfirmationRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
-
-        if (request.ShowDoNotShowAgain)
-        {
-            return ConfirmWithOptions(request).Accepted;
-        }
-
-        return MessageBox.Show(
-            request.Message,
-            request.Title,
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Warning) == MessageBoxResult.Yes;
+        return ShowPrompt(request).Accepted;
     }
 
     /// <inheritdoc />
     public (bool Accepted, bool DoNotShowAgain) ConfirmWithOptions(UserConfirmationRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
+        return ShowPrompt(request);
+    }
 
-        if (!request.ShowDoNotShowAgain)
-        {
-            return (Confirm(request), false);
-        }
+    private static (bool Accepted, bool DoNotShowAgain) ShowPrompt(UserConfirmationRequest request)
+    {
+        PromptWindow window = CreatePrompt(request, out CheckBox doNotShowAgain);
+        bool accepted = window.ShowDialog() == true;
+        return (accepted, accepted && request.ShowDoNotShowAgain && doNotShowAgain.IsChecked == true);
+    }
 
-        CheckBox doNotShowAgain = new()
+    internal static PromptWindow CreatePrompt(UserConfirmationRequest request, out CheckBox doNotShowAgain)
+    {
+        bool trayPreference = request.Title == Strings.TrayPreferenceTitle;
+        PromptWindow window = new(request.Title, trayPreference ? "\uE946" : "\uE7BA", trayPreference);
+        TextBlock title = new() { Text = request.Title, FontSize = 20, FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 16) };
+        window.Body.Children.Add(title);
+        TextBlock message = new() { Text = request.Message, TextWrapping = TextWrapping.Wrap };
+        message.SetResourceReference(TextBlock.ForegroundProperty, "SecondaryTextBrush");
+        window.Body.Children.Add(message);
+        doNotShowAgain = new CheckBox
         {
             Content = Strings.ConfirmDoNotShowAgain,
-            Margin = new Thickness(0, 12, 0, 0)
+            Margin = new Thickness(0, 20, 0, 0),
+            Visibility = request.ShowDoNotShowAgain ? Visibility.Visible : Visibility.Collapsed
         };
-        Button accept = new()
-        {
-            Content = Strings.CommandOk,
-            IsDefault = true,
-            MinWidth = 80,
-            Margin = new Thickness(8, 0, 0, 0)
-        };
-        Button decline = new()
-        {
-            Content = Strings.CommandCancel,
-            IsCancel = true,
-            MinWidth = 80,
-            Margin = new Thickness(8, 0, 0, 0)
-        };
-        Window window = new()
-        {
-            Title = request.Title,
-            Width = 460,
-            SizeToContent = SizeToContent.Height,
-            WindowStartupLocation = WindowStartupLocation.CenterOwner,
-            ResizeMode = ResizeMode.NoResize,
-            ShowInTaskbar = false,
-            Owner = System.Windows.Application.Current?.MainWindow
-        };
-        StackPanel panel = new() { Margin = new Thickness(20) };
-        panel.Children.Add(new TextBlock { Text = request.Message, TextWrapping = TextWrapping.Wrap });
-        panel.Children.Add(doNotShowAgain);
-        StackPanel buttons = new()
-        {
-            Orientation = Orientation.Horizontal,
-            HorizontalAlignment = HorizontalAlignment.Right,
-            Margin = new Thickness(0, 16, 0, 0)
-        };
-        buttons.Children.Add(decline);
-        buttons.Children.Add(accept);
-        panel.Children.Add(buttons);
-        window.Content = panel;
-
-        accept.Click += (_, _) => window.DialogResult = true;
-        decline.Click += (_, _) => window.DialogResult = false;
-        bool accepted = window.ShowDialog() == true;
-        return (accepted, accepted && doNotShowAgain.IsChecked == true);
+        window.Body.Children.Add(doNotShowAgain);
+        window.AddButton(Strings.CommandCancel, false);
+        window.AddButton(Strings.CommandOk, true);
+        return window;
     }
 }

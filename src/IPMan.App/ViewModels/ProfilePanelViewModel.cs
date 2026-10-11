@@ -77,6 +77,8 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
 
     public ObservableCollection<ProfileGroupViewModel> Groups { get; } = new();
 
+    public IReadOnlyList<ProfileListItemViewModel> Profiles { get; private set; } = Array.Empty<ProfileListItemViewModel>();
+
     public ObservableCollection<ProfileProblemListItemViewModel> Problems { get; } = new();
 
     public int ProblemCount => Problems.Count;
@@ -367,6 +369,7 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
         Groups.Clear();
         AddGroup(Strings.ProfileGroupFavorites, orderedProfiles.Where(profile => profile.IsFavorite));
         AddGroup(Strings.ProfileGroupOthers, orderedProfiles.Where(profile => !profile.IsFavorite));
+        Profiles = Groups.SelectMany(group => group.Profiles).ToArray();
 
         Problems.Clear();
         foreach (NetworkProfileProblem problem in _catalog.Problems)
@@ -377,6 +380,7 @@ public sealed partial class ProfilePanelViewModel : ObservableObject, IDisposabl
         OnPropertyChanged(nameof(ProblemCount));
         OnPropertyChanged(nameof(HasProblems));
         OnPropertyChanged(nameof(ProblemsHeader));
+        OnPropertyChanged(nameof(Profiles));
         SelectedProfile = orderedProfiles.FirstOrDefault(profile => profile.Id == selectedId);
     }
 
