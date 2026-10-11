@@ -97,49 +97,24 @@ public sealed class ProfilePanelViewModelTests
     }
 
     [Fact]
-    public void EditSetting_WhenDhcpProfileSelected_ClearsStaticDraftAndShowsGuidance()
+    public void Editor_WhenDhcpProfileSelected_OpensAutomaticModeWithoutChangingDraft()
     {
-        FakeProfileCatalog catalog = new()
-        {
-            Profiles =
-            [TestData.Profile(mode: NetworkConfigurationMode.Dhcp, ipv4Address: "10.0.0.10")]
-        };
-        FakeUserConfirmationService confirmation = new() { Answer = true };
-        using ProfilePanelViewModel viewModel = Create(catalog, confirmation);
-        AdapterDraftViewModel draft = new(new FakeClipboardService(), new StaticIpv4ConfigurationValidator());
-        draft.UpdateCurrentValues(TestData.Snapshot(mode: NetworkConfigurationMode.Static));
-        viewModel.SetDraft(draft);
-
-        viewModel.EditSetting(viewModel.Groups[0].Profiles[0]);
-
-        Assert.Equal(string.Empty, draft.Ipv4Address);
-        Assert.NotEmpty(draft.ProfileGuidance);
+        FakeProfileCatalog catalog = new() { Profiles = [TestData.Profile(mode: NetworkConfigurationMode.Dhcp)] };
+        using ProfileEditorViewModel editor = CreateEditor(catalog, catalog.Profiles[0]);
+        Assert.True(editor.IsAutomatic);
+        Assert.False(editor.IsDirty);
     }
 
     [Fact]
-    public void EditSetting_WhenDirtyDraftLoadIsDeclined_RestoresPreviousSelection()
+    public void Editor_WhenAnotherProfileIsOpened_PreservesIndependentUnsavedValues()
     {
-        FakeProfileCatalog catalog = new()
-        {
-            Profiles =
-            [
-                TestData.Profile(profileId: "first", name: "First", ipv4Address: "10.0.0.10"),
-                TestData.Profile(profileId: "second", name: "Second", ipv4Address: "10.0.0.20")
-            ]
-        };
-        FakeUserConfirmationService confirmation = new() { Answer = true };
-        using ProfilePanelViewModel viewModel = Create(catalog, confirmation);
-        AdapterDraftViewModel draft = new(new FakeClipboardService(), new StaticIpv4ConfigurationValidator());
-        viewModel.SetDraft(draft);
-        ProfileListItemViewModel first = viewModel.Groups[0].Profiles[0];
-
-        viewModel.EditSetting(first);
-        draft.Ipv4Address = "10.0.0.99";
-        confirmation.Answer = false;
-        Assert.False(viewModel.EditSetting(viewModel.Groups[0].Profiles[1]));
-
-        Assert.Same(first, viewModel.SelectedProfile);
-        Assert.Equal("10.0.0.99", draft.Ipv4Address);
+        FakeProfileCatalog catalog = new() { Profiles = [TestData.Profile(profileId: "first"), TestData.Profile(profileId: "second")] };
+        using ProfileEditorViewModel first = CreateEditor(catalog, catalog.Profiles[0]);
+        first.Ipv4Address = "10.0.0.99";
+        using ProfileEditorViewModel second = CreateEditor(catalog, catalog.Profiles[1]);
+        Assert.True(first.IsDirty);
+        Assert.False(second.IsDirty);
+        Assert.Equal("10.0.0.99", first.Ipv4Address);
     }
 
     [Fact]
@@ -186,29 +161,26 @@ public sealed class ProfilePanelViewModelTests
     }
 
     [Fact]
-    public async Task EditSetting_WhenSaved_UpdatesExistingIdentityAndNewSettingCreatesSeparateIdentity()
+    public async Task Editor_WhenSaved_UpdatesExistingIdentityAndNewSettingCreatesSeparateIdentity()
     {
         NetworkProfile original = TestData.Profile(isFavorite: true);
         FakeProfileCatalog catalog = new() { Profiles = [original] };
-        using ProfilePanelViewModel viewModel = Create(catalog);
-        AdapterDraftViewModel draft = new(new FakeClipboardService(), new StaticIpv4ConfigurationValidator());
-        draft.UpdateCurrentValues(TestData.Snapshot());
-        viewModel.SetDraft(draft);
-        Assert.True(viewModel.EditSetting(viewModel.Profiles[0]));
-        draft.Ipv4Address = "10.0.0.25";
-        viewModel.NewProfileName = "Updated";
-        await viewModel.SaveCommand.ExecuteAsync(null);
+        using ProfileEditorViewModel editor = CreateEditor(catalog, original);
+        editor.Ipv4Address = "10.0.0.25";
+        editor.Gateway = string.Empty;
+        editor.Name = "Updated";
+        await editor.SaveAsync(false);
         NetworkProfile updated = Assert.Single(catalog.SavedProfiles);
         Assert.Equal(original.ProfileId, updated.ProfileId);
         Assert.Equal(original.CreatedAtUtc, updated.CreatedAtUtc);
         Assert.True(updated.IsFavorite);
         Assert.Equal("10.0.0.25", updated.Ipv4Address);
-        viewModel.BeginNewSetting();
-        viewModel.NewProfileName = "New";
-        await viewModel.SaveCommand.ExecuteAsync(null);
+        using ProfileEditorViewModel newEditor = CreateEditor(catalog);
+        newEditor.Name = "New";
+        newEditor.Ipv4Address = "10.0.0.25";
+        await newEditor.SaveAsync(false);
         Assert.Equal(2, catalog.Profiles.Count);
         Assert.NotEqual(original.ProfileId, catalog.SavedProfiles[1].ProfileId);
-        Assert.Equal("10.0.0.25", catalog.SavedProfiles[1].Ipv4Address);
     }
 
     [Fact]
@@ -216,19 +188,19 @@ public sealed class ProfilePanelViewModelTests
     {
         FakeProfileCatalog catalog = new() { Profiles = [TestData.Profile()] };
         using ProfilePanelViewModel viewModel = Create(catalog);
-        AdapterDraftViewModel draft = new(new FakeClipboardService(), new StaticIpv4ConfigurationValidator());
-        draft.UpdateCurrentValues(TestData.Snapshot());
-        viewModel.SetDraft(draft);
-        viewModel.EditSetting(viewModel.Profiles[0]);
-        draft.Ipv4Address = "invalid";
-        viewModel.NewProfileName = "Unsaved";
+        using ProfileEditorViewModel editor = CreateEditor(catalog, catalog.Profiles[0]);
+        editor.Ipv4Address = "invalid";
+        editor.Name = "Unsaved";
         viewModel.SearchText = "unmatched";
         catalog.RaiseChanged();
-        Assert.Equal("invalid", draft.Ipv4Address);
-        Assert.True(draft.IsDirty);
-        Assert.Equal("Unsaved", viewModel.NewProfileName);
-        Assert.Equal(Strings.UpdateSetting, viewModel.SaveLabel);
+        Assert.Equal("invalid", editor.Ipv4Address);
+        Assert.True(editor.IsDirty);
+        Assert.Equal("Unsaved", editor.Name);
     }
+
+    private static ProfileEditorViewModel CreateEditor(IProfileCatalog catalog, NetworkProfile? profile = null) =>
+        new(catalog, new StaticIpv4ConfigurationValidator(), new(new SequenceIpv4ConflictProbe()),
+            new ImmediateDelayProvider(), profile);
 
     [Fact]
     public async Task DuplicateCommand_WhenCatalogResolvesNameCollision_UsesNewIdWithoutPromptAndSelectsResolvedName()

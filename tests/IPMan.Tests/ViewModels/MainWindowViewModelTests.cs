@@ -491,47 +491,34 @@ public sealed class MainWindowViewModelTests
     }
 
     [Fact]
-    public void SettingEditing_WhenAdapterIsSelected_LoadsThatAdaptersDraft()
+    public void SettingEditing_WhenAdapterIsSelected_OpensEditorWithoutChangingDraft()
     {
-        TestProfileCatalog catalog = new()
-        {
-            Profiles = [TestData.Profile(ipv4Address: "10.0.0.60")]
-        };
+        TestProfileCatalog catalog = new() { Profiles = [TestData.Profile(ipv4Address: "10.0.0.60")] };
         using ProfilePanelViewModel panel = CreateProfilePanel(catalog);
-        using MainWindowHarness harness = MainWindowHarness.Create(panel);
+        using MainWindowHarness harness = MainWindowHarness.Create(panel, editorCatalog: catalog);
         harness.ViewModel.Initialize();
         harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}", ipv4Address: "10.0.0.5"));
-
-        harness.ViewModel.EditSettingCommand.Execute(harness.ViewModel.ProfilePanel!.Groups[0].Profiles[0]);
-
-        Assert.Equal("10.0.0.60", harness.ViewModel.SelectedAdapter!.Draft.Ipv4Address);
+        harness.ViewModel.EditSettingCommand.Execute(panel.Profiles[0]);
+        Assert.Equal("10.0.0.60", harness.ViewModel.ProfileEditor!.Ipv4Address);
+        Assert.Equal("10.0.0.5", harness.ViewModel.SelectedAdapter!.Draft.Ipv4Address);
     }
 
     [Fact]
-    public void SettingEditing_WhenDirtyDraftLoadIsDeclined_PreservesDraftAndPreviousSelection()
+    public void SettingEditing_WhenDirtyEditorExitIsDeclined_PreservesEditorAndSelection()
     {
-        TestProfileCatalog catalog = new()
-        {
-            Profiles =
-            [
-                TestData.Profile(profileId: "first", name: "First", ipv4Address: "10.0.0.10"),
-                TestData.Profile(profileId: "second", name: "Second", ipv4Address: "10.0.0.20")
-            ]
-        };
-        FakeUserConfirmationService confirmation = new() { Answer = true };
-        using ProfilePanelViewModel panel = CreateProfilePanel(catalog, confirmation);
-        using MainWindowHarness harness = MainWindowHarness.Create(panel);
+        TestProfileCatalog catalog = new() { Profiles = [TestData.Profile()] };
+        using ProfilePanelViewModel panel = CreateProfilePanel(catalog);
+        using MainWindowHarness harness = MainWindowHarness.Create(panel, editorCatalog: catalog);
         harness.ViewModel.Initialize();
         harness.Coordinator.PublishRefresh(TestData.Snapshot(id: "{A}"));
-        ProfileListItemViewModel first = panel.Groups[0].Profiles[0];
-
-        panel.EditSetting(first);
-        harness.ViewModel.SelectedAdapter!.Draft.Ipv4Address = "10.0.0.99";
-        confirmation.Answer = false;
-        Assert.False(panel.EditSetting(panel.Groups[0].Profiles[1]));
-
-        Assert.Same(first, panel.SelectedProfile);
-        Assert.Equal("10.0.0.99", harness.ViewModel.SelectedAdapter.Draft.Ipv4Address);
+        harness.ViewModel.EditSettingCommand.Execute(panel.Profiles[0]);
+        ProfileEditorViewModel editor = harness.ViewModel.ProfileEditor!;
+        editor.Ipv4Address = "10.0.0.99";
+        harness.Confirmation.Answer = false;
+        harness.ViewModel.NewSettingCommand.Execute(null);
+        Assert.Same(editor, harness.ViewModel.ProfileEditor);
+        Assert.Equal("10.0.0.99", editor.Ipv4Address);
+        Assert.Equal(Strings.ProfileEditorDiscardMessage, Assert.Single(harness.Confirmation.Requests).Message);
     }
 
     [Fact]
@@ -669,7 +656,8 @@ public sealed class MainWindowViewModelTests
         public static MainWindowHarness Create(
             ProfilePanelViewModel? profilePanel = null,
             bool isElevated = true,
-            string version = "1.0.0")
+            string version = "1.0.0",
+            IProfileCatalog? editorCatalog = null)
         {
             FakeAdapterRefreshCoordinator coordinator = new();
             FakeUiDispatcher dispatcher = new();
@@ -696,7 +684,10 @@ public sealed class MainWindowViewModelTests
                 new FakeApplicationVersionProvider(version),
                 actions,
                 validator,
-                profilePanel);
+                profilePanel,
+                editorFactory: editorCatalog is null ? null : (profile, gateway) => new(editorCatalog, validator,
+                    new(new SequenceIpv4ConflictProbe()), new ImmediateDelayProvider(), profile, gateway),
+                confirmationService: confirmation);
 
             return new MainWindowHarness(
                 coordinator,

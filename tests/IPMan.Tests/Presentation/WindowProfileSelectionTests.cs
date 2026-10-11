@@ -29,16 +29,16 @@ public sealed partial class WindowXamlSmokeTests
             ProfileListItemViewModel office = fixture.Profiles.Profiles.Single(profile => profile.Id == "office");
             Edit(home);
             AdapterDraftViewModel draft = fixture.Main.SelectedAdapter!.Draft;
-            Assert.Equal(Strings.ProfileDhcpGuidance, draft.ProfileGuidance);
-            draft.Ipv4Address = "192.168.20.99";
+            Assert.True(fixture.Main.ProfileEditor!.IsAutomatic);
+            fixture.Main.ProfileEditor!.Name = "Unsaved";
             fixture.Main.GoBackCommand.Execute(null);
             Layout(main);
             fixture.Confirmation.Requests.Clear();
             Edit(office);
-            Assert.Same(office, fixture.Profiles.SelectedProfile);
-            Assert.True(fixture.Main.IsDetailsOpen);
-            Assert.Equal(office.Profile.Ipv4Address, draft.Ipv4Address);
-            Assert.Equal(Strings.ConfirmProfileLoadTitle, Assert.Single(fixture.Confirmation.Requests).Title);
+            Assert.Equal(office.Name, fixture.Main.ProfileEditor!.Name);
+            Assert.True(fixture.Main.IsProfileEditorOpen);
+            Assert.Equal(office.Profile.Ipv4Address, fixture.Main.ProfileEditor!.Ipv4Address);
+            Assert.Empty(fixture.Confirmation.Requests);
             AssertNeverShown(main);
 
             void Edit(ProfileListItemViewModel profile)
@@ -68,23 +68,21 @@ public sealed partial class WindowXamlSmokeTests
             new FakeWindowSessionMarker(), (Func<DiagnosticsViewModel>)(() => fixture.Diagnostics), fixture.Safety);
 
     [Fact]
-    public void MainWindow_WhenDirtyEditIsDeclined_PreservesDraftAndHomePage() =>
+    public void MainWindow_WhenDirtyEditorBackIsDeclined_PreservesEditorPage() =>
         WpfTestRunner.Run(() =>
         {
             using WindowFixture fixture = new("Light", RenderProfiles(), RenderAdapters());
             MainWindow main = CreateProfileSelectionWindow(fixture, "Light");
-            fixture.Main.SelectAdapter(RenderEthernetId);
             fixture.Main.EditSettingCommand.Execute(fixture.Profiles.Profiles.Single(profile => profile.Id == "home"));
-            AdapterDraftViewModel draft = fixture.Main.SelectedAdapter!.Draft;
-            draft.Ipv4Address = "192.168.20.99";
-            fixture.Main.GoBackCommand.Execute(null);
+            ProfileEditorViewModel editor = fixture.Main.ProfileEditor!;
+            editor.Name = "Unsaved";
             fixture.Confirmation.Answer = false;
-            fixture.Main.EditSettingCommand.Execute(fixture.Profiles.Profiles.Single(profile => profile.Id == "office"));
+            editor.BackCommand.Execute(null);
             Layout(main);
-            Assert.Equal("home", fixture.Profiles.SelectedProfile?.Id);
-            Assert.True(fixture.Main.IsHomeVisible);
-            Assert.Equal("192.168.20.99", draft.Ipv4Address);
-            Assert.Equal(Strings.ConfirmProfileLoadTitle, Assert.Single(fixture.Confirmation.Requests).Title);
+            Assert.Same(editor, fixture.Main.ProfileEditor);
+            Assert.True(fixture.Main.IsProfileEditorOpen);
+            Assert.Equal("Unsaved", editor.Name);
+            Assert.Equal(Strings.ProfileEditorDiscardTitle, Assert.Single(fixture.Confirmation.Requests).Title);
             AssertNeverShown(main);
         }, "Cancelled setting edit timed out.");
 

@@ -28,7 +28,7 @@ Sıra, uygulama sırasıdır. Tüm maddeler 1.0 kapsamındadır.
 | 12 | [İnternet durumu ve bağlantı yok durumu](12-internet-durumu.md) | tamamlandı |
 | 13 | [Profil merkezli ana ekran](13-ana-ekran.md) | tamamlandı |
 | 14 | [Güvenli geçiş: koşullu onay ve geri alma sayacı](14-guvenli-gecis.md) | tamamlandı |
-| 15 | [Yeni ve düzenle ayar sayfası](15-yeni-ayar-sayfasi.md) | yapılacak |
+| 15 | [Yeni ve düzenle ayar sayfası](15-yeni-ayar-sayfasi.md) | tamamlandı |
 | 16 | [Ayrıntılar ve elle ayar sayfası](16-ayrintilar-sayfasi.md) | yapılacak |
 | 17 | [Sade metinler ve terim sözlüğü uyumu](17-sade-metinler.md) | yapılacak |
 | 18 | [Tepsi menüsünden ayar değiştirme](18-tepsiden-ayar-degistirme.md) | yapılacak |

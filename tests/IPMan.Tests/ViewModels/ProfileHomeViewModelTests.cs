@@ -10,7 +10,7 @@ using Xunit;
 
 namespace IPMan.Tests.ViewModels;
 
-public sealed class ProfileHomeViewModelTests
+public sealed partial class ProfileHomeViewModelTests
 {
     [Theory]
     [InlineData(0, false)]
@@ -26,7 +26,7 @@ public sealed class ProfileHomeViewModelTests
         fixture.Main.ChooseCardViewCommand.Execute(null);
         Assert.Equal(PreferredViewMode.Card, fixture.Main.PreferredViewMode);
         Assert.True(fixture.Main.IsCardView);
-        fixture.Catalog.ProfileItems = Enumerable.Range(0, 9).Select(index => TestData.Profile(profileId: index.ToString(System.Globalization.CultureInfo.InvariantCulture))).ToArray();
+        fixture.Catalog.Profiles = Enumerable.Range(0, 9).Select(index => TestData.Profile(profileId: index.ToString(System.Globalization.CultureInfo.InvariantCulture))).ToArray();
         fixture.Catalog.RaiseChanged();
         Assert.True(fixture.Main.IsCardView);
     }
@@ -43,7 +43,7 @@ public sealed class ProfileHomeViewModelTests
         Assert.True(fixture.Main.Settings[0].IsBuiltIn);
         Assert.False(fixture.Main.Settings[0].CanManage);
         Assert.Null(fixture.Main.Settings[0].StoredSetting);
-        Assert.Equal(2, fixture.Catalog.ProfileItems.Count);
+        Assert.Equal(2, fixture.Catalog.Profiles.Count);
         Assert.Null(fixture.Profiles.SelectedProfile);
     }
 
@@ -69,7 +69,7 @@ public sealed class ProfileHomeViewModelTests
         fixture.Coordinator.PublishRefresh(TestData.Snapshot(mode: NetworkConfigurationMode.Static));
         Assert.Equal("Şu an: Ofis ağındasınız", fixture.Main.StatusHeadline);
         Assert.True(fixture.Main.Settings[1].IsActive);
-        fixture.Catalog.ProfileItems = [profile with { Name = "Ofis yeni" }];
+        fixture.Catalog.Profiles = [profile with { Name = "Ofis yeni" }];
         fixture.Catalog.RaiseChanged();
         Assert.Contains("Ofis yeni", fixture.Main.StatusHeadline, StringComparison.Ordinal);
         fixture.Profiles.SearchText = "unmatched";
@@ -167,41 +167,45 @@ public sealed class ProfileHomeViewModelTests
     }
 
     [Fact]
-    public void EditingAndNewSetting_UseDetailsPageAndBackPreservesDraft()
+    public void EditingAndNewSetting_UseEditorPageAndBackPreservesDraft()
     {
         using HomeFixture fixture = new([TestData.Profile(ipv4Address: "10.0.0.50")]);
+        string? draftAddress = fixture.Main.SelectedAdapter!.Draft.Ipv4Address;
         fixture.Main.EditSettingCommand.Execute(fixture.Profiles.Profiles[0]);
-        Assert.True(fixture.Main.IsDetailsOpen);
-        Assert.Equal("10.0.0.50", fixture.Main.SelectedAdapter!.Draft.Ipv4Address);
-        Assert.Equal(Strings.UpdateSetting, fixture.Profiles.SaveLabel);
-        fixture.Main.SelectedAdapter.Draft.Ipv4Address = "10.0.0.51";
-        fixture.Main.GoBackCommand.Execute(null);
+        Assert.True(fixture.Main.IsProfileEditorOpen);
+        Assert.False(fixture.Main.IsDetailsOpen);
+        Assert.Equal(Strings.ProfileEditorEditTitle, fixture.Main.ProfileEditor!.Title);
+        Assert.Equal("10.0.0.50", fixture.Main.ProfileEditor.Ipv4Address);
+        fixture.Main.ProfileEditor.BackCommand.Execute(null);
         Assert.True(fixture.Main.IsHomeVisible);
-        Assert.True(fixture.Main.HasDirtyDrafts);
+        Assert.Null(fixture.Main.ProfileEditor);
+        Assert.Equal(draftAddress, fixture.Main.SelectedAdapter.Draft.Ipv4Address);
         fixture.Main.NewSettingCommand.Execute(null);
-        Assert.True(fixture.Main.IsDetailsOpen);
-        Assert.Equal("10.0.0.51", fixture.Main.SelectedAdapter.Draft.Ipv4Address);
-        Assert.Empty(fixture.Profiles.NewProfileName);
-        Assert.Equal(Strings.CommandSaveProfile, fixture.Profiles.SaveLabel);
-        Assert.Empty(fixture.Static.Requests);
-        Assert.Empty(fixture.Dhcp.Requests);
+        Assert.True(fixture.Main.IsProfileEditorOpen);
+        Assert.Equal(Strings.ProfileEditorNewTitle, fixture.Main.ProfileEditor!.Title);
+        Assert.Empty(fixture.Main.ProfileEditor.Name);
+        Assert.True(fixture.Main.ProfileEditor.IsStatic);
+        Assert.False(fixture.Main.ProfileEditor.IsDirty);
     }
 
     private sealed class HomeFixture : IDisposable
     {
         public HomeFixture(IReadOnlyList<NetworkProfile> profiles)
         {
-            Catalog.ProfileItems = profiles;
+            Catalog.Profiles = profiles;
             FakeWindowProfileDialogs dialogs = new();
             Profiles = new(Catalog, dialogs, dialogs, Confirmation, new FakeUiDispatcher());
             AdapterActionsViewModel actions = new(Static, Dhcp, new FakeRecoveryRestoreService(), Confirmation, Coordinator, Safety);
             Main = new(Coordinator, new FakeUiDispatcher(), new FakeClipboardService(),
                 new FakeClock(DateTimeOffset.UtcNow), new FakeElevationStateProvider(true), new FakeApplicationVersionProvider("1.0"),
-                actions, new StaticIpv4ConfigurationValidator(), Profiles);
+                actions, new StaticIpv4ConfigurationValidator(), Profiles,
+                editorFactory: (profile, gateway) => new(Catalog, new StaticIpv4ConfigurationValidator(),
+                    new(new SequenceIpv4ConflictProbe()), new ImmediateDelayProvider(), profile, gateway),
+                confirmationService: Confirmation);
             Main.Initialize();
             Coordinator.PublishRefresh(TestData.Snapshot());
         }
-        public FakeProfileCatalog Catalog { get; } = new();
+        public FakeProfileEditorCatalog Catalog { get; } = new();
         public FakeAdapterRefreshCoordinator Coordinator { get; } = new();
         public FakeStaticIpv4ApplyService Static { get; } = new();
         public FakeDhcpApplyService Dhcp { get; } = new();

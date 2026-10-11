@@ -189,6 +189,11 @@ public partial class MainWindow : Window
             e.Cancel = true;
             return;
         }
+        if (!_isExiting && !_viewModel.ConfirmEditorExit())
+        {
+            e.Cancel = true;
+            return;
+        }
         if (!_isExiting && _settings.CloseToTray == true)
         {
             e.Cancel = true;
@@ -277,8 +282,17 @@ public partial class MainWindow : Window
 
     private void OnTrayOpenRequested(object? sender, EventArgs e) => RestoreAndActivate();
 
-    private void OnTrayExitRequested(object? sender, EventArgs e)
+    private async void OnTrayExitRequested(object? sender, EventArgs e)
     {
+        if (_exitCheckPending || !_viewModel.ConfirmEditorExit()) return;
+        if (_safetyCoordinator.IsCountdownActive)
+        {
+            _exitCheckPending = true;
+            bool approved;
+            try { approved = await _safetyCoordinator.RequestExitAsync(CancellationToken.None); }
+            finally { _exitCheckPending = false; }
+            if (!approved) return;
+        }
         if (RequiresExitConfirmation() &&
             !_confirmationService.Confirm(new UserConfirmationRequest(
                 Strings.ExitConfirmationTitle,

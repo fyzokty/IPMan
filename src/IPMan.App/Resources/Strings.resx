@@ -647,4 +647,43 @@
   <data name="SafeSwitchPreviousSetting" xml:space="preserve"><value>önceki ayar</value></data>
   <data name="SafeSwitchKept" xml:space="preserve"><value>{0} ayarına geçildi.</value></data>
   <data name="SafeSwitchReverted" xml:space="preserve"><value>Eski ayara ({0}) dönüldü. Ağınız eskisi gibi.</value></data>
+
+  <!-- ProfileEditor -->
+  <data name="ProfileEditorNewTitle" xml:space="preserve"><value>Yeni ayar</value></data>
+  <data name="ProfileEditorEditTitle" xml:space="preserve"><value>Ayarı düzenle</value></data>
+  <data name="ProfileEditorBack" xml:space="preserve"><value>← Geri</value></data>
+  <data name="ProfileEditorNameLabel" xml:space="preserve"><value>Ayarın adı</value></data>
+  <data name="ProfileEditorNameHint" xml:space="preserve"><value>Örnek: Saha PLC, Ofis, Ev</value></data>
+  <data name="ProfileEditorModeLabel" xml:space="preserve"><value>Adres nasıl belirlensin?</value></data>
+  <data name="ProfileEditorAutomatic" xml:space="preserve"><value>Otomatik</value></data>
+  <data name="ProfileEditorAutomaticHint" xml:space="preserve"><value>Ağ adresi kendisi verir (önerilir)</value></data>
+  <data name="ProfileEditorStatic" xml:space="preserve"><value>Sabit adres</value></data>
+  <data name="ProfileEditorStaticHint" xml:space="preserve"><value>Bir cihaza doğrudan bağlanmak için</value></data>
+  <data name="ProfileEditorDeviceLabel" xml:space="preserve"><value>Bağlanacağınız cihazın adresi (biliyorsanız)</value></data>
+  <data name="ProfileEditorDeviceHint" xml:space="preserve"><value>Cihazın etiketinde veya kılavuzunda yazar</value></data>
+  <data name="ProfileEditorSuggestionLabel" xml:space="preserve"><value>Bilgisayarınız için önerilen adres:</value></data>
+  <data name="ProfileEditorVerified" xml:space="preserve"><value>✓ Boş olduğu kontrol edildi</value></data>
+  <data name="ProfileEditorUnverified" xml:space="preserve"><value>⚠ Kontrol edilemedi, yine de kullanabilirsiniz</value></data>
+  <data name="ProfileEditorUseSuggestion" xml:space="preserve"><value>Bunu kullan</value></data>
+  <data name="ProfileEditorAddressLabel" xml:space="preserve"><value>Bilgisayarın adresi</value></data>
+  <data name="ProfileEditorGatewayLabel" xml:space="preserve"><value>Ağ geçidi (genelde modem adresi)</value></data>
+  <data name="ProfileEditorGatewayHint" xml:space="preserve"><value>Bilmiyorsanız boş bırakın</value></data>
+  <data name="ProfileEditorAdvanced" xml:space="preserve"><value>Gelişmiş</value></data>
+  <data name="ProfileEditorMaskLabel" xml:space="preserve"><value>Alt ağ maskesi</value></data>
+  <data name="ProfileEditorMaskAutoFilled" xml:space="preserve"><value>otomatik dolduruldu</value></data>
+  <data name="ProfileEditorPrimaryDnsLabel" xml:space="preserve"><value>Birinci DNS</value></data>
+  <data name="ProfileEditorSecondaryDnsLabel" xml:space="preserve"><value>İkinci DNS</value></data>
+  <data name="ProfileEditorSaveOnly" xml:space="preserve"><value>Sadece kaydet</value></data>
+  <data name="ProfileEditorSaveAndSwitch" xml:space="preserve"><value>Kaydet ve geç</value></data>
+  <data name="ProfileEditorNameRequired" xml:space="preserve"><value>Ayar adı boş bırakılamaz. Örnek: Saha PLC, Ofis, Ev</value></data>
+  <data name="ProfileEditorDuplicateName" xml:space="preserve"><value>Bu adda başka bir ayar var. Farklı bir ad seçin. Örnek: Saha PLC 2</value></data>
+  <data name="ProfileEditorOctetError" xml:space="preserve"><value>Her sayı 0 ile 255 arasında olmalı. Örnek: 192.168.1.50</value></data>
+  <data name="ProfileEditorAddressFormatError" xml:space="preserve"><value>Adres dört sayıdan oluşmalı ve noktayla ayrılmalıdır. Örnek: 192.168.1.50</value></data>
+  <data name="ProfileEditorAddressExample" xml:space="preserve"><value>Örnek: 192.168.1.50</value></data>
+  <data name="ProfileEditorMaskExample" xml:space="preserve"><value>Örnek: 255.255.255.0</value></data>
+  <data name="ProfileEditorGatewayWarning" xml:space="preserve"><value>Ağ geçidi bilgisayarın adresiyle aynı ağda görünmüyor. İnternet çalışmayabilir.</value></data>
+  <data name="ProfileEditorSaveFailed" xml:space="preserve"><value>Ayar kaydedilemedi. Ağınız değişmedi. Tekrar kaydetmeyi deneyin.</value></data>
+  <data name="ProfileEditorSaveCancelled" xml:space="preserve"><value>Kayıt iptal edildi. Ağınız değişmedi. Yeniden kaydedebilirsiniz.</value></data>
+  <data name="ProfileEditorDiscardTitle" xml:space="preserve"><value>Kaydedilmemiş değişiklikler</value></data>
+  <data name="ProfileEditorDiscardMessage" xml:space="preserve"><value>Değişiklikler kaydedilmedi. Çıkılsın mı?</value></data>
 </root>
