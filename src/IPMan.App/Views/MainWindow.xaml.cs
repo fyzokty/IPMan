@@ -14,6 +14,9 @@ using IPMan.Domain.Settings;
 namespace IPMan.App.Views;
 
 /// <summary>Main application window and its small amount of window-lifetime coordination.</summary>
+[System.Diagnostics.CodeAnalysis.SuppressMessage(
+    "Design", "CA1001:Types that own disposable fields should be disposable",
+    Justification = "The WPF Closed event releases the tray menu controller subscriptions.")]
 public partial class MainWindow : Window
 {
     private const double DefaultWidth = 1000;
@@ -23,6 +26,7 @@ public partial class MainWindow : Window
     private readonly IAppSettingsRepository _settingsRepository;
     private readonly IUserConfirmationService _confirmationService;
     private readonly TrayIconManager _trayIconManager;
+    private readonly TrayMenuController _trayMenuController;
     private readonly SettingsViewModel _settingsViewModel;
     private readonly Func<DiagnosticsViewModel> _diagnosticsFactory;
     private readonly WindowsThemeService _themeService;
@@ -87,7 +91,8 @@ public partial class MainWindow : Window
         Closing += OnClosing;
         StateChanged += OnStateChanged;
         ContentRendered += OnContentRendered;
-        _trayIconManager.OpenRequested += OnTrayOpenRequested;
+        _trayMenuController = new TrayMenuController(_viewModel, _trayIconManager, RestoreAndActivate);
+        Closed += OnClosed;
         _trayIconManager.ExitRequested += OnTrayExitRequested;
         _trayIconManager.NotificationClicked += OnNotificationClicked;
         _settingsViewModel.SettingsChanged += OnSettingsChanged;
@@ -280,7 +285,12 @@ public partial class MainWindow : Window
         }
     }
 
-    private void OnTrayOpenRequested(object? sender, EventArgs e) => RestoreAndActivate();
+    private void OnClosed(object? sender, EventArgs e)
+    {
+        _trayMenuController.Dispose();
+        _trayIconManager.ExitRequested -= OnTrayExitRequested;
+        _trayIconManager.NotificationClicked -= OnNotificationClicked;
+    }
 
     private async void OnTrayExitRequested(object? sender, EventArgs e)
     {

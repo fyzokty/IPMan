@@ -5,10 +5,12 @@ using IPMan.Application.Common;
 
 namespace IPMan.App.Presentation;
 
-/// <summary>Owns the temporary notification-area icon shown while the window is hidden.</summary>
+/// <summary>Owns the notification-area icon and its snapshot-based menu.</summary>
 public sealed class TrayIconManager : IDisposable
 {
     private readonly NotifyIcon _notifyIcon;
+    private readonly ContextMenuStrip _menu;
+    private bool _alwaysVisible;
     private string? _notificationAdapterId;
     private bool _restoreVisibilityAfterNotification;
     private bool _isDisposed;
@@ -19,6 +21,8 @@ public sealed class TrayIconManager : IDisposable
         ArgumentNullException.ThrowIfNull(versionProvider);
 
         ContextMenuStrip menu = new();
+        _menu = menu;
+        menu.Opening += OnMenuOpening;
         ToolStripMenuItem productItem = new(Strings.FormatTrayApplicationVersion(versionProvider.Version))
         {
             Enabled = false
@@ -51,6 +55,105 @@ public sealed class TrayIconManager : IDisposable
     /// <summary>Raised when the user asks to exit the application.</summary>
     public event EventHandler? ExitRequested;
 
+    public event EventHandler<string?>? SwitchRequested;
+
+    public event EventHandler? UndoRequested;
+
+    public event EventHandler? MoreSettingsRequested;
+
+    /// <summary>Evaluated on the UI thread immediately before the menu opens.</summary>
+    public Func<TrayMenuModel>? MenuProvider { get; set; }
+
+    /// <summary>Opt-in persistent icon visibility; defaults to the existing temporary behavior.</summary>
+    public bool AlwaysVisible
+    {
+        get => _alwaysVisible;
+        set
+        {
+            _alwaysVisible = value;
+            if (value)
+            {
+                _restoreVisibilityAfterNotification = false;
+                Show();
+            }
+        }
+    }
+
+    internal ContextMenuStrip Menu => _menu;
+
+    /// <summary>Rebuilds menu items on the UI thread without changing icon visibility.</summary>
+    public void Update(TrayMenuModel model)
+    {
+        ArgumentNullException.ThrowIfNull(model);
+        ObjectDisposedException.ThrowIf(_isDisposed, this);
+        ClearMenu();
+        _menu.Items.Add(new ToolStripMenuItem(model.Title) { Enabled = false });
+        _menu.Items.Add(new ToolStripLabel(model.StatusText)
+        {
+            Image = CreateStatusDot(model.StatusColor)
+        });
+        _menu.Items.Add(new ToolStripSeparator());
+        _menu.Items.Add(new ToolStripMenuItem(Strings.TraySwitch) { Enabled = false });
+        foreach (TraySettingItem setting in model.Settings)
+        {
+            ToolStripMenuItem item = new(setting.Name)
+            {
+                Checked = setting.IsActive,
+                Enabled = setting.IsEnabled
+            };
+            item.Click += (_, _) => SwitchRequested?.Invoke(this, setting.ProfileId);
+            _menu.Items.Add(item);
+        }
+
+        if (model.HasMoreSettings)
+        {
+            _menu.Items.Add(new ToolStripMenuItem(Strings.TrayMoreSettings, null,
+                (_, _) => MoreSettingsRequested?.Invoke(this, EventArgs.Empty)));
+        }
+
+        _menu.Items.Add(new ToolStripSeparator());
+        _menu.Items.Add(new ToolStripMenuItem(Strings.TrayUndo, null,
+            (_, _) => UndoRequested?.Invoke(this, EventArgs.Empty)) { Enabled = model.CanUndo });
+        _menu.Items.Add(new ToolStripMenuItem(Strings.TrayOpen, null, OnOpenClick));
+        _menu.Items.Add(new ToolStripSeparator());
+        _menu.Items.Add(new ToolStripMenuItem(Strings.TrayExit, null, OnExitClick));
+    }
+
+    internal void RefreshMenu()
+    {
+        if (MenuProvider is not null)
+        {
+            Update(MenuProvider());
+        }
+    }
+
+    private void OnMenuOpening(object? sender, System.ComponentModel.CancelEventArgs e) => RefreshMenu();
+
+    private static Bitmap CreateStatusDot(TrayStatusColor color)
+    {
+        Bitmap bitmap = new(16, 16);
+        using Graphics graphics = Graphics.FromImage(bitmap);
+        using SolidBrush brush = new(color switch
+        {
+            TrayStatusColor.Green => Color.SeaGreen,
+            TrayStatusColor.Amber => Color.DarkGoldenrod,
+            _ => SystemColors.GrayText
+        });
+        graphics.FillEllipse(brush, 4, 4, 8, 8);
+        return bitmap;
+    }
+
+    private void ClearMenu()
+    {
+        while (_menu.Items.Count > 0)
+        {
+            ToolStripItem item = _menu.Items[0];
+            _menu.Items.RemoveAt(0);
+            item.Image?.Dispose();
+            item.Dispose();
+        }
+    }
+
     /// <summary>Allows the safety coordinator to complete keep/restore or cancel before publishing exit.</summary>
     public Func<Task<bool>>? ExitGuard { get; set; }
 
@@ -58,10 +161,22 @@ public sealed class TrayIconManager : IDisposable
     public event EventHandler<string>? NotificationClicked;
 
     /// <summary>Makes the icon visible.</summary>
-    public void Show() => _notifyIcon.Visible = true;
+    public void Show()
+    {
+        if (_notifyIcon is not null)
+        {
+            _notifyIcon.Visible = true;
+        }
+    }
 
     /// <summary>Hides the icon.</summary>
-    public void Hide() => _notifyIcon.Visible = false;
+    public void Hide()
+    {
+        if (_notifyIcon is not null)
+        {
+            _notifyIcon.Visible = AlwaysVisible;
+        }
+    }
 
     /// <summary>Attempts to show a non-critical balloon notification.</summary>
     public void ShowBalloon(string text)
@@ -133,12 +248,21 @@ public sealed class TrayIconManager : IDisposable
         }
 
         _isDisposed = true;
-        _notifyIcon.MouseClick -= OnMouseClick;
-        _notifyIcon.DoubleClick -= OnDoubleClick;
-        _notifyIcon.BalloonTipClicked -= OnBalloonTipClicked;
-        _notifyIcon.BalloonTipClosed -= OnBalloonTipClosed;
-        _notifyIcon.Visible = false;
-        _notifyIcon.Dispose();
+        if (_notifyIcon is not null)
+        {
+            _notifyIcon.MouseClick -= OnMouseClick;
+            _notifyIcon.DoubleClick -= OnDoubleClick;
+            _notifyIcon.BalloonTipClicked -= OnBalloonTipClicked;
+            _notifyIcon.BalloonTipClosed -= OnBalloonTipClosed;
+            _notifyIcon.Visible = false;
+            _notifyIcon.Dispose();
+        }
+        if (_menu is not null)
+        {
+            _menu.Opening -= OnMenuOpening;
+            ClearMenu();
+            _menu.Dispose();
+        }
     }
 
     private static Icon GetApplicationIcon() =>
@@ -195,6 +319,9 @@ public sealed class TrayIconManager : IDisposable
         }
 
         _restoreVisibilityAfterNotification = false;
-        _notifyIcon.Visible = false;
+        if (_notifyIcon is not null)
+        {
+            _notifyIcon.Visible = AlwaysVisible;
+        }
     }
 }

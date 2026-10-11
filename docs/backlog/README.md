@@ -31,7 +31,7 @@ Sıra, uygulama sırasıdır. Tüm maddeler 1.0 kapsamındadır.
 | 15 | [Yeni ve düzenle ayar sayfası](15-yeni-ayar-sayfasi.md) | tamamlandı |
 | 16 | [Ayrıntılar ve elle ayar sayfası](16-ayrintilar-sayfasi.md) | tamamlandı |
 | 17 | [Sade metinler ve terim sözlüğü uyumu](17-sade-metinler.md) | yapılacak |
-| 18 | [Tepsi menüsünden ayar değiştirme](18-tepsiden-ayar-degistirme.md) | yapılacak |
+| 18 | [Tepsi menüsünden ayar değiştirme](18-tepsiden-ayar-degistirme.md) | tamamlandı |
 
 ## Kaynaklar
 - Gereksinimler: `docs/01_Requirements/01_Product_Requirements_Baseline.md` (PR-xxx)
